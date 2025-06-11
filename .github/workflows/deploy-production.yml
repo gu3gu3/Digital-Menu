@@ -57,7 +57,7 @@ jobs:
 
     - name: 📋 Generate build info
       id: generate_info
-      run: echo "sha=${GITHUB_SHA::8}" >> $GITHUB_OUTPUT
+      run: echo "sha=$(echo ${GITHUB_SHA} | cut -c1-8 | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
 
   # ===============================
   # JOB 2: DEPLOY BACKEND API
