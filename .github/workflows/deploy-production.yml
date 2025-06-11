@@ -138,7 +138,7 @@ jobs:
           --image gcr.io/${{ env.GCP_PROJECT_ID }}/${{ env.BACKEND_SERVICE_NAME }} \
           --region ${{ env.GCP_REGION }} \
           --service-account menuview-run@${{ env.GCP_PROJECT_ID }}.iam.gserviceaccount.com \
-          --add-cloudsql-instances ${{ env.GCP_PROJECT_ID }}:${{ env.GCP_REGION }}:menuview-db \
+          --set-cloudsql-instances ${{ env.GCP_PROJECT_ID }}:${{ env.GCP_REGION }}:menuview-db \
           --set-secrets DATABASE_URL=database-url:latest \
           --command npx \
           --args prisma,migrate,deploy \
