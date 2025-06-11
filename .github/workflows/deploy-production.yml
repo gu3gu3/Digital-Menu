@@ -27,8 +27,6 @@ jobs:
   build-test:
     name: 🧪 Build & Test
     runs-on: ubuntu-latest
-    outputs:
-      sha: ${{ steps.generate_info.outputs.sha }}
     
     steps:
     - name: 📥 Checkout code
@@ -54,10 +52,6 @@ jobs:
       run: npm run build --workspace=frontend
       env:
         VITE_API_URL: https://api.menuview.app/api
-
-    - name: 📋 Generate build info
-      id: generate_info
-      run: echo "sha=$(echo ${GITHUB_SHA} | cut -c1-8 | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
 
   # ===============================
   # JOB 2: DEPLOY BACKEND API
@@ -86,8 +80,9 @@ jobs:
       run: gcloud auth configure-docker
 
     - name: 🔧 Deploy to Cloud Run (Backend)
+      id: deploy
       run: |
-        cd packages/backend
+        TAG_SHA=$(echo ${GITHUB_SHA} | cut -c1-8 | tr '[:upper:]' '[:lower:]')
         gcloud run deploy ${{ env.BACKEND_SERVICE_NAME }} \
           --source . \
           --platform managed \
@@ -102,7 +97,7 @@ jobs:
           --min-instances 1 \
           --max-instances 10 \
           --timeout 300s \
-          --tag build-${{ needs.build-test.outputs.sha }} \
+          --tag build-${TAG_SHA} \
           --quiet
 
     - name: 📝 Get Backend Image URI
@@ -191,7 +186,9 @@ jobs:
         VITE_API_URL: https://api.menuview.app/api
 
     - name: 🚀 Deploy to Cloud Run (Frontend)
+      id: deploy_frontend
       run: |
+        TAG_SHA=$(echo ${GITHUB_SHA} | cut -c1-8 | tr '[:upper:]' '[:lower:]')
         cd packages/frontend
         
         # Crear Dockerfile temporal para frontend
@@ -225,7 +222,7 @@ jobs:
           --min-instances 0 \
           --max-instances 5 \
           --port 8080 \
-          --tag build-${{ needs.build-test.outputs.sha }} \
+          --tag build-${TAG_SHA} \
           --quiet
 
   # ===============================
