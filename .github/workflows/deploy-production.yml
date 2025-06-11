@@ -92,7 +92,7 @@ jobs:
           --allow-unauthenticated \
           --service-account menuview-run@${{ env.GCP_PROJECT_ID }}.iam.gserviceaccount.com \
           --add-cloudsql-instances ${{ env.GCP_PROJECT_ID }}:${{ env.GCP_REGION }}:menuview-db \
-          --set-env-vars NODE_ENV=production,PORT=3001,FRONTEND_URL=https://menuview.app \
+          --set-env-vars NODE_ENV=production,FRONTEND_URL=https://menuview.app \
           --set-secrets DATABASE_URL=database-url:latest,JWT_SECRET=jwt-secret:latest,SUPER_USER_EMAIL=super-user-email:latest,SUPER_USER_PASSWORD=super-user-password:latest,GCP_PROJECT_ID=gcp-project-id:latest,GCP_STORAGE_BUCKET=gcp-storage-bucket:latest \
           --memory 1Gi \
           --cpu 1 \
