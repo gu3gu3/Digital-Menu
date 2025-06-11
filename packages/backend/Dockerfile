@@ -4,9 +4,9 @@ FROM node:18
 # Set working directory
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
-COPY prisma ./prisma/
+# Copy all files from the current directory to the container
+# .dockerignore will prevent copying unnecessary files
+COPY . .
 
 # Install dependencies
 RUN npm install
@@ -14,10 +14,7 @@ RUN npm install
 # Generate Prisma client
 RUN npx prisma generate
 
-# Copy source code
-COPY src ./src/
-
-# Create uploads directory
+# Create uploads directory (it might be excluded by .dockerignore, so we ensure it exists)
 RUN mkdir -p uploads
 
 # Expose port
