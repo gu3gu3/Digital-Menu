@@ -149,7 +149,7 @@ jobs:
           --parallelism 1
         
         # Ejecutar migraciones
-        JOB_NAME=$(gcloud run jobs list --filter="metadata.name:menuview-migrate" --format="value(metadata.name)" --limit=1)
+        JOB_NAME=$(gcloud run jobs list --filter="metadata.name:menuview-migrate" --sort-by="~metadata.creationTimestamp" --format="value(metadata.name)" --limit=1)
         gcloud run jobs execute $JOB_NAME --region=${{ env.GCP_REGION }} --wait
 
   # ===============================
