@@ -42,7 +42,7 @@ jobs:
       run: npm ci
 
     - name: 📝 Generate Prisma Client
-      run: npx prisma generate --workspace=backend
+      run: npm exec --workspace=backend -- prisma generate
 
     - name: 🧪 Run backend tests
       run: npm run test --workspace=backend
