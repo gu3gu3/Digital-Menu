@@ -99,7 +99,8 @@ jobs:
           --min-instances 1 \
           --max-instances 10 \
           --timeout 300s \
-          --tag build-${{ github.sha }}
+          --tag build-${{ github.sha }} \
+          --quiet
 
     - name: 📝 Get Backend URL
       run: |
@@ -217,7 +218,8 @@ jobs:
           --min-instances 0 \
           --max-instances 5 \
           --port 8080 \
-          --tag build-${{ github.sha }}
+          --tag build-${{ github.sha }} \
+          --quiet
 
   # ===============================
   # JOB 5: CONFIGURE DOMAIN MAPPING
