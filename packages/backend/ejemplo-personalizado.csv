@@ -1,0 +1,5 @@
+categoria_nombre,categoria_descripcion,categoria_orden,producto_nombre,producto_descripcion,producto_precio,producto_disponible,producto_orden
+"Mis Entradas","Mis deliciosos aperitivos",1,"Mi Ceviche Especial","Ceviche con mariscos frescos del día",15.00,true,1
+"Mis Entradas","Mis deliciosos aperitivos",1,"Nachos de la Casa","Nachos con queso y jalapeños",8.50,true,2
+"Mis Platos Principales","Los favoritos de mis clientes",2,"Pollo a la Plancha","Pollo marinado con hierbas",12.90,true,1
+"Mis Platos Principales","Los favoritos de mis clientes",2,"Pescado Frito","Pescado fresco del día empanizado",16.50,true,2 

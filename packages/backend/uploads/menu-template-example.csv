@@ -1,0 +1,15 @@
+categoria_nombre,categoria_descripcion,categoria_orden,producto_nombre,producto_descripcion,producto_precio,producto_disponible,producto_orden
+Entradas,"Deliciosos aperitivos para comenzar tu experiencia gastronómica",1,"Ceviche de Pescado","Fresco ceviche con pescado del día marinado en limón y ají",12.50,true,1
+Entradas,"Deliciosos aperitivos para comenzar tu experiencia gastronómica",1,"Guacamole con Nachos","Guacamole casero con nachos crujientes y pico de gallo",8.90,true,2
+Entradas,"Deliciosos aperitivos para comenzar tu experiencia gastronómica",1,"Alitas BBQ","6 alitas de pollo con salsa barbacoa casera",11.50,true,3
+"Platos Fuertes","Nuestras especialidades principales que te harán volver",2,"Lomo Saltado","Clásico lomo saltado peruano con papas fritas y arroz",18.90,true,1
+"Platos Fuertes","Nuestras especialidades principales que te harán volver",2,"Pollo a la Brasa","Medio pollo con papas doradas y ensalada fresca",16.50,true,2
+"Platos Fuertes","Nuestras especialidades principales que te harán volver",2,"Pasta Alfredo","Fettuccine en salsa alfredo con pollo grillado",14.90,true,3
+"Platos Fuertes","Nuestras especialidades principales que te harán volver",2,"Pizza Margarita","Pizza tradicional con tomate, mozzarella y albahaca",13.50,false,4
+Bebidas,"Refrescantes bebidas para acompañar tu comida",3,"Chicha Morada","Bebida tradicional peruana con frutas",4.50,true,1
+Bebidas,"Refrescantes bebidas para acompañar tu comida",3,"Limonada","Limonada fresca natural",3.90,true,2
+Bebidas,"Refrescantes bebidas para acompañar tu comida",3,"Inca Kola","Gaseosa peruana 355ml",2.50,true,3
+Bebidas,"Refrescantes bebidas para acompañar tu comida",3,"Agua Mineral","Agua mineral sin gas 500ml",2.00,true,4
+Postres,"Dulces finales para completar tu experiencia",4,"Tres Leches","Clásico postre de tres leches con canela",6.90,true,1
+Postres,"Dulces finales para completar tu experiencia",4,"Suspiro Limeño","Tradicional postre peruano con manjarblanco",7.50,true,2
+Postres,"Dulces finales para completar tu experiencia",4,"Helado de Lúcuma","Helado artesanal de lúcuma peruana",5.50,false,3 
