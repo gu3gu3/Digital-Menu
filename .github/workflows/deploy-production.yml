@@ -14,6 +14,10 @@ on:
         - production
         - staging
 
+permissions:
+  contents: 'read'
+  id-token: 'write'
+
 env:
   GCP_PROJECT_ID: digital-menu-455517
   GCP_REGION: us-central1
@@ -27,6 +31,8 @@ jobs:
   build-test:
     name: 🧪 Build & Test
     runs-on: ubuntu-latest
+    outputs:
+      sha: ${{ steps.generate_info.outputs.sha }}
     
     steps:
     - name: 📥 Checkout code
@@ -53,6 +59,10 @@ jobs:
       env:
         VITE_API_URL: https://api.menuview.app/api
 
+    - name: 📋 Generate build info
+      id: generate_info
+      run: echo "sha=$(echo ${GITHUB_SHA} | cut -c1-8 | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
+
   # ===============================
   # JOB 2: DEPLOY BACKEND API
   # ===============================
@@ -69,9 +79,10 @@ jobs:
       uses: actions/checkout@v4
 
     - name: 🔐 Authenticate to Google Cloud
-      uses: google-github-actions/auth@v2
+      uses: 'google-github-actions/auth@v2'
       with:
-        credentials_json: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+        workload_identity_provider: 'projects/433607530847/locations/global/workloadIdentityPools/github/providers/github-provider'
+        service_account: 'menuview-run@digital-menu-455517.iam.gserviceaccount.com'
 
     - name: 🛠️ Set up Cloud SDK
       uses: google-github-actions/setup-gcloud@v2
@@ -80,16 +91,15 @@ jobs:
       run: gcloud auth configure-docker
 
     - name: 🔧 Deploy to Cloud Run (Backend)
-      id: deploy
       run: |
-        TAG_SHA=$(echo ${GITHUB_SHA} | cut -c1-8 | tr '[:upper:]' '[:lower:]')
+        cd packages/backend
         gcloud run deploy ${{ env.BACKEND_SERVICE_NAME }} \
           --source . \
           --platform managed \
           --region ${{ env.GCP_REGION }} \
           --allow-unauthenticated \
           --service-account menuview-run@${{ env.GCP_PROJECT_ID }}.iam.gserviceaccount.com \
-          --add-cloudsql-instances ${{ env.GCP_PROJECT_ID }}:${{ env.GCP_REGION }}:menuview-db \
+          --set-cloudsql-instances ${{ env.GCP_PROJECT_ID }}:${{ env.GCP_REGION }}:menuview-db \
           --set-env-vars NODE_ENV=production,FRONTEND_URL=https://menuview.app \
           --set-secrets DATABASE_URL=database-url:latest,JWT_SECRET=jwt-secret:latest,SUPER_USER_EMAIL=super-user-email:latest,SUPER_USER_PASSWORD=super-user-password:latest,GCP_PROJECT_ID=gcp-project-id:latest,GCP_STORAGE_BUCKET=gcp-storage-bucket:latest \
           --memory 1Gi \
@@ -97,7 +107,7 @@ jobs:
           --min-instances 1 \
           --max-instances 10 \
           --timeout 300s \
-          --tag build-${TAG_SHA} \
+          --tag build-${{ needs.build-test.outputs.sha }} \
           --quiet
 
     - name: 📝 Get Backend Image URI
@@ -120,9 +130,10 @@ jobs:
       uses: actions/checkout@v4
 
     - name: 🔐 Authenticate to Google Cloud
-      uses: google-github-actions/auth@v2
+      uses: 'google-github-actions/auth@v2'
       with:
-        credentials_json: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+        workload_identity_provider: 'projects/433607530847/locations/global/workloadIdentityPools/github/providers/github-provider'
+        service_account: 'menuview-run@digital-menu-455517.iam.gserviceaccount.com'
 
     - name: 🛠️ Set up Cloud SDK
       uses: google-github-actions/setup-gcloud@v2
@@ -170,9 +181,10 @@ jobs:
         cache: 'npm'
 
     - name: 🔐 Authenticate to Google Cloud
-      uses: google-github-actions/auth@v2
+      uses: 'google-github-actions/auth@v2'
       with:
-        credentials_json: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+        workload_identity_provider: 'projects/433607530847/locations/global/workloadIdentityPools/github/providers/github-provider'
+        service_account: 'menuview-run@digital-menu-455517.iam.gserviceaccount.com'
 
     - name: 🛠️ Set up Cloud SDK
       uses: google-github-actions/setup-gcloud@v2
@@ -188,7 +200,6 @@ jobs:
     - name: 🚀 Deploy to Cloud Run (Frontend)
       id: deploy_frontend
       run: |
-        TAG_SHA=$(echo ${GITHUB_SHA} | cut -c1-8 | tr '[:upper:]' '[:lower:]')
         cd packages/frontend
         
         # Crear Dockerfile temporal para frontend
@@ -222,7 +233,7 @@ jobs:
           --min-instances 0 \
           --max-instances 5 \
           --port 8080 \
-          --tag build-${TAG_SHA} \
+          --tag build-${{ needs.build-test.outputs.sha }} \
           --quiet
 
   # ===============================
@@ -236,9 +247,10 @@ jobs:
     
     steps:
     - name: 🔐 Authenticate to Google Cloud
-      uses: google-github-actions/auth@v2
+      uses: 'google-github-actions/auth@v2'
       with:
-        credentials_json: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+        workload_identity_provider: 'projects/433607530847/locations/global/workloadIdentityPools/github/providers/github-provider'
+        service_account: 'menuview-run@digital-menu-455517.iam.gserviceaccount.com'
 
     - name: 🛠️ Set up Cloud SDK
       uses: google-github-actions/setup-gcloud@v2
