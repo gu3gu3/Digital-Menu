@@ -132,15 +132,6 @@ const SuperAdminLoginPage = () => {
               )}
             </button>
           </form>
-
-          {/* Información de desarrollo */}
-          <div className="mt-6 p-4 bg-gray-50 rounded-md">
-            <h3 className="text-sm font-medium text-gray-700 mb-2">Credenciales de desarrollo:</h3>
-            <div className="text-xs text-gray-600 space-y-1">
-              <p><strong>Email:</strong> admin@menuview.app</p>
-              <p><strong>Password:</strong> SuperAdmin123!</p>
-            </div>
-          </div>
         </div>
 
         {/* Footer */}
