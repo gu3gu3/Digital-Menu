@@ -161,7 +161,7 @@ jobs:
   deploy-frontend:
     name: 🎨 Deploy Frontend
     runs-on: ubuntu-latest
-    needs: [deploy-backend, migrate-database]
+    needs: [build-test, deploy-backend, migrate-database]
     if: github.ref == 'refs/heads/main'
     
     steps:
