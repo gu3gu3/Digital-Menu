@@ -27,6 +27,8 @@ jobs:
   build-test:
     name: 🧪 Build & Test
     runs-on: ubuntu-latest
+    outputs:
+      sha: ${{ steps.generate_info.outputs.sha }}
     
     steps:
     - name: 📥 Checkout code
@@ -54,9 +56,8 @@ jobs:
         VITE_API_URL: https://api.menuview.app/api
 
     - name: 📋 Generate build info
-      run: |
-        echo "BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_ENV
-        echo "COMMIT_SHA=${GITHUB_SHA::8}" >> $GITHUB_ENV
+      id: generate_info
+      run: echo "sha=${GITHUB_SHA::8}" >> $GITHUB_OUTPUT
 
   # ===============================
   # JOB 2: DEPLOY BACKEND API
@@ -99,7 +100,7 @@ jobs:
           --min-instances 1 \
           --max-instances 10 \
           --timeout 300s \
-          --tag build-${{ github.sha }} \
+          --tag build-${{ needs.build-test.outputs.sha }} \
           --quiet
 
     - name: 📝 Get Backend URL
@@ -218,7 +219,7 @@ jobs:
           --min-instances 0 \
           --max-instances 5 \
           --port 8080 \
-          --tag build-${{ github.sha }} \
+          --tag build-${{ needs.build-test.outputs.sha }} \
           --quiet
 
   # ===============================
@@ -283,7 +284,7 @@ jobs:
         echo "🎉 Deployment to menuview.app completed successfully!"
         echo "- Backend API: https://api.menuview.app"
         echo "- Frontend: https://menuview.app"
-        echo "- Build SHA: ${{ github.sha }}"
+        echo "- Build SHA: ${{ needs.build-test.outputs.sha }}"
 
     - name: ❌ Deployment Failed Notification
       if: failure()
