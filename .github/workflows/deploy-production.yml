@@ -67,6 +67,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: build-test
     if: github.ref == 'refs/heads/main'
+    outputs:
+      image_uri: ${{ steps.get_image_uri.outputs.IMAGE_URI }}
     
     steps:
     - name: 📥 Checkout code
@@ -103,10 +105,11 @@ jobs:
           --tag build-${{ needs.build-test.outputs.sha }} \
           --quiet
 
-    - name: 📝 Get Backend URL
+    - name: 📝 Get Backend Image URI
+      id: get_image_uri
       run: |
-        BACKEND_URL=$(gcloud run services describe ${{ env.BACKEND_SERVICE_NAME }} --region=${{ env.GCP_REGION }} --format="value(status.url)")
-        echo "BACKEND_URL=$BACKEND_URL" >> $GITHUB_ENV
+        IMAGE_URI=$(gcloud run services describe ${{ env.BACKEND_SERVICE_NAME }} --region=${{ env.GCP_REGION }} --format="value(spec.template.spec.containers[0].image)")
+        echo "IMAGE_URI=$IMAGE_URI" >> $GITHUB_OUTPUT
 
   # ===============================
   # JOB 3: RUN DATABASE MIGRATIONS
@@ -135,7 +138,7 @@ jobs:
         
         # Crear job temporal para migraciones
         gcloud run jobs create menuview-migrate-$(date +%s) \
-          --image gcr.io/${{ env.GCP_PROJECT_ID }}/${{ env.BACKEND_SERVICE_NAME }} \
+          --image ${{ needs.deploy-backend.outputs.image_uri }} \
           --region ${{ env.GCP_REGION }} \
           --service-account menuview-run@${{ env.GCP_PROJECT_ID }}.iam.gserviceaccount.com \
           --set-cloudsql-instances ${{ env.GCP_PROJECT_ID }}:${{ env.GCP_REGION }}:menuview-db \
