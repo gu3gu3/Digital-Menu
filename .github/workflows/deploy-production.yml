@@ -15,7 +15,7 @@ on:
         - staging
 
 env:
-  GCP_PROJECT_ID: menuview-app-prod
+  GCP_PROJECT_ID: digital-menu-455517
   GCP_REGION: us-central1
   BACKEND_SERVICE_NAME: menuview-api
   FRONTEND_SERVICE_NAME: menuview-frontend
