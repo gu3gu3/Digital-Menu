@@ -104,7 +104,7 @@ jobs:
         --allow-unauthenticated
         --service-account menuview-run@${{ env.GCP_PROJECT_ID }}.iam.gserviceaccount.com
         --set-cloudsql-instances ${{ env.GCP_PROJECT_ID }}:${{ env.GCP_REGION }}:menuview-db
-        --set-env-vars NODE_ENV=production,FRONTEND_URL=https://menuview.app,DATABASE_URL=${{ env.DATABASE_URL }}
+        --set-env-vars "NODE_ENV=production,FRONTEND_URL=https://menuview.app,DATABASE_URL=${{ env.DATABASE_URL }}"
         --set-secrets JWT_SECRET=jwt-secret:latest,SUPER_USER_EMAIL=super-user-email:latest,SUPER_USER_PASSWORD=super-user-password:latest,GCP_PROJECT_ID=gcp-project-id:latest,GCP_STORAGE_BUCKET=gcp-storage-bucket:latest
         --memory 1Gi
         --cpu 1
@@ -161,7 +161,7 @@ jobs:
           --region ${{ env.GCP_REGION }} \
           --service-account menuview-run@${{ env.GCP_PROJECT_ID }}.iam.gserviceaccount.com \
           --set-cloudsql-instances ${{ env.GCP_PROJECT_ID }}:${{ env.GCP_REGION }}:menuview-db \
-          --set-env-vars DATABASE_URL=${{ env.DATABASE_URL }} \
+          --set-env-vars "DATABASE_URL=${{ env.DATABASE_URL }}" \
           --command npx \
           --args prisma,migrate,deploy,--schema=./prisma/schema.prisma \
           --max-retries 3 \
@@ -213,7 +213,7 @@ jobs:
           --region ${{ env.GCP_REGION }} \
           --service-account menuview-run@${{ env.GCP_PROJECT_ID }}.iam.gserviceaccount.com \
           --set-cloudsql-instances ${{ env.GCP_PROJECT_ID }}:${{ env.GCP_REGION }}:menuview-db \
-          --set-env-vars DATABASE_URL=${{ env.DATABASE_URL }} \
+          --set-env-vars "DATABASE_URL=${{ env.DATABASE_URL }}" \
           --command npm \
           --args run,db:seed:prod \
           --max-retries 3 \
