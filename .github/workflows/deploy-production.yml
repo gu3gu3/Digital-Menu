@@ -155,12 +155,54 @@ jobs:
         gcloud run jobs execute $JOB_NAME --region=${{ env.GCP_REGION }} --wait
 
   # ===============================
+  # JOB 3.5: SEED DATABASE
+  # ===============================
+  seed-database:
+    name: 🌱 Seed Database
+    runs-on: ubuntu-latest
+    needs: migrate-database
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+
+    - name: 🔐 Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+
+    - name: 🛠️ Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v2
+
+    - name: 🌱 Run Database Seeding
+      run: |
+        # Crear job temporal para seeder
+        gcloud run jobs create menuview-seed-$(date +%s) \
+          --image ${{ needs.deploy-backend.outputs.image_uri }} \
+          --region ${{ env.GCP_REGION }} \
+          --service-account menuview-run@${{ env.GCP_PROJECT_ID }}.iam.gserviceaccount.com \
+          --set-cloudsql-instances ${{ env.GCP_PROJECT_ID }}:${{ env.GCP_REGION }}:menuview-db \
+          --set-secrets DATABASE_URL=database-url:latest \
+          --command npm \
+          --args run,db:seed:prod \
+          --max-retries 3 \
+          --parallelism 1
+        
+        # Give secrets time to propagate
+        sleep 10
+        
+        # Ejecutar seeder
+        JOB_NAME=$(gcloud run jobs list --filter="metadata.name:menuview-seed" --sort-by="~metadata.creationTimestamp" --format="value(metadata.name)" --limit=1)
+        gcloud run jobs execute $JOB_NAME --region=${{ env.GCP_REGION }} --wait
+
+  # ===============================
   # JOB 4: DEPLOY FRONTEND 
   # ===============================
   deploy-frontend:
     name: 🎨 Deploy Frontend
     runs-on: ubuntu-latest
-    needs: [build-test, deploy-backend, migrate-database]
+    needs: [build-test, deploy-backend, seed-database]
     if: github.ref == 'refs/heads/main'
     
     steps:
