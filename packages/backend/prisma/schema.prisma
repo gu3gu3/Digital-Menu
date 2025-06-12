@@ -7,6 +7,266 @@ generator client {
   provider = "prisma-client-js"
 }
 
+// Modelos de la aplicación
+
+model Plan {
+  id               String       @id @default(cuid())
+  nombre           String       @unique
+  precio           Float
+  limiteProductos  Int
+  limiteCategorias Int
+  limiteUsuarios   Int
+  soporteEmail     Boolean      @default(false)
+  soporteChat      Boolean      @default(false)
+  analiticas       Boolean      @default(false)
+  activo           Boolean      @default(true)
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  restaurantes     Restaurante[]
+  @@map("planes")
+}
+
 model Restaurante {
-// ... existing code ...
+  id                String       @id @default(cuid())
+  nombre            String
+  slug              String       @unique
+  descripcion       String?      @db.Text
+  telefono          String?
+  direccion         String?
+  email             String?      @unique
+  logoUrl           String?
+  bannerUrl         String?
+  backgroundImage   String?
+  backgroundColor   String?
+  moneda            String       @default("USD")
+  activo            Boolean      @default(true)
+  configuracion     Json?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  planId            String
+  plan              Plan         @relation(fields: [planId], references: [id])
+  
+  usuariosAdmin     UsuarioAdmin[]
+  usuariosMesero    UsuarioMesero[]
+  mesas             Mesa[]
+  categorias        Categoria[]
+  productos         Producto[]
+  ordenes           Orden[]
+  sesiones          Sesion[]
+  notificaciones    NotificacionUsuario[]
+
+  suscripcion       Suscripcion?
+  @@map("restaurantes")
+}
+
+model UsuarioAdmin {
+  id                String       @id @default(cuid())
+  email             String       @unique
+  password          String
+  nombre            String
+  apellido          String?
+  telefono          String?
+  activo            Boolean      @default(true)
+  emailVerificado   Boolean      @default(false)
+  lastLogin         DateTime?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  restauranteId     String
+  restaurante       Restaurante  @relation(fields: [restauranteId], references: [id], onDelete: Cascade)
+  
+  @@map("usuarios_admin")
+}
+
+model UsuarioMesero {
+  id                String       @id @default(cuid())
+  email             String       @unique
+  password          String
+  nombre            String
+  apellido          String?
+  pin               String?
+  activo            Boolean      @default(true)
+  lastLogin         DateTime?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  restauranteId     String
+  restaurante       Restaurante  @relation(fields: [restauranteId], references: [id], onDelete: Cascade)
+  
+  @@map("usuarios_mesero")
+}
+
+model Mesa {
+  id                String       @id @default(cuid())
+  nombre            String
+  numero            Int
+  capacidad         Int          @default(1)
+  activo            Boolean      @default(true)
+  qrCodeUrl         String?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  restauranteId     String
+  restaurante       Restaurante  @relation(fields: [restauranteId], references: [id], onDelete: Cascade)
+  ordenes           Orden[]
+  sesiones          Sesion[]
+
+  @@unique([restauranteId, numero])
+  @@map("mesas")
+}
+
+model Categoria {
+  id                String       @id @default(cuid())
+  nombre            String
+  descripcion       String?
+  activa            Boolean      @default(true)
+  orden             Int          @default(0)
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  restauranteId     String
+  restaurante       Restaurante  @relation(fields: [restauranteId], references: [id], onDelete: Cascade)
+  productos         Producto[]
+
+  @@unique([restauranteId, nombre])
+  @@map("categorias")
+}
+
+model Producto {
+  id                String       @id @default(cuid())
+  nombre            String
+  descripcion       String?      @db.Text
+  precio            Float
+  imagenUrl         String?
+  disponible        Boolean      @default(true)
+  orden             Int          @default(0)
+  esDestacado       Boolean      @default(false)
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  categoriaId       String
+  categoria         Categoria    @relation(fields: [categoriaId], references: [id], onDelete: Cascade)
+  itemsOrden        ItemOrden[]
+
+  @@map("productos")
+}
+
+model Orden {
+  id                String       @id @default(cuid())
+  numeroOrden       Int
+  estado            String       @default("PENDIENTE") // PENDIENTE, EN_PROCESO, COMPLETADA, CANCELADA
+  subtotal          Float
+  impuestos         Float        @default(0)
+  total             Float
+  notas             String?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  restauranteId     String
+  restaurante       Restaurante  @relation(fields: [restauranteId], references: [id], onDelete: Cascade)
+  mesaId            String
+  mesa              Mesa         @relation(fields: [mesaId], references: [id])
+  sesionId          String?
+  sesion            Sesion?      @relation(fields: [sesionId], references: [id])
+  items             ItemOrden[]
+
+  @@unique([restauranteId, numeroOrden])
+  @@map("ordenes")
+}
+
+model ItemOrden {
+  id                String       @id @default(cuid())
+  cantidad          Int
+  precioUnitario    Float
+  subtotal          Float
+  notas             String?
+  
+  ordenId           String
+  orden             Orden        @relation(fields: [ordenId], references: [id], onDelete: Cascade)
+  productoId        String
+  producto          Producto     @relation(fields: [productoId], references: [id])
+
+  @@map("items_orden")
+}
+
+model Sesion {
+  id                String       @id @default(cuid())
+  activa            Boolean      @default(true)
+  createdAt         DateTime     @default(now())
+  
+  mesaId            String
+  mesa              Mesa         @relation(fields: [mesaId], references: [id])
+  restauranteId     String
+  restaurante       Restaurante  @relation(fields: [restauranteId], references: [id])
+  ordenes           Orden[]
+  
+  @@map("sesiones")
+}
+
+model Suscripcion {
+  id                String       @id @default(cuid())
+  estado            String       @default("ACTIVA") // ACTIVA, VENCIDA, CANCELADA
+  fechaInicio       DateTime
+  fechaVencimiento  DateTime
+  renovacionAutomatica Boolean   @default(true)
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  restauranteId     String       @unique
+  restaurante       Restaurante  @relation(fields: [restauranteId], references: [id], onDelete: Cascade)
+  historialPagos    HistorialPago[]
+  
+  @@map("suscripciones")
+}
+
+model HistorialPago {
+  id                String       @id @default(cuid())
+  suscripcionId     String
+  monto             Decimal
+  mesesPagados      Int
+  fechaPago         DateTime     @default(now())
+  metodoPago        String?
+  referenciaPago    String?
+  procesadoPor      String?
+  notas             String?
+  createdAt         DateTime     @default(now())
+  
+  suscripcion       Suscripcion  @relation(fields: [suscripcionId], references: [id], onDelete: Cascade)
+  
+  @@map("historial_pagos")
+}
+
+model SuperUsuario {
+  id                String       @id @default(cuid())
+  email             String       @unique
+  password          String
+  nombre            String
+  apellido          String?
+  activo            Boolean      @default(true)
+  lastLogin         DateTime?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  
+  notificacionesEnviadas NotificacionUsuario[] @relation("NotificacionEnviadaPor")
+  
+  @@map("super_usuarios")
+}
+
+model NotificacionUsuario {
+  id                String       @id @default(cuid())
+  tipo              String       @default("INFO") // INFO, WARNING, ERROR, SUCCESS
+  titulo            String
+  mensaje           String       @db.Text
+  leida             Boolean      @default(false)
+  createdAt         DateTime     @default(now())
+
+  restauranteId     String
+  restaurante       Restaurante  @relation(fields: [restauranteId], references: [id])
+  
+  enviadaPorId      String?
+  enviadaPor        SuperUsuario? @relation("NotificacionEnviadaPor", fields: [enviadaPorId], references: [id])
+
+  @@map("notificaciones_usuario")
 } 
