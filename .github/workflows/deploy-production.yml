@@ -79,6 +79,16 @@ jobs:
       with:
         credentials_json: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
 
+    - name: 🔨 Construct Database URL
+      id: construct_db_url
+      run: |
+        DB_USER=$(gcloud secrets versions access latest --secret="db-user" --project=${{ env.GCP_PROJECT_ID }})
+        DB_PASSWORD=$(gcloud secrets versions access latest --secret="database-password" --project=${{ env.GCP_PROJECT_ID }})
+        DB_NAME=$(gcloud secrets versions access latest --secret="db-name" --project=${{ env.GCP_PROJECT_ID }})
+        DB_SOCKET_PATH=$(gcloud secrets versions access latest --secret="db-socket-path" --project=${{ env.GCP_PROJECT_ID }})
+        DATABASE_URL="postgresql://${DB_USER}:${DB_PASSWORD}@localhost:5432/${DB_NAME}?host=${DB_SOCKET_PATH}&pgbouncer=true&connection_limit=1"
+        echo "DATABASE_URL=$DATABASE_URL" >> $GITHUB_ENV
+
     - name: 🛠️ Set up Cloud SDK
       uses: google-github-actions/setup-gcloud@v2
 
@@ -94,8 +104,8 @@ jobs:
         --allow-unauthenticated
         --service-account menuview-run@${{ env.GCP_PROJECT_ID }}.iam.gserviceaccount.com
         --set-cloudsql-instances ${{ env.GCP_PROJECT_ID }}:${{ env.GCP_REGION }}:menuview-db
-        --set-env-vars NODE_ENV=production,FRONTEND_URL=https://menuview.app
-        --set-secrets JWT_SECRET=jwt-secret:latest,SUPER_USER_EMAIL=super-user-email:latest,SUPER_USER_PASSWORD=super-user-password:latest,GCP_PROJECT_ID=gcp-project-id:latest,GCP_STORAGE_BUCKET=gcp-storage-bucket:latest,DB_USER=db-user:latest,DB_PASSWORD=database-password:latest,DB_NAME=db-name:latest,DB_SOCKET_PATH=db-socket-path:latest
+        --set-env-vars NODE_ENV=production,FRONTEND_URL=https://menuview.app,DATABASE_URL=${{ env.DATABASE_URL }}
+        --set-secrets JWT_SECRET=jwt-secret:latest,SUPER_USER_EMAIL=super-user-email:latest,SUPER_USER_PASSWORD=super-user-password:latest,GCP_PROJECT_ID=gcp-project-id:latest,GCP_STORAGE_BUCKET=gcp-storage-bucket:latest
         --memory 1Gi
         --cpu 1
         --min-instances 1
@@ -128,6 +138,16 @@ jobs:
       with:
         credentials_json: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
 
+    - name: 🔨 Construct Database URL
+      id: construct_db_url
+      run: |
+        DB_USER=$(gcloud secrets versions access latest --secret="db-user" --project=${{ env.GCP_PROJECT_ID }})
+        DB_PASSWORD=$(gcloud secrets versions access latest --secret="database-password" --project=${{ env.GCP_PROJECT_ID }})
+        DB_NAME=$(gcloud secrets versions access latest --secret="db-name" --project=${{ env.GCP_PROJECT_ID }})
+        DB_SOCKET_PATH=$(gcloud secrets versions access latest --secret="db-socket-path" --project=${{ env.GCP_PROJECT_ID }})
+        DATABASE_URL="postgresql://${DB_USER}:${DB_PASSWORD}@localhost:5432/${DB_NAME}?host=${DB_SOCKET_PATH}&pgbouncer=true&connection_limit=1"
+        echo "DATABASE_URL=$DATABASE_URL" >> $GITHUB_ENV
+
     - name: 🛠️ Set up Cloud SDK
       uses: google-github-actions/setup-gcloud@v2
 
@@ -141,7 +161,7 @@ jobs:
           --region ${{ env.GCP_REGION }} \
           --service-account menuview-run@${{ env.GCP_PROJECT_ID }}.iam.gserviceaccount.com \
           --set-cloudsql-instances ${{ env.GCP_PROJECT_ID }}:${{ env.GCP_REGION }}:menuview-db \
-          --set-secrets DB_USER=db-user:latest,DB_PASSWORD=database-password:latest,DB_NAME=db-name:latest,DB_SOCKET_PATH=db-socket-path:latest \
+          --set-env-vars DATABASE_URL=${{ env.DATABASE_URL }} \
           --command npx \
           --args prisma,migrate,deploy,--schema=./prisma/schema.prisma \
           --max-retries 3 \
@@ -172,6 +192,16 @@ jobs:
       with:
         credentials_json: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
 
+    - name: 🔨 Construct Database URL
+      id: construct_db_url
+      run: |
+        DB_USER=$(gcloud secrets versions access latest --secret="db-user" --project=${{ env.GCP_PROJECT_ID }})
+        DB_PASSWORD=$(gcloud secrets versions access latest --secret="database-password" --project=${{ env.GCP_PROJECT_ID }})
+        DB_NAME=$(gcloud secrets versions access latest --secret="db-name" --project=${{ env.GCP_PROJECT_ID }})
+        DB_SOCKET_PATH=$(gcloud secrets versions access latest --secret="db-socket-path" --project=${{ env.GCP_PROJECT_ID }})
+        DATABASE_URL="postgresql://${DB_USER}:${DB_PASSWORD}@localhost:5432/${DB_NAME}?host=${DB_SOCKET_PATH}&pgbouncer=true&connection_limit=1"
+        echo "DATABASE_URL=$DATABASE_URL" >> $GITHUB_ENV
+
     - name: 🛠️ Set up Cloud SDK
       uses: google-github-actions/setup-gcloud@v2
 
@@ -183,7 +213,7 @@ jobs:
           --region ${{ env.GCP_REGION }} \
           --service-account menuview-run@${{ env.GCP_PROJECT_ID }}.iam.gserviceaccount.com \
           --set-cloudsql-instances ${{ env.GCP_PROJECT_ID }}:${{ env.GCP_REGION }}:menuview-db \
-          --set-secrets DB_USER=db-user:latest,DB_PASSWORD=database-password:latest,DB_NAME=db-name:latest,DB_SOCKET_PATH=db-socket-path:latest \
+          --set-env-vars DATABASE_URL=${{ env.DATABASE_URL }} \
           --command npm \
           --args run,db:seed:prod \
           --max-retries 3 \
