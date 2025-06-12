@@ -89,7 +89,6 @@ jobs:
       run: >-
         gcloud run deploy ${{ env.BACKEND_SERVICE_NAME }}
         --source packages/backend
-        --dockerfile packages/backend/Dockerfile
         --platform managed
         --region ${{ env.GCP_REGION }}
         --allow-unauthenticated
