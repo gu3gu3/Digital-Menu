@@ -150,6 +150,9 @@ model Producto {
   categoria         Categoria    @relation(fields: [categoriaId], references: [id], onDelete: Cascade)
   itemsOrden        ItemOrden[]
 
+  restauranteId     String
+  restaurante       Restaurante  @relation(fields: [restauranteId], references: [id], onDelete: Cascade)
+
   @@map("productos")
 }
 
