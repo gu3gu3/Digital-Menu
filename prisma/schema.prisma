@@ -1,8 +1,0 @@
-datasource db {
-  provider = "postgresql"
-  url      = "postgresql://${process.env.DB_USER}:${process.env.DB_PASSWORD}@localhost/${process.env.DB_NAME}?host=${process.env.DB_SOCKET_PATH}"
-}
-
-generator client {
-// ... existing code ...
-} 
