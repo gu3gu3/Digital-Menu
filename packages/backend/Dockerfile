@@ -4,25 +4,25 @@ FROM node:18
 # Set working directory
 WORKDIR /app
 
-# Copy all files from the current directory to the container
-# .dockerignore will prevent copying unnecessary files
-COPY . .
+# Copy package.json and package-lock.json first
+COPY package*.json ./
 
-# Install dependencies
-RUN npm install
+# Install dependencies using npm ci for production
+RUN npm ci --only=production
+
+# Copy the rest of the application files
+COPY . .
 
 # Generate Prisma client
 RUN npx prisma generate
 
-# Create uploads directory (it might be excluded by .dockerignore, so we ensure it exists)
-RUN mkdir -p uploads
+# Expose port from environment variable, default to 3001
+ENV PORT 3001
+EXPOSE $PORT
 
-# Expose port
-EXPOSE 3001
-
-# Health check
+# Health check (Adjusted to use ENV PORT)
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3001/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"
+  CMD node -e "require('http').get('http://localhost:${process.env.PORT}/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"
 
 # Start the application
 CMD ["npm", "start"] 

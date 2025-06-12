@@ -86,24 +86,24 @@ jobs:
       run: gcloud auth configure-docker
 
     - name: 🔧 Deploy to Cloud Run (Backend)
-      run: |
-        cd packages/backend
-        gcloud run deploy ${{ env.BACKEND_SERVICE_NAME }} \
-          --source . \
-          --platform managed \
-          --region ${{ env.GCP_REGION }} \
-          --allow-unauthenticated \
-          --service-account menuview-run@${{ env.GCP_PROJECT_ID }}.iam.gserviceaccount.com \
-          --set-cloudsql-instances ${{ env.GCP_PROJECT_ID }}:${{ env.GCP_REGION }}:menuview-db \
-          --set-env-vars NODE_ENV=production,FRONTEND_URL=https://menuview.app \
-          --set-secrets DATABASE_URL=database-url:latest,JWT_SECRET=jwt-secret:latest,SUPER_USER_EMAIL=super-user-email:latest,SUPER_USER_PASSWORD=super-user-password:latest,GCP_PROJECT_ID=gcp-project-id:latest,GCP_STORAGE_BUCKET=gcp-storage-bucket:latest \
-          --memory 1Gi \
-          --cpu 1 \
-          --min-instances 1 \
-          --max-instances 10 \
-          --timeout 300s \
-          --tag build-${{ needs.build-test.outputs.sha }} \
-          --quiet
+      run: >-
+        gcloud run deploy ${{ env.BACKEND_SERVICE_NAME }}
+        --source packages/backend
+        --dockerfile packages/backend/Dockerfile
+        --platform managed
+        --region ${{ env.GCP_REGION }}
+        --allow-unauthenticated
+        --service-account menuview-run@${{ env.GCP_PROJECT_ID }}.iam.gserviceaccount.com
+        --set-cloudsql-instances ${{ env.GCP_PROJECT_ID }}:${{ env.GCP_REGION }}:menuview-db
+        --set-env-vars NODE_ENV=production,FRONTEND_URL=https://menuview.app
+        --set-secrets DATABASE_URL=database-url:latest,JWT_SECRET=jwt-secret:latest,SUPER_USER_EMAIL=super-user-email:latest,SUPER_USER_PASSWORD=super-user-password:latest,GCP_PROJECT_ID=gcp-project-id:latest,GCP_STORAGE_BUCKET=gcp-storage-bucket:latest
+        --memory 1Gi
+        --cpu 1
+        --min-instances 1
+        --max-instances 10
+        --timeout 300s
+        --tag build-${{ needs.build-test.outputs.sha }}
+        --quiet
 
     - name: 📝 Get Backend Image URI
       id: get_image_uri
