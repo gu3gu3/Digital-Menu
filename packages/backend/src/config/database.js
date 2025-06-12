@@ -1,10 +1,32 @@
 const { PrismaClient } = require('@prisma/client');
 
-// Create a single instance that will be used throughout the app
-const prisma = new PrismaClient({
-  log: process.env.NODE_ENV === 'development' ? ['query', 'info', 'warn', 'error'] : ['error'],
-  errorFormat: 'pretty',
-});
+let prisma;
+
+if (process.env.NODE_ENV === 'production') {
+  const user = process.env.DB_USER;
+  const password = process.env.DB_PASSWORD;
+  const database = process.env.DB_NAME;
+  const host = process.env.DB_SOCKET_PATH;
+  
+  const connectionString = `postgresql://${user}:${password}@localhost/${database}?host=${host}`;
+
+  prisma = new PrismaClient({
+    datasources: {
+      db: {
+        url: connectionString,
+      },
+    },
+    log: ['error'],
+    errorFormat: 'pretty',
+  });
+
+} else {
+  // Configuración para desarrollo
+  prisma = new PrismaClient({
+    log: ['query', 'info', 'warn', 'error'],
+    errorFormat: 'pretty',
+  });
+}
 
 const connectDB = async () => {
   try {

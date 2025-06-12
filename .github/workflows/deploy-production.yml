@@ -95,7 +95,7 @@ jobs:
         --service-account menuview-run@${{ env.GCP_PROJECT_ID }}.iam.gserviceaccount.com
         --set-cloudsql-instances ${{ env.GCP_PROJECT_ID }}:${{ env.GCP_REGION }}:menuview-db
         --set-env-vars NODE_ENV=production,FRONTEND_URL=https://menuview.app
-        --set-secrets DATABASE_URL=database-url:latest,JWT_SECRET=jwt-secret:latest,SUPER_USER_EMAIL=super-user-email:latest,SUPER_USER_PASSWORD=super-user-password:latest,GCP_PROJECT_ID=gcp-project-id:latest,GCP_STORAGE_BUCKET=gcp-storage-bucket:latest,DB_PASSWORD=database-password:latest
+        --set-secrets JWT_SECRET=jwt-secret:latest,SUPER_USER_EMAIL=super-user-email:latest,SUPER_USER_PASSWORD=super-user-password:latest,GCP_PROJECT_ID=gcp-project-id:latest,GCP_STORAGE_BUCKET=gcp-storage-bucket:latest,DB_USER=db-user:latest,DB_PASSWORD=database-password:latest,DB_NAME=db-name:latest,DB_SOCKET_PATH=db-socket-path:latest
         --memory 1Gi
         --cpu 1
         --min-instances 1
@@ -141,7 +141,7 @@ jobs:
           --region ${{ env.GCP_REGION }} \
           --service-account menuview-run@${{ env.GCP_PROJECT_ID }}.iam.gserviceaccount.com \
           --set-cloudsql-instances ${{ env.GCP_PROJECT_ID }}:${{ env.GCP_REGION }}:menuview-db \
-          --set-secrets DATABASE_URL=database-url:latest,DB_PASSWORD=database-password:latest \
+          --set-secrets DB_USER=db-user:latest,DB_PASSWORD=database-password:latest,DB_NAME=db-name:latest,DB_SOCKET_PATH=db-socket-path:latest \
           --command npx \
           --args prisma,migrate,deploy,--schema=./prisma/schema.prisma \
           --max-retries 3 \
@@ -183,7 +183,7 @@ jobs:
           --region ${{ env.GCP_REGION }} \
           --service-account menuview-run@${{ env.GCP_PROJECT_ID }}.iam.gserviceaccount.com \
           --set-cloudsql-instances ${{ env.GCP_PROJECT_ID }}:${{ env.GCP_REGION }}:menuview-db \
-          --set-secrets DATABASE_URL=database-url:latest,DB_PASSWORD=database-password:latest \
+          --set-secrets DB_USER=db-user:latest,DB_PASSWORD=database-password:latest,DB_NAME=db-name:latest,DB_SOCKET_PATH=db-socket-path:latest \
           --command npm \
           --args run,db:seed:prod \
           --max-retries 3 \
