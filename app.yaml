@@ -1,6 +1,10 @@
-service: default
 runtime: nodejs20
+env: standard
+
 instance_class: F1
+
+env_variables:
+  DATABASE_URL: 'postgresql://postgres:JAFgQKBgQDZTW@/menuview_db?host=/cloudsql/digital-menu-455517:us-central1:digital-menu-db'
 
 handlers:
   - url: /.*
@@ -12,12 +16,26 @@ automatic_scaling:
   max_instances: 1
   target_cpu_utilization: 0.65
 
-beta_settings:
-  cloud_sql_instances: "digital-menu-455517:us-central1:digital-menu-db"
-
-env_variables:
-  NODE_ENV: "production"
-  DATABASE_URL: 'postgresql://postgres:JAFgQKBgQDZTW@/menuview_db?host=/cloudsql/digital-menu-455517:us-central1:digital-menu-db'
-  GCP_STORAGE_BUCKET: "digital-menu-455517-media"
+# The following section is not needed if DATABASE_URL is set directly
+# beta_settings:
+#   cloud_sql_instances: digital-menu-455517:us-central1:digital-menu-db
 
 # Force redeploy to fetch latest secrets 
+
+health_check:
+  enable_health_check: true
+  check_interval_sec: 30
+  timeout_sec: 4
+  unhealthy_threshold: 2
+  healthy_threshold: 2
+  restart_threshold: 4
+  path: "/health"
+
+readiness_check:
+  enable_readiness_check: true
+  check_interval_sec: 30
+  timeout_sec: 4
+  unhealthy_threshold: 2
+  healthy_threshold: 2
+  app_start_timeout_sec: 300
+  path: "/health" 
