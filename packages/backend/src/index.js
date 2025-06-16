@@ -178,35 +178,12 @@ app.use(notFound);
 // Error handling middleware
 app.use(errorHandler);
 
-// Function to run migrations and start the server
-const startServer = async () => {
-  try {
-    // Solo ejecutar migraciones en entornos que no sean de desarrollo para evitar problemas
-    if (process.env.NODE_ENV !== 'development') {
-      console.log('🚀 Running database migrations...');
-      // Usar npx para asegurar que se encuentre el ejecutable de prisma
-      execSync('npx prisma migrate deploy', { stdio: 'inherit' });
-      console.log('✅ Migrations completed.');
-
-      console.log('🌱 Seeding database...');
-      execSync('npx prisma db seed', { stdio: 'inherit' });
-      console.log('🌳 Seeding completed.');
-    }
-
-    // Start server
-    app.listen(PORT, () => {
-      console.log(`🚀 Server ready at: http://localhost:${PORT}`);
-      console.log(`📱 Environment: ${process.env.NODE_ENV || 'development'}`);
-      console.log(`🔗 Health check: http://localhost:${PORT}/health`);
-      console.log(`📖 API docs: http://localhost:${PORT}/api`);
-    });
-  } catch (error) {
-    console.error('❌ Failed to start server:', error);
-    process.exit(1);
-  }
-};
-
-// Start the server process
-startServer();
+// Start server
+app.listen(PORT, () => {
+  console.log(`🚀 Server ready at: http://localhost:${PORT}`);
+  console.log(`📱 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`🔗 Health check: http://localhost:${PORT}/health`);
+  console.log(`📖 API docs: http://localhost:${PORT}/api`);
+});
 
 module.exports = app; 
