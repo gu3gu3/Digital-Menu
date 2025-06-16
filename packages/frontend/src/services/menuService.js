@@ -1,6 +1,4 @@
-import { API_ENDPOINTS } from '../config/api'
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+import API_BASE_URL from '../config/api'
 
 class MenuService {
   // Obtener menú público por slug
@@ -39,15 +37,12 @@ class MenuService {
   async getSession(sessionToken) {
     try {
       const response = await fetch(`${API_BASE_URL}/api/sessions/${sessionToken}`)
-      const data = await response.json()
-      
       if (!response.ok) {
-        throw new Error(data.error || 'Error obteniendo sesión')
+        throw new Error('La sesión no fue encontrada o es inválida.');
       }
-      
-      return data.data.sesion
+      return await response.json()
     } catch (error) {
-      console.error('Error en getSession:', error)
+      console.error("Error al obtener la sesión:", error);
       throw error
     }
   }
@@ -90,14 +85,8 @@ class MenuService {
       const response = await fetch(`${API_BASE_URL}/api/cart/${sessionToken}/item/${itemId}`, {
         method: 'DELETE'
       })
-
-      const data = await response.json()
-      
-      if (!response.ok) {
-        throw new Error(data.error || 'Error eliminando del carrito')
-      }
-      
-      return data.data
+      if (!response.ok) throw new Error('Error eliminando item del carrito');
+      return await response.json()
     } catch (error) {
       console.error('Error en removeFromCart:', error)
       throw error
@@ -110,14 +99,8 @@ class MenuService {
       const response = await fetch(`${API_BASE_URL}/api/cart/${sessionToken}/clear`, {
         method: 'DELETE'
       })
-
-      const data = await response.json()
-      
-      if (!response.ok) {
-        throw new Error(data.error || 'Error vaciando carrito')
-      }
-      
-      return data.data
+      if (!response.ok) throw new Error('Error vaciando el carrito');
+      return await response.json()
     } catch (error) {
       console.error('Error en clearCart:', error)
       throw error
@@ -147,9 +130,9 @@ class MenuService {
         await this.addToCart(sessionToken, item.productoId, item.cantidad)
       }
       
-      return { success: true, cartItems }
+      return await this.getCart(sessionToken)
     } catch (error) {
-      console.error('Error en updateSessionCart:', error)
+      console.error('Error al actualizar el carrito de la sesión:', error)
       throw error
     }
   }
@@ -160,16 +143,10 @@ class MenuService {
       const response = await fetch(`${API_BASE_URL}/api/sessions/${sessionToken}/close`, {
         method: 'POST'
       })
-
-      const data = await response.json()
-      
-      if (!response.ok) {
-        throw new Error(data.error || 'Error cerrando sesión')
-      }
-      
-      return data.data
+      if (!response.ok) throw new Error('Error al cerrar la sesión');
+      return await response.json()
     } catch (error) {
-      console.error('Error en closeSession:', error)
+      console.error('Error al cerrar la sesión:', error)
       throw error
     }
   }
@@ -184,8 +161,8 @@ class MenuService {
   async getOrderStatus(orderId) {
     const response = await fetch(`${API_BASE_URL}/api/public/orden/${orderId}`);
     if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Error obteniendo el estado de la orden' }));
-        throw new Error(errorData.error || 'Error obteniendo el estado de la orden');
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Error obteniendo estado de la orden');
     }
     const data = await response.json();
     return data.data;
@@ -195,10 +172,7 @@ class MenuService {
     const response = await fetch(`${API_BASE_URL}/api/orders/${orderId}/call`, {
       method: 'POST'
     });
-    if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Error llamando al mesero' }));
-        throw new Error(errorData.error || 'Error llamando al mesero');
-    }
+    if (!response.ok) throw new Error('Error al llamar al mesero');
     const data = await response.json();
     return data;
   }

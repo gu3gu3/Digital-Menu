@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import { 
   ClockIcon,
   CheckCircleIcon,
@@ -8,11 +9,14 @@ import {
   XMarkIcon,
   CreditCardIcon
 } from '@heroicons/react/24/outline';
+import API_BASE_URL from '../config/api';
 
 const OrderTracker = ({ ordenId, restauranteSlug, onClose }) => {
+  const { orderId } = useParams();
   const [orden, setOrden] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const API_URL = `${API_BASE_URL}/api`;
 
   // Configuración de estados con colores y iconos
   const estadosConfig = {
@@ -113,8 +117,7 @@ const OrderTracker = ({ ordenId, restauranteSlug, onClose }) => {
   const fetchOrden = async () => {
     try {
       setLoading(true);
-      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-      const response = await fetch(`${API_BASE_URL}/api/public/orden/${ordenId}`);
+      const response = await fetch(`${API_URL}/public/orden/${ordenId}`);
       const data = await response.json();
       
       if (response.ok) {

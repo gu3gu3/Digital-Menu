@@ -16,6 +16,8 @@ import {
 } from '@heroicons/react/24/outline'
 import logo from '../assets/logo.png'
 import NotificationBell from './NotificationBell'
+import API_BASE_URL from '../config/api'
+import { useAuth } from '../context/AuthContext'
 
 const AdminLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -24,6 +26,7 @@ const AdminLayout = () => {
   const [planInfo, setPlanInfo] = useState({ nombre: 'Cargando...' })
   const navigate = useNavigate()
   const location = useLocation()
+  const { logout } = useAuth()
 
   useEffect(() => {
     // Verificar autenticación
@@ -51,7 +54,7 @@ const AdminLayout = () => {
   const loadPlanInfo = async () => {
     try {
       const token = localStorage.getItem('adminToken')
-      const response = await fetch('http://localhost:3001/api/admin/stats', {
+      const response = await fetch(`${API_BASE_URL}/api/admin/stats`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -70,6 +73,7 @@ const AdminLayout = () => {
   const handleLogout = () => {
     localStorage.removeItem('adminToken')
     localStorage.removeItem('adminUser')
+    logout()
     navigate('/admin/login')
   }
 

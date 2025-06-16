@@ -9,6 +9,7 @@ import {
   TableCellsIcon,
   UsersIcon
 } from '@heroicons/react/24/outline'
+import API_BASE_URL from '../config/api'
 
 const AdminTablesPage = () => {
   const [mesas, setMesas] = useState([])
@@ -37,7 +38,7 @@ const AdminTablesPage = () => {
     setLoading(true)
     try {
       const token = localStorage.getItem('adminToken')
-      const response = await fetch('http://localhost:3001/api/tables', {
+      const response = await fetch(`${API_BASE_URL}/api/tables`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -67,8 +68,8 @@ const AdminTablesPage = () => {
     try {
       const token = localStorage.getItem('adminToken')
       const url = editingTable 
-        ? `http://localhost:3001/api/tables/${editingTable.id}`
-        : 'http://localhost:3001/api/tables'
+        ? `${API_BASE_URL}/api/tables/${editingTable.id}`
+        : `${API_BASE_URL}/api/tables`
       
       const method = editingTable ? 'PUT' : 'POST'
 
@@ -116,7 +117,7 @@ const AdminTablesPage = () => {
     setLoading(true)
     try {
       const token = localStorage.getItem('adminToken')
-      const response = await fetch(`http://localhost:3001/api/tables/${table.id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/tables/${table.id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -142,7 +143,7 @@ const AdminTablesPage = () => {
     setLoading(true)
     try {
       const token = localStorage.getItem('adminToken')
-      const response = await fetch(`http://localhost:3001/api/tables/${table.id}/qr`, {
+      const response = await fetch(`${API_BASE_URL}/api/tables/${table.id}/qr`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -169,7 +170,7 @@ const AdminTablesPage = () => {
     setLoading(true)
     try {
       const token = localStorage.getItem('adminToken')
-      const response = await fetch('http://localhost:3001/api/tables/qr/all', {
+      const response = await fetch(`${API_BASE_URL}/api/tables/qr/all`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }

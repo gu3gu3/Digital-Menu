@@ -14,8 +14,7 @@ import {
 } from '@heroicons/react/24/outline';
 import OrderStatusBadge from '../components/OrderStatusBadge';
 import OrderDetailsModal from '../components/OrderDetailsModal';
-import ordersService from '../services/ordersService';
-import sessionsService from '../services/sessionsService';
+import apiRequest from '../services/api';
 
 const AdminOrdersPage = () => {
   const [orders, setOrders] = useState([]);
@@ -67,8 +66,9 @@ const AdminOrdersPage = () => {
       if (activeTab !== 'all') {
         queryFilters.estado = activeTab;
       }
-
-      const response = await ordersService.getOrders(queryFilters);
+      
+      const query = new URLSearchParams(queryFilters).toString();
+      const response = await apiRequest(`/orders?${query}`);
       setOrders(response.data?.orders || response.orders || []);
     } catch (error) {
       console.error('Error loading orders:', error);
@@ -80,7 +80,7 @@ const AdminOrdersPage = () => {
 
   const loadStats = async () => {
     try {
-      const response = await ordersService.getOrderStats('today');
+      const response = await apiRequest('/orders/stats?period=today');
       setStats(response.data || response);
     } catch (error) {
       console.error('Error loading stats:', error);
@@ -89,7 +89,7 @@ const AdminOrdersPage = () => {
 
   const loadActiveSessions = async () => {
     try {
-      const response = await sessionsService.getActiveSessions();
+      const response = await apiRequest('/sessions/active');
       setActiveSessions(response.data?.sessions || response.sessions || []);
     } catch (error) {
       console.error('Error loading active sessions:', error);

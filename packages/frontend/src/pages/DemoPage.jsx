@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { ArrowLeftIcon, ShoppingCartIcon, PlusIcon, MinusIcon } from '@heroicons/react/24/outline'
 import { MapPinIcon, PhoneIcon } from '@heroicons/react/24/solid'
+import API_BASE_URL from '../config/api'
 
 const DemoPage = () => {
   const [menuData, setMenuData] = useState(null)
@@ -10,12 +11,12 @@ const DemoPage = () => {
   const [showCart, setShowCart] = useState(false)
 
   useEffect(() => {
-    fetchDemoData()
+    fetchDemoMenu()
   }, [])
 
-  const fetchDemoData = async () => {
+  const fetchDemoMenu = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/menu/demo')
+      const response = await fetch(`${API_BASE_URL}/api/menu/demo`)
       const data = await response.json()
       
       if (data.success) {
