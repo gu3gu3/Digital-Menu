@@ -5,7 +5,10 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
-require('dotenv').config();
+// Load env vars only in development
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv').config();
+}
 
 const { errorHandler, notFound } = require('./middleware/errorMiddleware');
 const { connectDB } = require('./config/database');
