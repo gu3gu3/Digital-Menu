@@ -20,6 +20,22 @@ automatic_scaling:
 # beta_settings:
 #   cloud_sql_instances: digital-menu-455517:us-central1:digital-menu-db
 
+# Correct health check configuration for App Engine Standard (nodejs20)
+liveness_check:
+  path: "/health"
+  check_interval_sec: 30
+  timeout_sec: 4
+  failure_threshold: 2
+  success_threshold: 2
+
+readiness_check:
+  path: "/health"
+  check_interval_sec: 5
+  timeout_sec: 4
+  failure_threshold: 2
+  success_threshold: 2
+  app_start_timeout_sec: 300
+
 # Force redeploy to fetch latest secrets 
 
 health_check:
@@ -29,13 +45,4 @@ health_check:
   unhealthy_threshold: 2
   healthy_threshold: 2
   restart_threshold: 4
-  path: "/health"
-
-readiness_check:
-  enable_readiness_check: true
-  check_interval_sec: 30
-  timeout_sec: 4
-  unhealthy_threshold: 2
-  healthy_threshold: 2
-  app_start_timeout_sec: 300
   path: "/health" 
