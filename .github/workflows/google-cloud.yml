@@ -1,21 +1,23 @@
-name: Deploy to Cloud Run
+name: Deploy Backend to Cloud Run
 
 on:
   push:
     branches:
       - main
+  workflow_dispatch: # Allows manual triggering
 
 env:
   PROJECT_ID: digital-menu-455517
   GAR_LOCATION: us-central1
   SERVICE_NAME: digital-menu-backend
+  REPO_NAME: digitalmenu # The name of the Artifact Registry repository
   REGION: us-central1
+  INSTANCE_NAME: digital-menu-db # The name of the Cloud SQL instance
 
 jobs:
-  deploy:
-    name: Build and Deploy to Cloud Run
+  build-and-deploy:
+    name: Build and Deploy Backend
     runs-on: ubuntu-latest
-
     permissions:
       contents: 'read'
       id-token: 'write'
@@ -33,26 +35,18 @@ jobs:
       - name: Set up Cloud SDK
         uses: 'google-github-actions/setup-gcloud@v2'
 
-      - name: Authorize Docker push
-        run: gcloud auth configure-docker ${{ env.GAR_LOCATION }}-docker.pkg.dev
-
-      - name: Build and push Docker image
+      - name: Build and Push Docker image with Cloud Build
+        id: build
         run: |-
-          docker build --tag "${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.SERVICE_NAME }}:${{ github.sha }}" .
-          docker push "${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.SERVICE_NAME }}:${{ github.sha }}"
+          gcloud builds submit --tag "${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.SERVICE_NAME }}:${{ github.sha }}" .
 
       - name: Deploy to Cloud Run
         id: deploy
-        uses: google-github-actions/deploy-cloudrun@v2
-        with:
-          service: ${{ env.SERVICE_NAME }}
-          region: ${{ env.REGION }}
-          image: ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
-          platform: 'managed'
-          allow_unauthenticated: true
-          min_instances: 0
-          max_instances: 1
-          cloud_sql_instances: '${{ env.PROJECT_ID }}:${{ env.REGION }}:digital-menu-db'
-
-      - name: Show Cloud Run URL
-        run: echo "Deployment successful. URL: ${{ steps.deploy.outputs.url }}" 
+        run: |-
+          gcloud run deploy ${{ env.SERVICE_NAME }} \
+            --image "${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.SERVICE_NAME }}:${{ github.sha }}" \
+            --region ${{ env.REGION }} \
+            --add-cloudsql-instances=${{ env.PROJECT_ID }}:${{ env.REGION }}:${{ env.INSTANCE_NAME }} \
+            --update-secrets=DATABASE_URL=DATABASE_URL:latest \
+            --allow-unauthenticated \
+            --project=${{ env.PROJECT_ID }}

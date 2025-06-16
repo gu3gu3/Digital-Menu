@@ -1,19 +1,19 @@
-# Guía de Despliegue y Migración
+# Guía de Despliegue y Migración con Cloud Run
 
-Este documento explica el flujo de trabajo para desplegar nuevos cambios en la aplicación y actualizar la base de datos en producción (Google App Engine y Cloud SQL).
+Este documento explica el flujo de trabajo para desplegar nuevos cambios en la aplicación y actualizar la base de datos en producción (Google Cloud Run y Cloud SQL).
 
 ## Resumen del Flujo
 
 El proceso se ha separado en dos partes para mayor estabilidad y control:
 
-1.  **Despliegue de la Aplicación (Automático):** Subir cambios a la rama `main` de GitHub despliega automáticamente el código de la aplicación en App Engine.
+1.  **Despliegue del Backend (Automático):** Subir cambios a la rama `main` de GitHub despliega automáticamente el código del backend en Cloud Run.
 2.  **Migración de la Base de Datos (Manual):** Los cambios en la estructura de la base de datos (crear tablas, añadir columnas, etc.) se aplican manualmente a través de Google Cloud Shell.
 
 ---
 
 ## Escenario 1: Cambios que NO Afectan a la Base de Datos
 
-Si tus cambios son solo en el frontend o en la lógica del backend (que no tocan el `schema.prisma`), el proceso es simple.
+Si tus cambios son solo en la lógica del backend (que no tocan el `schema.prisma`), el proceso es simple.
 
 1.  **Haz `push` a `main`:**
     ```bash
@@ -21,7 +21,7 @@ Si tus cambios son solo en el frontend o en la lógica del backend (que no tocan
     git commit -m "feat: descripción de tus cambios"
     git push origin main
     ```
-2.  **Listo:** El pipeline de CI/CD en GitHub Actions se encargará de todo. Tu nueva versión estará en línea en unos minutos.
+2.  **Listo:** El pipeline de CI/CD en GitHub Actions se encargará de todo. Tu nueva versión del backend estará en línea en unos minutos.
 
 ---
 
@@ -46,7 +46,7 @@ Este es el flujo para cuando modificas el archivo `prisma/schema.prisma`.
     git commit -m "feat: añade campo X a la tabla Y"
     git push origin main
     ```
-2.  **Espera a que termine el deploy:** Ve a la pestaña "Actions" en GitHub y espera a que el workflow termine con éxito (✔️). En este punto, tu nueva aplicación ya está en línea, pero es posible que muestre errores porque la base de datos de producción aún no tiene los cambios.
+2.  **Espera a que termine el deploy:** Ve a la pestaña "Actions" en GitHub y espera a que el workflow del backend termine con éxito (✔️). En este punto, tu nueva aplicación ya está en línea, pero es posible que muestre errores porque la base de datos de producción aún no tiene los cambios.
 
 ### Paso 3: Aplica la Migración a la Base de Datos de Producción (Manual)
 
@@ -86,8 +86,8 @@ Este es el flujo para cuando modificas el archivo `prisma/schema.prisma`.
         npx prisma db seed
         ```
 
-3.  **Verifica:** Tu aplicación ahora debería funcionar correctamente. Visita las URLs para confirmar.
-    *   `https://digital-menu-455517.uc.r.appspot.com/health`
-    *   `https://digital-menu-455517.uc.r.appspot.com/api/public`
+3.  **Verifica:** Tu aplicación ahora debería funcionar correctamente. Visita la URL de tu servicio de Cloud Run para confirmar.
+    *   `https://digital-menu-backend-vp3nyx3twq-uc.a.run.app/`
+    *   `https://digital-menu-backend-vp3nyx3twq-uc.a.run.app/api/public`
 
 ¡Y eso es todo! Este proceso te da un control total y seguro sobre tu entorno de producción. 

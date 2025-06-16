@@ -17,9 +17,15 @@
     "db:studio": "npm run db:studio --workspace=backend"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "firebase-tools": "^14.7.0"
   },
-  "keywords": ["qr", "menu", "restaurant", "digital"],
+  "keywords": [
+    "qr",
+    "menu",
+    "restaurant",
+    "digital"
+  ],
   "author": "Digital Menu Team",
   "license": "MIT"
-} 
+}
