@@ -39,14 +39,6 @@ app.set('trust proxy', 1);
 const PORT = process.env.PORT || 3001;
 
 // =================================================================
-//  DIAGNÓSTICO: Imprimir la variable de entorno al arrancar
-// =================================================================
-console.log('--- INICIO DE DIAGNÓSTICO DE VARIABLES DE ENTORNO ---');
-console.log(`DATABASE_URL (leída por Node.js): ${process.env.DATABASE_URL}`);
-console.log('--- FIN DE DIAGNÓSTICO ---');
-// =================================================================
-
-// =================================================================
 //  Middleware Setup
 // =================================================================
 
