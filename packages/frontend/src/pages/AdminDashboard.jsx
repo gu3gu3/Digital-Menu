@@ -70,7 +70,10 @@ const AdminDashboard = () => {
   }
 
   const getUsagePercentage = (current, limit) => {
-    return Math.min((current / limit) * 100, 100)
+    if (limit === 0) {
+      return 0; // Si el límite es 0 (ilimitado), el uso es 0%
+    }
+    return Math.min((current / limit) * 100, 100);
   }
 
   const getUsageColor = (percentage) => {
@@ -139,12 +142,12 @@ const AdminDashboard = () => {
               <p className="text-sm font-medium text-gray-500">Productos</p>
               <div className="flex items-baseline">
                 <p className="text-2xl font-semibold text-gray-900">{stats.productos}</p>
-                <span className="ml-2 text-sm text-gray-500">/ {stats.plan.limiteProductos}</span>
+                <span className="ml-2 text-sm text-gray-500">/ {stats.plan?.limiteProductos === 0 ? '∞' : stats.plan?.limiteProductos || '∞'}</span>
               </div>
               <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
                 <div 
                   className="bg-primary-500 h-2 rounded-full"
-                  style={{ width: `${getUsagePercentage(stats.productos, stats.plan.limiteProductos)}%` }}
+                  style={{ width: `${getUsagePercentage(stats.productos, stats.plan?.limiteProductos || 0)}%` }}
                 />
               </div>
             </div>
@@ -160,12 +163,14 @@ const AdminDashboard = () => {
               <p className="text-sm font-medium text-gray-500">Mesas</p>
               <div className="flex items-baseline">
                 <p className="text-2xl font-semibold text-gray-900">{stats.mesas}</p>
-                <span className="ml-2 text-sm text-gray-500">/ {stats.plan.limiteMesas}</span>
+                <span className="ml-2 text-sm text-gray-500">
+                  / {stats.plan?.limiteMesas === 0 ? '∞' : stats.plan?.limiteMesas || '∞'}
+                </span>
               </div>
               <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
                 <div 
                   className="bg-secondary-500 h-2 rounded-full"
-                  style={{ width: `${getUsagePercentage(stats.mesas, stats.plan.limiteMesas)}%` }}
+                  style={{ width: `${getUsagePercentage(stats.mesas, stats.plan?.limiteMesas || 0)}%` }}
                 />
               </div>
             </div>
@@ -194,35 +199,19 @@ const AdminDashboard = () => {
               <p className="text-sm font-medium text-gray-500">Meseros</p>
               <div className="flex items-baseline">
                 <p className="text-2xl font-semibold text-gray-900">{stats.meseros}</p>
-                <span className="ml-2 text-sm text-gray-500">/ {stats.plan.limiteMeseros}</span>
+                 <span className="ml-2 text-sm text-gray-500">
+                  / {stats.plan?.limiteMeseros === 0 ? '∞' : stats.plan?.limiteMeseros || '∞'}
+                </span>
               </div>
               <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
                 <div 
                   className="bg-purple-500 h-2 rounded-full"
-                  style={{ width: `${getUsagePercentage(stats.meseros, stats.plan.limiteMeseros)}%` }}
+                  style={{ width: `${getUsagePercentage(stats.meseros, stats.plan?.limiteMeseros || 0)}%` }}
                 />
               </div>
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Usage Alerts */}
-      <div className="space-y-3">
-        {getUsagePercentage(stats.productos, stats.plan.limiteProductos) >= 80 && (
-          <div className={`p-4 rounded-lg ${getUsageColor(getUsagePercentage(stats.productos, stats.plan.limiteProductos))}`}>
-            <p className="text-sm font-medium">
-              ⚠️ Te estás acercando al límite de productos ({stats.productos}/{stats.plan.limiteProductos})
-            </p>
-          </div>
-        )}
-        {getUsagePercentage(stats.mesas, stats.plan.limiteMesas) >= 80 && (
-          <div className={`p-4 rounded-lg ${getUsageColor(getUsagePercentage(stats.mesas, stats.plan.limiteMesas))}`}>
-            <p className="text-sm font-medium">
-              ⚠️ Te estás acercando al límite de mesas ({stats.mesas}/{stats.plan.limiteMesas})
-            </p>
-          </div>
-        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -316,50 +305,38 @@ const AdminDashboard = () => {
             )}
           </div>
         </div>
-      </div>
 
-      {/* Plan Information */}
-      <div className="bg-gradient-to-r from-primary-50 to-secondary-50 rounded-lg p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-lg font-medium text-gray-900">{stats.plan.nombre}</h3>
-            <p className="text-sm text-gray-600">
-              {stats.plan.nombre === 'Plan Gratuito' 
-                ? 'Disfruta de todas las funciones básicas sin costo'
-                : stats.plan.nombre === 'Plan Básico'
-                ? 'Plan con funciones esenciales para tu restaurante'
-                : stats.plan.nombre === 'Plan Premium'
-                ? 'Todas las funciones avanzadas para tu negocio'
-                : `Actualmente tienes el ${stats.plan.nombre}`
-              }
-            </p>
+        {/* Plan Info */}
+        <div className="bg-white rounded-lg shadow">
+          <div className="p-6 border-b border-gray-200">
+            <h2 className="text-lg font-medium text-gray-900">{stats.plan?.nombre || 'Plan Básico'}</h2>
+            <p className="text-sm text-gray-500">Plan con funciones esenciales para tu restaurante</p>
           </div>
-          <button 
-            onClick={() => {
-              // Temporalmente mostramos un alert, luego se puede conectar a una página de planes
-              alert('Funcionalidad de planes próximamente disponible');
-            }}
-            className="px-4 py-2 bg-gradient-to-r from-primary-600 to-secondary-600 text-white rounded-lg hover:from-primary-700 hover:to-secondary-700 transition-colors"
-          >
-            Explorar Planes
-          </button>
-        </div>
-        <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="text-center">
-            <p className="text-2xl font-bold text-primary-600">{stats.plan.limiteProductos}</p>
-            <p className="text-sm text-gray-600">Productos</p>
+          <div className="p-6 grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+            <div>
+              <p className="text-2xl font-bold text-gray-900">{stats.plan?.limiteProductos === 0 ? '∞' : stats.plan?.limiteProductos || '∞'}</p>
+              <p className="text-sm text-gray-500">Productos</p>
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-gray-900">{stats.plan?.limiteMesas === 0 ? '∞' : stats.plan?.limiteMesas || '∞'}</p>
+              <p className="text-sm text-gray-500">Mesas</p>
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-gray-900">{stats.plan?.limiteMeseros === 0 ? '∞' : stats.plan?.limiteMeseros || '∞'}</p>
+              <p className="text-sm text-gray-500">Meseros</p>
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-gray-900">{stats.plan?.limiteOrdenes === 0 ? '∞' : stats.plan?.limiteOrdenes || '∞'}</p>
+              <p className="text-sm text-gray-500">Órdenes/mes</p>
+            </div>
           </div>
-          <div className="text-center">
-            <p className="text-2xl font-bold text-secondary-600">{stats.plan.limiteMesas}</p>
-            <p className="text-sm text-gray-600">Mesas</p>
-          </div>
-          <div className="text-center">
-            <p className="text-2xl font-bold text-purple-600">{stats.plan.limiteMeseros}</p>
-            <p className="text-sm text-gray-600">Meseros</p>
-          </div>
-          <div className="text-center">
-            <p className="text-2xl font-bold text-blue-600">{stats.plan.limiteOrdenes}</p>
-            <p className="text-sm text-gray-600">Órdenes/mes</p>
+          <div className="p-6 border-t border-gray-200 text-right">
+             <button
+              onClick={() => navigate('/admin/billing')} // Asumiendo que esta será la ruta
+              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+            >
+              Explorar Planes
+            </button>
           </div>
         </div>
       </div>

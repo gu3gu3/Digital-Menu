@@ -37,7 +37,7 @@ const getOrders = async (req, res) => {
       const endDate = new Date(fecha);
       endDate.setDate(endDate.getDate() + 1);
       
-      where.fechaOrden = {
+      where.createdAt = {
         gte: startDate,
         lt: endDate
       };
@@ -47,20 +47,8 @@ const getOrders = async (req, res) => {
     if (search) {
       where.OR = [
         {
-          numeroOrden: {
-            contains: search,
-            mode: 'insensitive'
-          }
-        },
-        {
-          nombreClienteFactura: {
-            contains: search,
-            mode: 'insensitive'
-          }
-        },
-        {
           mesa: {
-            numero: {
+            nombre: {
               contains: search,
               mode: 'insensitive'
             }
@@ -101,7 +89,7 @@ const getOrders = async (req, res) => {
         }
       },
       orderBy: {
-        fechaOrden: 'desc'
+        createdAt: 'desc'
       },
       take: parseInt(limit),
       skip: parseInt(offset)
@@ -219,8 +207,6 @@ const updateOrderStatus = async (req, res) => {
       data: {
         estado: status,
         notas: notas || order.notas,
-        updatedAt: new Date(),
-        ...(status === 'COMPLETADA' && { fechaCompletada: new Date() })
       },
       include: {
         mesa: true,
@@ -241,16 +227,20 @@ const updateOrderStatus = async (req, res) => {
       }
     });
 
-    // Si la orden se marca como COMPLETADA, cerrar la sesión
-    if (status === 'COMPLETADA' && updatedOrder.sesion) {
+    // Si la orden se marca como COMPLETADA o CANCELADA, cerrar la sesión
+    if ((status === 'COMPLETADA' || status === 'CANCELADA') && updatedOrder.sesion) {
+      console.log(`🔄 Cerrando sesión ${updatedOrder.sesion.id} porque orden cambió a ${status}`);
       await prisma.sesion.update({
         where: { id: updatedOrder.sesion.id },
         data: {
-          estado: 'CERRADA',
+          activa: false,
           finSesion: new Date(),
           ultimaActividad: new Date()
         }
       });
+      console.log(`✅ Sesión ${updatedOrder.sesion.id} cerrada exitosamente`);
+    } else {
+      console.log(`ℹ️ No se cerró sesión: status=${status}, sesion=${!!updatedOrder.sesion}`);
     }
 
     res.json({
@@ -354,8 +344,8 @@ const takeOrder = async (req, res) => {
     const { restauranteId, id: meseroId, role } = req.user;
     const { id } = req.params;
 
-    // Solo meseros pueden tomar órdenes
-    if (role !== 'MESERO') {
+    // Solo meseros y administradores pueden tomar órdenes
+    if (role !== 'MESERO' && role !== 'ADMINISTRADOR') {
       return res.status(403).json({
         success: false,
         error: 'Solo los meseros pueden tomar órdenes'
@@ -385,14 +375,23 @@ const takeOrder = async (req, res) => {
       });
     }
 
+    // Si es un administrador, solo cambiar el estado sin asignar mesero
+    // Si es un mesero, asignar el mesero
+    const updateData = {
+      // Si la orden estaba en estado ENVIADA, cambiarla a RECIBIDA
+      estado: order.estado === 'ENVIADA' ? 'RECIBIDA' : order.estado,
+      updatedAt: new Date()
+    };
+
+    // Solo asignar mesero si el usuario es un mesero
+    if (role === 'MESERO') {
+      updateData.meseroId = meseroId;
+    }
+    // Si es administrador, no asignar mesero automáticamente
+
     const updatedOrder = await prisma.orden.update({
       where: { id: id },
-      data: {
-        meseroId: meseroId,
-        // Si la orden estaba en estado ENVIADA, cambiarla a RECIBIDA
-        estado: order.estado === 'ENVIADA' ? 'RECIBIDA' : order.estado,
-        updatedAt: new Date()
-      },
+      data: updateData,
       include: {
         mesa: true,
         sesion: true,
@@ -459,7 +458,7 @@ const getOrderStats = async (req, res) => {
 
     const where = {
       restauranteId: restauranteId,
-      fechaOrden: {
+      createdAt: {
         gte: startDate,
         lt: endDate
       }
@@ -553,7 +552,7 @@ const getOrdersByMesa = async (req, res) => {
         }
       },
       orderBy: {
-        fechaOrden: 'desc'
+        createdAt: 'desc'
       }
     });
 
@@ -600,7 +599,7 @@ const getRecentOrders = async (req, res) => {
         }
       },
       orderBy: {
-        fechaOrden: 'desc'
+        createdAt: 'desc'
       },
       take: parseInt(limit)
     });
@@ -663,6 +662,50 @@ const deleteOrder = async (req, res) => {
   }
 };
 
+// @desc    Notificar para llamar a un mesero
+// @route   POST /api/orders/:id/call
+// @access  Public
+const callWaiter = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // 1. Obtener la orden para saber la mesa y el restaurante
+    const order = await prisma.orden.findUnique({
+      where: { id },
+      include: { mesa: true },
+    });
+
+    if (!order) {
+      return res.status(404).json({ success: false, error: 'Orden no encontrada' });
+    }
+
+    const { restauranteId, mesa } = order;
+    const notificationKey = `call-waiter-mesa-${mesa.id}`;
+
+    // 2. Crear (o actualizar) una notificación usando upsert
+    await prisma.notificacionUsuario.upsert({
+      where: { notificationKey },
+      update: {
+        createdAt: new Date(), // Actualiza la fecha para que aparezca como nueva
+        leida: false,
+      },
+      create: {
+        restauranteId,
+        notificationKey,
+        tipo: 'CALL', // Un nuevo tipo para identificar estas llamadas
+        titulo: `Mesa ${mesa.numero} solicita atención`,
+        mensaje: `Un cliente en la mesa ${mesa.nombre} (#${mesa.numero}) ha solicitado la presencia de un mesero.`,
+      },
+    });
+
+    res.status(200).json({ success: true, message: 'Se ha notificado al personal.' });
+
+  } catch (error) {
+    console.error('Error al llamar al mesero:', error);
+    res.status(500).json({ success: false, error: 'Error interno del servidor' });
+  }
+};
+
 // Routes
 router.get('/', authenticate, requireStaff, getOrders);
 router.get('/stats', authenticate, requireStaff, getOrderStats);
@@ -673,5 +716,6 @@ router.put('/:id/status', authenticate, requireStaff, updateOrderStatus);
 router.put('/:id/assign', authenticate, requireStaff, assignMeseroToOrder);
 router.put('/:id/take', authenticate, requireStaff, takeOrder);
 router.delete('/:id', authenticate, requireStaff, deleteOrder);
+router.post('/:id/call', callWaiter);
 
 module.exports = router; 

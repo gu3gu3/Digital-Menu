@@ -392,27 +392,48 @@ const deleteMesero = async (req, res) => {
   }
 };
 
-// @desc    Get meseros stats
+// @desc    Get staff statistics
 // @route   GET /api/staff/stats
 // @access  Private (Admin)
 const getStaffStats = async (req, res) => {
   try {
-    const { restauranteId, restaurante } = req.user;
+    const { userId } = req.user;
 
-    const [totalMeseros, meserosActivos, meseroCount] = await Promise.all([
-      prisma.usuarioMesero.count({
-        where: { restauranteId }
-      }),
-      prisma.usuarioMesero.count({
-        where: { 
-          restauranteId,
-          activo: true 
+    // Get user's restaurant with plan info to ensure consistency
+    const admin = await prisma.usuarioAdmin.findUnique({
+      where: { id: userId },
+      include: { 
+        restaurante: {
+          include: {
+            plan: true
+          }
         }
-      }),
-      prisma.usuarioMesero.count({
-        where: { restauranteId }
-      })
-    ]);
+      }
+    });
+
+    if (!admin || !admin.restaurante) {
+      return res.status(404).json({
+        success: false,
+        error: 'Restaurante no encontrado para el usuario'
+      });
+    }
+
+    const restauranteId = admin.restaurante.id;
+
+    const totalMeseros = await prisma.usuarioMesero.count({
+      where: { restauranteId },
+    });
+
+    const meserosActivos = await prisma.usuarioMesero.count({
+      where: { restauranteId, activo: true },
+    });
+
+    const limitePlan = admin.restaurante.plan.limiteMeseros;
+    
+    // Treat a limit of 0 as unlimited
+    const disponibles = limitePlan === 0 
+      ? Infinity 
+      : Math.max(0, limitePlan - totalMeseros);
 
     // Set no-cache headers
     res.set({
@@ -426,15 +447,13 @@ const getStaffStats = async (req, res) => {
       data: {
         totalMeseros,
         meserosActivos,
-        meserosInactivos: totalMeseros - meserosActivos,
-        limitePlan: restaurante.plan.limiteMeseros,
-        disponibles: restaurante.plan.limiteMeseros - meseroCount,
-        porcentajeUso: Math.round((meseroCount / restaurante.plan.limiteMeseros) * 100)
+        limitePlan,
+        disponibles,
       }
     });
 
   } catch (error) {
-    console.error('Error obteniendo estadísticas de personal:', error);
+    console.error('Error obteniendo estadísticas del personal:', error);
     res.status(500).json({
       success: false,
       error: 'Error interno del servidor'

@@ -29,6 +29,34 @@ const sendNotificationSchema = Joi.object({
   mensaje: Joi.string().min(1).required()
 });
 
+const planSchema = Joi.object({
+  nombre: Joi.string().min(3).required(),
+  precio: Joi.number().min(0).required(),
+  limiteProductos: Joi.number().integer().min(-1).required(),
+  limiteCategorias: Joi.number().integer().min(-1).required(),
+  limiteMeseros: Joi.number().integer().min(-1).required(),
+  limiteMesas: Joi.number().integer().min(-1).required(),
+  limiteOrdenes: Joi.number().integer().min(-1).required(),
+  soporteEmail: Joi.boolean().required(),
+  soporteChat: Joi.boolean().required(),
+  analiticas: Joi.boolean().required(),
+  activo: Joi.boolean().optional()
+});
+
+const updatePlanSchema = Joi.object({
+  nombre: Joi.string().min(3).optional(),
+  precio: Joi.number().min(0).optional(),
+  limiteProductos: Joi.number().integer().min(-1).optional(),
+  limiteCategorias: Joi.number().integer().min(-1).optional(),
+  limiteMeseros: Joi.number().integer().min(-1).optional(),
+  limiteMesas: Joi.number().integer().min(-1).optional(),
+  limiteOrdenes: Joi.number().integer().min(-1).optional(),
+  soporteEmail: Joi.boolean().optional(),
+  soporteChat: Joi.boolean().optional(),
+  analiticas: Joi.boolean().optional(),
+  activo: Joi.boolean().optional()
+});
+
 /**
  * GET /api/super-admin/subscriptions
  * Obtener todas las suscripciones con filtros
@@ -55,7 +83,9 @@ router.get('/', authenticateSuperAdmin, async (req, res) => {
     }
     
     if (planId) {
-      where.planId = planId;
+      where.restaurante = {
+        planId: planId
+      };
     }
 
     // Filtro por vencimiento próximo
@@ -93,16 +123,14 @@ router.get('/', authenticateSuperAdmin, async (req, res) => {
               email: true,
               slug: true,
               activo: true,
-              createdAt: true
-            }
-          },
-          plan: {
-            select: {
-              id: true,
-              nombre: true,
-              precio: true,
-              limiteProductos: true,
-              limiteMesas: true
+              createdAt: true,
+              plan: {
+                select: {
+                  id: true,
+                  nombre: true,
+                  precio: true
+                }
+              }
             }
           },
           historialPagos: {
@@ -229,7 +257,7 @@ router.get('/stats', authenticateSuperAdmin, async (req, res) => {
       }),
       
       // Suscripciones por plan
-      prisma.suscripcion.groupBy({
+      prisma.restaurante.groupBy({
         by: ['planId'],
         _count: {
           id: true
@@ -248,8 +276,7 @@ router.get('/stats', authenticateSuperAdmin, async (req, res) => {
     }, {});
 
     const suscripcionesPorPlanConNombres = suscripcionesPorPlan.map(item => ({
-      planId: item.planId,
-      planNombre: planesMap[item.planId] || 'Plan Desconocido',
+      nombre: planesMap[item.planId] || 'Plan Desconocido',
       cantidad: item._count.id
     }));
 
@@ -291,12 +318,15 @@ router.get('/plans', authenticateSuperAdmin, async (req, res) => {
       select: {
         id: true,
         nombre: true,
-        descripcion: true,
         precio: true,
         limiteProductos: true,
-        limiteMesas: true,
+        limiteCategorias: true,
         limiteMeseros: true,
-        limiteOrdenes: true
+        limiteMesas: true,
+        limiteOrdenes: true,
+        soporteEmail: true,
+        soporteChat: true,
+        analiticas: true
       },
       orderBy: { precio: 'asc' }
     });
@@ -891,19 +921,21 @@ router.get('/plans/all', authenticateSuperAdmin, async (req, res) => {
       select: {
         id: true,
         nombre: true,
-        descripcion: true,
         precio: true,
         limiteProductos: true,
-        limiteMesas: true,
+        limiteCategorias: true,
         limiteMeseros: true,
+        limiteMesas: true,
         limiteOrdenes: true,
+        soporteEmail: true,
+        soporteChat: true,
+        analiticas: true,
         activo: true,
         createdAt: true,
         updatedAt: true,
         _count: {
           select: {
-            restaurantes: true,
-            suscripciones: true
+            restaurantes: true
           }
         }
       },
@@ -931,18 +963,7 @@ router.get('/plans/all', authenticateSuperAdmin, async (req, res) => {
 router.post('/plans', authenticateSuperAdmin, async (req, res) => {
   try {
     // Validar entrada
-    const createPlanSchema = Joi.object({
-      nombre: Joi.string().min(1).max(100).required(),
-      descripcion: Joi.string().max(500).optional(),
-      precio: Joi.number().min(0).required(),
-      limiteProductos: Joi.number().integer().min(-1).required(), // -1 = ilimitado
-      limiteMesas: Joi.number().integer().min(-1).required(),
-      limiteMeseros: Joi.number().integer().min(-1).required(),
-      limiteOrdenes: Joi.number().integer().min(-1).required(),
-      activo: Joi.boolean().default(true)
-    });
-
-    const { error, value } = createPlanSchema.validate(req.body);
+    const { error, value } = planSchema.validate(req.body);
     if (error) {
       return res.status(400).json({
         success: false,
@@ -992,17 +1013,6 @@ router.put('/plans/:id', authenticateSuperAdmin, async (req, res) => {
     const { id } = req.params;
 
     // Validar entrada
-    const updatePlanSchema = Joi.object({
-      nombre: Joi.string().min(1).max(100).optional(),
-      descripcion: Joi.string().max(500).optional(),
-      precio: Joi.number().min(0).optional(),
-      limiteProductos: Joi.number().integer().min(-1).optional(),
-      limiteMesas: Joi.number().integer().min(-1).optional(),
-      limiteMeseros: Joi.number().integer().min(-1).optional(),
-      limiteOrdenes: Joi.number().integer().min(-1).optional(),
-      activo: Joi.boolean().optional()
-    });
-
     const { error, value } = updatePlanSchema.validate(req.body);
     if (error) {
       return res.status(400).json({
@@ -1018,8 +1028,7 @@ router.put('/plans/:id', authenticateSuperAdmin, async (req, res) => {
       include: {
         _count: {
           select: {
-            restaurantes: true,
-            suscripciones: true
+            restaurantes: true
           }
         }
       }
@@ -1081,8 +1090,7 @@ router.delete('/plans/:id', authenticateSuperAdmin, async (req, res) => {
       include: {
         _count: {
           select: {
-            restaurantes: true,
-            suscripciones: true
+            restaurantes: true
           }
         }
       }
@@ -1096,13 +1104,12 @@ router.delete('/plans/:id', authenticateSuperAdmin, async (req, res) => {
     }
 
     // Verificar que no tiene restaurantes o suscripciones activas
-    if (plan._count.restaurantes > 0 || plan._count.suscripciones > 0) {
+    if (plan._count.restaurantes > 0) {
       return res.status(400).json({
         success: false,
-        message: 'No se puede eliminar un plan que tiene restaurantes o suscripciones asociadas. Desactive el plan en su lugar.',
+        message: 'No se puede eliminar un plan que tiene restaurantes asociados. Desactive el plan en su lugar.',
         data: {
-          restaurantesAsociados: plan._count.restaurantes,
-          suscripcionesAsociadas: plan._count.suscripciones
+          restaurantesAsociados: plan._count.restaurantes
         }
       });
     }
@@ -1188,23 +1195,16 @@ router.get('/plans/:id/usage', authenticateSuperAdmin, async (req, res) => {
     }
 
     // Obtener estadísticas de uso
-    const [restaurantesCount, suscripcionesCount, suscripcionesActivas, ingresosTotales] = await Promise.all([
+    const [restaurantesCount, ingresosTotales] = await Promise.all([
       prisma.restaurante.count({
         where: { planId: id }
-      }),
-      prisma.suscripcion.count({
-        where: { planId: id }
-      }),
-      prisma.suscripcion.count({
-        where: { 
-          planId: id,
-          estado: 'ACTIVA'
-        }
       }),
       prisma.historialPago.aggregate({
         where: {
           suscripcion: {
-            planId: id
+            restaurante: {
+              planId: id
+            }
           }
         },
         _sum: {
@@ -1233,8 +1233,6 @@ router.get('/plans/:id/usage', authenticateSuperAdmin, async (req, res) => {
         plan,
         estadisticas: {
           restaurantesAsociados: restaurantesCount,
-          totalSuscripciones: suscripcionesCount,
-          suscripcionesActivas: suscripcionesActivas,
           ingresosTotales: ingresosTotales._sum.monto || 0
         },
         restaurantesRecientes

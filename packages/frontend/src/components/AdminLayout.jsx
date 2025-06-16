@@ -11,9 +11,11 @@ import {
   ArrowRightOnRectangleIcon,
   Bars3Icon,
   XMarkIcon,
-  LinkIcon
+  LinkIcon,
+  BellIcon as BellIconOutline
 } from '@heroicons/react/24/outline'
 import logo from '../assets/logo.png'
+import NotificationBell from './NotificationBell'
 
 const AdminLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -76,6 +78,7 @@ const AdminLayout = () => {
     { name: 'Restaurante', href: '/admin/restaurant', icon: BuildingStorefrontIcon },
     { name: 'Menú', href: '/admin/menu', icon: RectangleStackIcon },
     { name: 'Órdenes', href: '/admin/orders', icon: ClipboardDocumentListIcon },
+    { name: 'Notificaciones', href: '/admin/notifications', icon: BellIconOutline },
     { name: 'Mesas & QR', href: '/admin/tables', icon: QrCodeIcon },
     { name: 'Meseros', href: '/admin/staff', icon: UsersIcon },
     { name: 'Configuración', href: '/admin/settings', icon: Cog6ToothIcon },
@@ -221,6 +224,7 @@ const AdminLayout = () => {
             </div>
 
             <div className="flex items-center space-x-3">
+              <NotificationBell />
               <div className="hidden sm:block text-right">
                 <p className="text-sm font-medium text-gray-900">
                   {user.nombre || 'Administrador'}

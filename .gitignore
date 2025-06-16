@@ -36,4 +36,4 @@ Thumbs.db
 # Build output
 /dist
 /out
-/build 
+/build gcp-credentials.json

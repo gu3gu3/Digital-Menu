@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { EyeIcon, EyeSlashIcon, UserIcon } from '@heroicons/react/24/outline';
 import logo from '../assets/logo.png';
-import api from '../services/api';
+import authService from '../services/authService.js';
 
 const StaffLoginPage = () => {
   const [formData, setFormData] = useState({
@@ -17,20 +17,15 @@ const StaffLoginPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
+    setError(null);
 
     try {
-      const response = await api.post('/auth/login', {
-        ...formData,
-        role: 'MESERO'
-      });
-
-      if (response.success) {
-        // Store auth data
+      const response = await authService.login({ email: formData.email, password: formData.password, role: 'MESERO' });
+      
+      if (response && response.data) {
         localStorage.setItem('staffToken', response.data.token);
         localStorage.setItem('staffUser', JSON.stringify(response.data.user));
         
-        // Navigate to staff dashboard
         navigate('/staff/dashboard');
       } else {
         setError(response.error || 'Error al iniciar sesión');

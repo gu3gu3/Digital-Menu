@@ -15,7 +15,9 @@ model Plan {
   precio           Float
   limiteProductos  Int
   limiteCategorias Int
-  limiteUsuarios   Int
+  limiteMeseros    Int          @default(0) // Renombrado desde limiteUsuarios
+  limiteMesas      Int          @default(0) // Límite de mesas
+  limiteOrdenes    Int          @default(0) // Límite de órdenes mensuales
   soporteEmail     Boolean      @default(false)
   soporteChat      Boolean      @default(false)
   analiticas       Boolean      @default(false)
@@ -86,6 +88,7 @@ model UsuarioMesero {
   password          String
   nombre            String
   apellido          String?
+  telefono          String?
   pin               String?
   activo            Boolean      @default(true)
   lastLogin         DateTime?
@@ -94,6 +97,7 @@ model UsuarioMesero {
 
   restauranteId     String
   restaurante       Restaurante  @relation(fields: [restauranteId], references: [id], onDelete: Cascade)
+  ordenes           Orden[]      // Un mesero puede tener muchas órdenes asignadas
   
   @@map("usuarios_mesero")
 }
@@ -110,8 +114,8 @@ model Mesa {
 
   restauranteId     String
   restaurante       Restaurante  @relation(fields: [restauranteId], references: [id], onDelete: Cascade)
-  ordenes           Orden[]
-  sesiones          Sesion[]
+  ordenes           Orden[]      // Una mesa puede tener muchas órdenes
+  sesiones          Sesion[]     // Una mesa puede tener muchas sesiones
 
   @@unique([restauranteId, numero])
   @@map("mesas")
@@ -153,6 +157,7 @@ model Producto {
   restauranteId     String
   restaurante       Restaurante  @relation(fields: [restauranteId], references: [id], onDelete: Cascade)
 
+  @@unique([restauranteId, nombre])
   @@map("productos")
 }
 
@@ -164,15 +169,22 @@ model Orden {
   impuestos         Float        @default(0)
   total             Float
   notas             String?
+  nombreClienteFactura String?
   createdAt         DateTime     @default(now())
   updatedAt         DateTime     @updatedAt
 
   restauranteId     String
   restaurante       Restaurante  @relation(fields: [restauranteId], references: [id], onDelete: Cascade)
+  
   mesaId            String
   mesa              Mesa         @relation(fields: [mesaId], references: [id])
+  
   sesionId          String?
   sesion            Sesion?      @relation(fields: [sesionId], references: [id])
+
+  meseroId          String?
+  mesero            UsuarioMesero? @relation(fields: [meseroId], references: [id], onDelete: SetNull)
+  
   items             ItemOrden[]
 
   @@unique([restauranteId, numeroOrden])
@@ -199,6 +211,12 @@ model Sesion {
   activa            Boolean      @default(true)
   createdAt         DateTime     @default(now())
   
+  clienteNombre     String?
+  clienteTelefono   String?
+  numeroPersonas    Int?
+  ultimaActividad   DateTime?
+  finSesion         DateTime?
+
   mesaId            String
   mesa              Mesa         @relation(fields: [mesaId], references: [id])
   restauranteId     String
@@ -264,6 +282,7 @@ model NotificacionUsuario {
   mensaje           String       @db.Text
   leida             Boolean      @default(false)
   createdAt         DateTime     @default(now())
+  notificationKey   String?      @unique // Para evitar notificaciones duplicadas (ej: "limit-mesas")
 
   restauranteId     String
   restaurante       Restaurante  @relation(fields: [restauranteId], references: [id])

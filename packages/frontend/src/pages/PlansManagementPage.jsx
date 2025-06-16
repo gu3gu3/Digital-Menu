@@ -19,12 +19,15 @@ const PlansManagementPage = () => {
   // Form data
   const [formData, setFormData] = useState({
     nombre: '',
-    descripcion: '',
     precio: '',
     limiteProductos: '',
-    limiteMesas: '',
+    limiteCategorias: '',
     limiteMeseros: '',
+    limiteMesas: '',
     limiteOrdenes: '',
+    soporteEmail: false,
+    soporteChat: false,
+    analiticas: false,
     activo: true
   });
 
@@ -51,14 +54,19 @@ const PlansManagementPage = () => {
   const resetForm = () => {
     setFormData({
       nombre: '',
-      descripcion: '',
       precio: '',
       limiteProductos: '',
-      limiteMesas: '',
+      limiteCategorias: '',
       limiteMeseros: '',
+      limiteMesas: '',
       limiteOrdenes: '',
+      soporteEmail: false,
+      soporteChat: false,
+      analiticas: false,
       activo: true
     });
+    setShowEditModal(false);
+    setSelectedPlan(null);
   };
 
   const handleInputChange = (e) => {
@@ -81,9 +89,10 @@ const PlansManagementPage = () => {
         ...formData,
         precio: parseFloat(formData.precio),
         limiteProductos: parseInt(formData.limiteProductos) || -1,
-        limiteMesas: parseInt(formData.limiteMesas) || -1,
+        limiteCategorias: parseInt(formData.limiteCategorias) || -1,
         limiteMeseros: parseInt(formData.limiteMeseros) || -1,
-        limiteOrdenes: parseInt(formData.limiteOrdenes) || -1
+        limiteMesas: parseInt(formData.limiteMesas) || -1,
+        limiteOrdenes: parseInt(formData.limiteOrdenes) || -1,
       };
 
       await superAdminService.createPlan(planData);
@@ -114,16 +123,16 @@ const PlansManagementPage = () => {
         ...formData,
         precio: parseFloat(formData.precio),
         limiteProductos: parseInt(formData.limiteProductos) || -1,
-        limiteMesas: parseInt(formData.limiteMesas) || -1,
+        limiteCategorias: parseInt(formData.limiteCategorias) || -1,
         limiteMeseros: parseInt(formData.limiteMeseros) || -1,
-        limiteOrdenes: parseInt(formData.limiteOrdenes) || -1
+        limiteMesas: parseInt(formData.limiteMesas) || -1,
+        limiteOrdenes: parseInt(formData.limiteOrdenes) || -1,
       };
 
       await superAdminService.updatePlan(selectedPlan.id, planData);
       setSuccess('Plan actualizado exitosamente');
       setShowEditModal(false);
       resetForm();
-      setSelectedPlan(null);
       fetchPlans();
       
       // Limpiar mensaje de éxito después de 3 segundos
@@ -176,12 +185,15 @@ const PlansManagementPage = () => {
     setSelectedPlan(plan);
     setFormData({
       nombre: plan.nombre,
-      descripcion: plan.descripcion || '',
       precio: plan.precio.toString(),
       limiteProductos: plan.limiteProductos === -1 ? '' : plan.limiteProductos.toString(),
-      limiteMesas: plan.limiteMesas === -1 ? '' : plan.limiteMesas.toString(),
+      limiteCategorias: plan.limiteCategorias === -1 ? '' : plan.limiteCategorias.toString(),
       limiteMeseros: plan.limiteMeseros === -1 ? '' : plan.limiteMeseros.toString(),
+      limiteMesas: plan.limiteMesas === -1 ? '' : plan.limiteMesas.toString(),
       limiteOrdenes: plan.limiteOrdenes === -1 ? '' : plan.limiteOrdenes.toString(),
+      soporteEmail: plan.soporteEmail,
+      soporteChat: plan.soporteChat,
+      analiticas: plan.analiticas,
       activo: plan.activo
     });
     setShowEditModal(true);
@@ -199,6 +211,90 @@ const PlansManagementPage = () => {
   const formatPrice = (price) => {
     return `$${parseFloat(price).toFixed(2)}`;
   };
+
+  const renderFormFields = () => (
+    <>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label htmlFor="nombre" className="block text-sm font-medium text-gray-700">Nombre del Plan</label>
+          <input type="text" name="nombre" id="nombre" value={formData.nombre} onChange={handleInputChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required />
+        </div>
+        <div>
+          <label htmlFor="precio" className="block text-sm font-medium text-gray-700">Precio (USD)</label>
+          <input type="number" name="precio" id="precio" step="0.01" value={formData.precio} onChange={handleInputChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required />
+        </div>
+      </div>
+
+      <div className="mt-6">
+        <h3 className="text-lg font-medium text-gray-900">Límites de Recursos</h3>
+        <p className="text-sm text-gray-500">Dejar en blanco o poner -1 para ilimitado.</p>
+        <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div>
+            <label htmlFor="limiteProductos" className="block text-sm font-medium text-gray-700">Productos</label>
+            <input type="number" name="limiteProductos" id="limiteProductos" value={formData.limiteProductos} onChange={handleInputChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Ilimitado si se deja vacío" />
+          </div>
+          <div>
+            <label htmlFor="limiteCategorias" className="block text-sm font-medium text-gray-700">Categorías</label>
+            <input type="number" name="limiteCategorias" id="limiteCategorias" value={formData.limiteCategorias} onChange={handleInputChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Ilimitado si se deja vacío" />
+          </div>
+          <div>
+            <label htmlFor="limiteMeseros" className="block text-sm font-medium text-gray-700">Meseros</label>
+            <input type="number" name="limiteMeseros" id="limiteMeseros" value={formData.limiteMeseros} onChange={handleInputChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Ilimitado si se deja vacío" />
+          </div>
+          <div>
+            <label htmlFor="limiteMesas" className="block text-sm font-medium text-gray-700">Mesas</label>
+            <input type="number" name="limiteMesas" id="limiteMesas" value={formData.limiteMesas} onChange={handleInputChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Ilimitado si se deja vacío" />
+          </div>
+          <div>
+            <label htmlFor="limiteOrdenes" className="block text-sm font-medium text-gray-700">Órdenes Mensuales</label>
+            <input type="number" name="limiteOrdenes" id="limiteOrdenes" value={formData.limiteOrdenes} onChange={handleInputChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Ilimitado si se deja vacío" />
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-6">
+        <h3 className="text-lg font-medium text-gray-900">Características Adicionales</h3>
+        <div className="mt-4 space-y-4">
+          <div className="flex items-start">
+            <div className="flex items-center h-5">
+              <input id="soporteEmail" name="soporteEmail" type="checkbox" checked={formData.soporteEmail} onChange={handleInputChange} className="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded" />
+            </div>
+            <div className="ml-3 text-sm">
+              <label htmlFor="soporteEmail" className="font-medium text-gray-700">Soporte por Email</label>
+            </div>
+          </div>
+          <div className="flex items-start">
+            <div className="flex items-center h-5">
+              <input id="soporteChat" name="soporteChat" type="checkbox" checked={formData.soporteChat} onChange={handleInputChange} className="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded" />
+            </div>
+            <div className="ml-3 text-sm">
+              <label htmlFor="soporteChat" className="font-medium text-gray-700">Soporte por Chat</label>
+            </div>
+          </div>
+          <div className="flex items-start">
+            <div className="flex items-center h-5">
+              <input id="analiticas" name="analiticas" type="checkbox" checked={formData.analiticas} onChange={handleInputChange} className="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded" />
+            </div>
+            <div className="ml-3 text-sm">
+              <label htmlFor="analiticas" className="font-medium text-gray-700">Analíticas Avanzadas</label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-6">
+        <div className="flex items-start">
+          <div className="flex items-center h-5">
+            <input id="activo" name="activo" type="checkbox" checked={formData.activo} onChange={handleInputChange} className="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded" />
+          </div>
+          <div className="ml-3 text-sm">
+            <label htmlFor="activo" className="font-medium text-gray-700">Plan Activo</label>
+            <p className="text-gray-500">Los planes inactivos no se pueden asignar a nuevas suscripciones.</p>
+          </div>
+        </div>
+      </div>
+    </>
+  );
 
   if (loading) {
     return (
@@ -308,18 +404,14 @@ const PlansManagementPage = () => {
                           <div className="text-sm text-gray-500">{plan.descripcion}</div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">
-                          {plan.precio === 0 ? 'Gratuito' : formatPrice(plan.precio)}
-                        </div>
-                        <div className="text-sm text-gray-500">por mes</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-xs text-gray-600 space-y-1">
-                          <div>Productos: {formatLimit(plan.limiteProductos)}</div>
-                          <div>Mesas: {formatLimit(plan.limiteMesas)}</div>
-                          <div>Meseros: {formatLimit(plan.limiteMeseros)}</div>
-                          <div>Órdenes: {formatLimit(plan.limiteOrdenes)}/mes</div>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatPrice(plan.precio)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-sm text-gray-500">
+                          <span>Productos: {formatLimit(plan.limiteProductos)}</span>
+                          <span>Categorías: {formatLimit(plan.limiteCategorias)}</span>
+                          <span>Meseros: {formatLimit(plan.limiteMeseros)}</span>
+                          <span>Mesas: {formatLimit(plan.limiteMesas)}</span>
+                          <span>Órdenes: {formatLimit(plan.limiteOrdenes)}</span>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -407,132 +499,7 @@ const PlansManagementPage = () => {
               </div>
 
               <form onSubmit={handleCreatePlan} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Nombre del Plan *
-                    </label>
-                    <input
-                      type="text"
-                      name="nombre"
-                      value={formData.nombre}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                      placeholder="Ej: Plan Premium"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Precio (USD) *
-                    </label>
-                    <input
-                      type="number"
-                      name="precio"
-                      value={formData.precio}
-                      onChange={handleInputChange}
-                      required
-                      min="0"
-                      step="0.01"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                      placeholder="0.00"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Descripción
-                  </label>
-                  <textarea
-                    name="descripcion"
-                    value={formData.descripcion}
-                    onChange={handleInputChange}
-                    rows="3"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    placeholder="Descripción del plan"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Límite Productos
-                    </label>
-                    <input
-                      type="number"
-                      name="limiteProductos"
-                      value={formData.limiteProductos}
-                      onChange={handleInputChange}
-                      min="-1"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                      placeholder="Vacío = Ilimitado"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">-1 o vacío = Ilimitado</p>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Límite Mesas
-                    </label>
-                    <input
-                      type="number"
-                      name="limiteMesas"
-                      value={formData.limiteMesas}
-                      onChange={handleInputChange}
-                      min="-1"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                      placeholder="Vacío = Ilimitado"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">-1 o vacío = Ilimitado</p>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Límite Meseros
-                    </label>
-                    <input
-                      type="number"
-                      name="limiteMeseros"
-                      value={formData.limiteMeseros}
-                      onChange={handleInputChange}
-                      min="-1"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                      placeholder="Vacío = Ilimitado"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">-1 o vacío = Ilimitado</p>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Límite Órdenes/mes
-                    </label>
-                    <input
-                      type="number"
-                      name="limiteOrdenes"
-                      value={formData.limiteOrdenes}
-                      onChange={handleInputChange}
-                      min="-1"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                      placeholder="Vacío = Ilimitado"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">-1 o vacío = Ilimitado</p>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      name="activo"
-                      checked={formData.activo}
-                      onChange={handleInputChange}
-                      className="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                    />
-                    <span className="ml-2 text-sm text-gray-700">Plan activo</span>
-                  </label>
-                </div>
+                {renderFormFields()}
 
                 <div className="flex justify-end space-x-3 pt-4">
                   <button
@@ -574,132 +541,7 @@ const PlansManagementPage = () => {
               </div>
 
               <form onSubmit={handleEditPlan} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Nombre del Plan *
-                    </label>
-                    <input
-                      type="text"
-                      name="nombre"
-                      value={formData.nombre}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                      placeholder="Ej: Plan Premium"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Precio (USD) *
-                    </label>
-                    <input
-                      type="number"
-                      name="precio"
-                      value={formData.precio}
-                      onChange={handleInputChange}
-                      required
-                      min="0"
-                      step="0.01"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                      placeholder="0.00"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Descripción
-                  </label>
-                  <textarea
-                    name="descripcion"
-                    value={formData.descripcion}
-                    onChange={handleInputChange}
-                    rows="3"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    placeholder="Descripción del plan"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Límite Productos
-                    </label>
-                    <input
-                      type="number"
-                      name="limiteProductos"
-                      value={formData.limiteProductos}
-                      onChange={handleInputChange}
-                      min="-1"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                      placeholder="Vacío = Ilimitado"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">-1 o vacío = Ilimitado</p>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Límite Mesas
-                    </label>
-                    <input
-                      type="number"
-                      name="limiteMesas"
-                      value={formData.limiteMesas}
-                      onChange={handleInputChange}
-                      min="-1"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                      placeholder="Vacío = Ilimitado"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">-1 o vacío = Ilimitado</p>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Límite Meseros
-                    </label>
-                    <input
-                      type="number"
-                      name="limiteMeseros"
-                      value={formData.limiteMeseros}
-                      onChange={handleInputChange}
-                      min="-1"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                      placeholder="Vacío = Ilimitado"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">-1 o vacío = Ilimitado</p>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Límite Órdenes/mes
-                    </label>
-                    <input
-                      type="number"
-                      name="limiteOrdenes"
-                      value={formData.limiteOrdenes}
-                      onChange={handleInputChange}
-                      min="-1"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                      placeholder="Vacío = Ilimitado"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">-1 o vacío = Ilimitado</p>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      name="activo"
-                      checked={formData.activo}
-                      onChange={handleInputChange}
-                      className="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                    />
-                    <span className="ml-2 text-sm text-gray-700">Plan activo</span>
-                  </label>
-                </div>
+                {renderFormFields()}
 
                 <div className="flex justify-end space-x-3 pt-4">
                   <button

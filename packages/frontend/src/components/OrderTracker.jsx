@@ -113,7 +113,8 @@ const OrderTracker = ({ ordenId, restauranteSlug, onClose }) => {
   const fetchOrden = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/public/orden/${ordenId}`);
+      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+      const response = await fetch(`${API_BASE_URL}/api/public/orden/${ordenId}`);
       const data = await response.json();
       
       if (response.ok) {
@@ -296,7 +297,7 @@ const OrderTracker = ({ ordenId, restauranteSlug, onClose }) => {
             </div>
             <div>
               <p className="text-sm text-gray-600">Hora de pedido</p>
-              <p className="font-medium">{formatTime(orden.fechaOrden)}</p>
+                              <p className="font-medium">{formatTime(orden.createdAt)}</p>
             </div>
             <div>
               <p className="text-sm text-gray-600">Items</p>

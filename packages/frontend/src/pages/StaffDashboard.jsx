@@ -15,7 +15,9 @@ import {
 } from '@heroicons/react/24/outline';
 import OrderDetailsModal from '../components/OrderDetailsModal';
 import OrderStatusBadge from '../components/OrderStatusBadge';
+import NotificationBell from '../components/NotificationBell';
 import ordersService from '../services/ordersService';
+import { notificationService } from '../services/notificationService';
 import logo from '../assets/logo.png';
 
 const StaffDashboard = () => {
@@ -29,6 +31,7 @@ const StaffDashboard = () => {
   const [activeFilter, setActiveFilter] = useState('all');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [autoRefresh, setAutoRefresh] = useState(true);
+  const [callNotifications, setCallNotifications] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -54,6 +57,7 @@ const StaffDashboard = () => {
     if (user) {
       loadOrders();
       loadStats();
+      loadCallNotifications();
 
       // Auto-refresh cada 15 segundos si está habilitado
       let interval;
@@ -61,6 +65,7 @@ const StaffDashboard = () => {
         interval = setInterval(() => {
           loadOrders();
           loadStats();
+          loadCallNotifications();
         }, 15000);
       }
 
@@ -104,6 +109,28 @@ const StaffDashboard = () => {
     }
   };
 
+  const loadCallNotifications = async () => {
+    try {
+      const response = await notificationService.getNotifications(5, 0);
+      if (response.success) {
+        // Solo mostrar notificaciones no leídas de tipo CALL
+        const callNotifs = response.data.notifications.filter(n => n.tipo === 'CALL' && !n.leida);
+        setCallNotifications(callNotifs);
+      }
+    } catch (error) {
+      console.error('Error loading call notifications:', error);
+    }
+  };
+
+  const handleCallNotificationRead = async (notificationId) => {
+    try {
+      await notificationService.markAsRead(notificationId);
+      loadCallNotifications(); // Refresh notifications
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+    }
+  };
+
   const handleOrderClick = (order) => {
     setSelectedOrder(order);
     setIsModalOpen(true);
@@ -134,10 +161,16 @@ const StaffDashboard = () => {
   };
 
   const formatTime = (dateString) => {
-    return new Date(dateString).toLocaleString('es-NI', {
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    if (!dateString) return 'N/A';
+    try {
+      return new Date(dateString).toLocaleString('es-NI', {
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (error) {
+      console.error('Error formatting time:', error);
+      return 'N/A';
+    }
   };
 
   const formatCurrency = (amount) => {
@@ -145,6 +178,7 @@ const StaffDashboard = () => {
   };
 
   const getTimeElapsed = (dateString) => {
+    if (!dateString) return 'N/A';
     const minutes = Math.floor((new Date() - new Date(dateString)) / (1000 * 60));
     if (minutes < 60) return `${minutes}m`;
     const hours = Math.floor(minutes / 60);
@@ -153,7 +187,8 @@ const StaffDashboard = () => {
   };
 
   const getOrderPriority = (order) => {
-    const minutes = Math.floor((new Date() - new Date(order.fechaOrden)) / (1000 * 60));
+    if (!order.createdAt) return 'normal';
+    const minutes = Math.floor((new Date() - new Date(order.createdAt)) / (1000 * 60));
     if (order.estado === 'EN_PREPARACION' && minutes > 30) return 'high';
     if (order.estado === 'ENVIADA' && minutes > 15) return 'medium';
     return 'normal';
@@ -197,6 +232,9 @@ const StaffDashboard = () => {
             </div>
 
             <div className="flex items-center space-x-4">
+              {/* Notifications */}
+              <NotificationBell />
+
               {/* Auto-refresh toggle */}
               <button
                 onClick={() => setAutoRefresh(!autoRefresh)}
@@ -304,6 +342,42 @@ const StaffDashboard = () => {
           </div>
         </div>
 
+        {/* Call Notifications Section */}
+        {callNotifications.length > 0 && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center">
+                <BellIcon className="h-5 w-5 text-red-600 mr-2" />
+                <h3 className="text-lg font-semibold text-red-800">
+                  ¡Clientes necesitan atención! ({callNotifications.length})
+                </h3>
+              </div>
+            </div>
+            <div className="space-y-2">
+              {callNotifications.map((notification) => (
+                <div key={notification.id} className="bg-white rounded-lg p-3 flex items-center justify-between border border-red-200">
+                  <div className="flex-1">
+                    <p className="font-medium text-gray-900">{notification.titulo}</p>
+                    <p className="text-sm text-gray-600">{notification.mensaje}</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {new Date(notification.createdAt).toLocaleString('es-NI', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => handleCallNotificationRead(notification.id)}
+                    className="ml-4 px-3 py-1 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition-colors"
+                  >
+                    Atendido
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Filters */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
           <div className="flex flex-wrap gap-2">
@@ -383,24 +457,21 @@ const StaffDashboard = () => {
                       <div className="flex-1">
                         <div className="flex items-center space-x-3">
                           <h3 className="text-lg font-semibold text-gray-900">
-                            Orden #{order.numeroOrden.split('-').pop()}
+                            Orden #{order.numeroOrden || 'N/A'} • Mesa {order.mesa?.numero || 'N/A'}
                           </h3>
-                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                            Mesa {order.mesa?.numero}
-                          </span>
                           <OrderStatusBadge status={order.estado} size="sm" />
                         </div>
                         <div className="mt-1 text-sm text-gray-600">
                           <span>Cliente: {order.nombreClienteFactura || order.sesion?.clienteNombre || 'Cliente anónimo'}</span>
                           <span className="mx-2">•</span>
-                          <span>{formatTime(order.fechaOrden)}</span>
+                          <span>{formatTime(order.createdAt)}</span>
                           <span className="mx-2">•</span>
                           <span className={`font-medium ${
                             priority === 'high' ? 'text-red-600' :
                             priority === 'medium' ? 'text-yellow-600' :
                             'text-gray-600'
                           }`}>
-                            {getTimeElapsed(order.fechaOrden)}
+                            {getTimeElapsed(order.createdAt)}
                           </span>
                         </div>
                         <div className="mt-1 text-sm text-gray-500">

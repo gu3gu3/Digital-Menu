@@ -13,6 +13,7 @@ import { API_ENDPOINTS, getImageUrl } from '../config/api'
 import menuService from '../services/menuService'
 import OrderStatusBanner from '../components/OrderStatusBanner'
 import { formatMenuPrice, formatOrderTotal } from '../utils/currencyUtils'
+import NamePromptModal from '../components/NamePromptModal'
 
 const PublicMenuPage = () => {
   const { slug } = useParams()
@@ -27,9 +28,9 @@ const PublicMenuPage = () => {
   const [error, setError] = useState('')
 
   // Estados del carrito y sesión
-  const [carrito, setCarrito] = useState([])
+  const [cart, setCart] = useState(null)
   const [sesionId, setSesionId] = useState(null)
-  const [currentOrdenId, setCurrentOrdenId] = useState(null) // Nuevo estado para seguimiento
+  const [currentOrdenId, setCurrentOrdenId] = useState(null)
   const [submittingOrder, setSubmittingOrder] = useState(false)
   const [orderSubmitted, setOrderSubmitted] = useState(false)
 
@@ -37,14 +38,19 @@ const PublicMenuPage = () => {
   const [showCart, setShowCart] = useState(false)
   const [notification, setNotification] = useState(null)
   const [showOrderModal, setShowOrderModal] = useState(false)
-  const [orderDetails, setOrderDetails] = useState({
-    nombreCliente: '',
-    notas: ''
-  })
+  const [customerName, setCustomerName] = useState('')
+  const [isNameModalOpen, setIsNameModalOpen] = useState(false)
+  const [orderNotes, setOrderNotes] = useState('')
 
   useEffect(() => {
     if (slug) {
       loadMenu()
+      const savedName = localStorage.getItem(`customerName_${slug}_${mesaNumero}`)
+      if (savedName) {
+        setCustomerName(savedName)
+      } else {
+        setTimeout(() => setIsNameModalOpen(true), 500)
+      }
     }
   }, [slug])
 
@@ -83,18 +89,22 @@ const PublicMenuPage = () => {
 
   const initializeSession = async () => {
     try {
-      const sesion = await menuService.createOrResumeSession(
-        slug, 
-        mesaNumero, 
-        { mesaNumero: parseInt(mesaNumero) }
-      )
+      const sesion = await menuService.createOrResumeSession(slug, mesaNumero)
+      setSesionId(sesion.id)
       
-      setSesionId(sesion.sessionToken)
-      
-      // Cargar carrito existente de la sesión
-      if (sesion.metadata?.carrito) {
-        setCarrito(sesion.metadata.carrito)
+      // Si hay un nombre guardado y la sesión no lo tiene, actualizarla
+      const savedName = localStorage.getItem(`customerName_${slug}_${mesaNumero}`)
+      if (savedName && !sesion.clienteNombre) {
+        try {
+          await menuService.updateSession(sesion.id, { clienteNombre: savedName })
+        } catch (error) {
+          console.error('Error updating session with saved name:', error)
+        }
       }
+      
+      const initialCart = await menuService.getCart(sesion.id)
+      setCart(initialCart)
+
     } catch (error) {
       console.error('Error initializing session:', error)
       showNotification('Error al inicializar la sesión', 'error')
@@ -108,27 +118,8 @@ const PublicMenuPage = () => {
 
   const addToCart = async (producto) => {
     try {
-      const productoIdStr = String(producto.id)
-      const existingItem = carrito.find(item => item.productoId === productoIdStr)
-      let newCarrito
-
-      if (existingItem) {
-        newCarrito = carrito.map(item =>
-          item.productoId === productoIdStr
-            ? { ...item, cantidad: item.cantidad + 1 }
-            : item
-        )
-      } else {
-        newCarrito = [...carrito, {
-          productoId: productoIdStr,
-          nombre: producto.nombre,
-          precio: producto.precio,
-          cantidad: 1
-        }]
-      }
-
-      setCarrito(newCarrito)
-      
+      const updatedCart = await menuService.addToCart(sesionId, producto.id, 1)
+      setCart(updatedCart)
       showNotification(`${producto.nombre} agregado al carrito`)
     } catch (error) {
       console.error('Error adding to cart:', error)
@@ -136,102 +127,79 @@ const PublicMenuPage = () => {
     }
   }
 
-  const updateQuantity = async (productoId, newQuantity) => {
+  const updateQuantity = async (itemId, newQuantity) => {
     try {
-      const productoIdStr = String(productoId)
-      let newCarrito
-      
-      if (newQuantity <= 0) {
-        newCarrito = carrito.filter(item => item.productoId !== productoIdStr)
-      } else {
-        newCarrito = carrito.map(item =>
-          item.productoId === productoIdStr
-            ? { ...item, cantidad: newQuantity }
-            : item
-        )
-      }
-
-      setCarrito(newCarrito)
-      
+      const updatedCart = await menuService.updateCartItem(sesionId, itemId, newQuantity);
+      setCart(updatedCart);
     } catch (error) {
       console.error('Error updating quantity:', error)
       showNotification('Error al actualizar cantidad', 'error')
     }
   }
 
+  const handleNameSubmit = async (name) => {
+    try {
+      setCustomerName(name)
+      localStorage.setItem(`customerName_${slug}_${mesaNumero}`, name)
+      
+      // Actualizar la sesión con el nombre del cliente
+      if (sesionId) {
+        await menuService.updateSession(sesionId, { clienteNombre: name })
+      }
+      
+      setIsNameModalOpen(false)
+      showNotification(`¡Hola, ${name}! Bienvenido.`, 'success')
+    } catch (error) {
+      console.error('Error updating session with customer name:', error)
+      // Aún así permitir continuar, solo mostrar advertencia
+      setCustomerName(name)
+      localStorage.setItem(`customerName_${slug}_${mesaNumero}`, name)
+      setIsNameModalOpen(false)
+      showNotification(`¡Hola, ${name}! Bienvenido.`, 'success')
+    }
+  }
+
   const showOrderConfirmation = () => {
-    if (carrito.length === 0) {
+    if (!cart || cart.items.length === 0) {
       showNotification('El carrito está vacío', 'error')
+      return
+    }
+    if (!customerName) {
+      setIsNameModalOpen(true)
+      showNotification('Por favor, ingresa un nombre para tu pedido', 'error')
       return
     }
     setShowOrderModal(true)
   }
 
   const confirmOrder = async () => {
+    if (!sesionId) {
+      showNotification('La sesión no es válida. Recarga la página.', 'error')
+      return
+    }
+    
     try {
       setSubmittingOrder(true)
+      const data = await menuService.confirmOrder(sesionId, {
+        nombreClienteFactura: customerName,
+        notas: orderNotes.trim() || undefined,
+      });
       
-      // Primero actualizar el carrito en la sesión
-      await fetch(`/api/cart/${sesionId}/clear`, { method: 'DELETE' })
+      setCurrentOrdenId(data.orden.id)
+      localStorage.setItem(`orden_${slug}_${mesaNumero}`, data.orden.id)
       
-      for (const item of carrito) {
-        const requestBody = {
-          productoId: String(item.productoId),
-          cantidad: item.cantidad
-        };
-        
-        // Solo agregar notas si no está vacío
-        if (item.notas && item.notas.trim()) {
-          requestBody.notas = item.notas.trim();
-        }
-        
-        await fetch(`/api/cart/${sesionId}/add`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(requestBody)
-        })
-      }
-      
-      // Luego confirmar la orden con los datos del modal
-      const response = await fetch(`/api/cart/${sesionId}/confirm`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          nombreClienteFactura: orderDetails.nombreCliente.trim() || undefined,
-          notas: orderDetails.notas.trim() || undefined
-        })
-      })
-
-      const data = await response.json()
-      
-      if (!response.ok) {
-        throw new Error(data.error || 'Error confirmando pedido')
-      }
-      
-      // Guardar ID de orden para seguimiento
-      setCurrentOrdenId(data.data.orden.id)
-      localStorage.setItem(`orden_${slug}_${mesaNumero}`, data.data.orden.id)
-      
-      // Limpiar carrito y cerrar modales
-      setCarrito([])
+      setCart(null)
       setShowOrderModal(false)
-      setOrderDetails({ nombreCliente: '', notas: '' })
-      setShowCart(false)
+      setOrderNotes('')
       
       setOrderSubmitted(true)
-      
       showNotification('¡Pedido enviado exitosamente!', 'success')
       
-      // Ocultar el mensaje de éxito después de 3 segundos
-      setTimeout(() => {
-        setOrderSubmitted(false)
-      }, 3000)
+      setTimeout(() => setOrderSubmitted(false), 3000)
 
     } catch (error) {
       console.error('Error confirming order:', error)
-      showNotification('Error al enviar el pedido. Intenta de nuevo.', 'error')
+      showNotification(error.message || 'Error al enviar el pedido. Intenta de nuevo.', 'error')
     } finally {
       setSubmittingOrder(false)
     }
@@ -243,11 +211,11 @@ const PublicMenuPage = () => {
   }
 
   const getTotalItems = () => {
-    return carrito.reduce((total, item) => total + item.cantidad, 0)
+    return cart?.items?.reduce((total, item) => total + item.cantidad, 0) || 0
   }
 
   const getTotalPrice = () => {
-    return carrito.reduce((total, item) => total + (item.precio * item.cantidad), 0)
+    return cart?.total || 0;
   }
 
   const formatCurrency = (amount) => {
@@ -306,6 +274,12 @@ const PublicMenuPage = () => {
         backgroundAttachment: 'fixed'
       }}
     >
+      <NamePromptModal 
+        isOpen={isNameModalOpen}
+        onSubmit={handleNameSubmit}
+        restaurantName={restaurante?.nombre || 'este restaurante'}
+      />
+
       {/* Header del restaurante */}
       <div 
         className="bg-white/90 backdrop-blur-sm shadow-sm relative"
@@ -459,7 +433,7 @@ const PublicMenuPage = () => {
                   </div>
                 </div>
 
-                {carrito.length === 0 ? (
+                {!cart || cart.items.length === 0 ? (
                   <div className="text-center py-8">
                     <ShoppingCartIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                     <p className="text-gray-500">Tu carrito está vacío</p>
@@ -467,16 +441,16 @@ const PublicMenuPage = () => {
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {carrito.map((item) => (
-                      <div key={item.productoId} className="flex items-center justify-between py-2 border-b border-gray-200">
+                    {cart.items.map((item) => (
+                      <div key={item.id} className="flex items-center justify-between py-2 border-b border-gray-200">
                         <div className="flex-1">
-                          <h4 className="font-medium text-gray-900">{item.nombre}</h4>
-                          <p className="text-sm text-gray-600">{formatCurrency(item.precio)}</p>
+                          <h4 className="font-medium text-gray-900">{item.producto.nombre}</h4>
+                          <p className="text-sm text-gray-600">{formatCurrency(item.producto.precio)}</p>
                         </div>
                         
                         <div className="flex items-center space-x-2">
                           <button
-                            onClick={() => updateQuantity(item.productoId, item.cantidad - 1)}
+                            onClick={() => updateQuantity(item.id, item.cantidad - 1)}
                             className="p-1 rounded-full hover:bg-gray-100"
                           >
                             <MinusIcon className="h-4 w-4 text-gray-600" />
@@ -487,7 +461,7 @@ const PublicMenuPage = () => {
                           </span>
                           
                           <button
-                            onClick={() => updateQuantity(item.productoId, item.cantidad + 1)}
+                            onClick={() => updateQuantity(item.id, item.cantidad + 1)}
                             className="p-1 rounded-full hover:bg-gray-100"
                           >
                             <PlusIcon className="h-4 w-4 text-gray-600" />
@@ -506,7 +480,7 @@ const PublicMenuPage = () => {
 
                       <button
                         onClick={showOrderConfirmation}
-                        disabled={submittingOrder || carrito.length === 0}
+                        disabled={submittingOrder || !cart || cart.items.length === 0}
                         className="w-full bg-primary-600 text-white py-3 rounded-lg hover:bg-primary-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium"
                       >
                         {submittingOrder ? 'Enviando...' : 'Confirmar Pedido'}
@@ -542,78 +516,41 @@ const PublicMenuPage = () => {
         </div>
       )}
 
-      {/* Modal de confirmación de orden */}
+      {/* Order Confirmation Modal (simplificado) */}
       {showOrderModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md mx-4 w-full">
-            <div className="text-center mb-6">
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Confirmar Pedido</h3>
-              <p className="text-gray-600">
-                Agrega tu nombre para identificar tu orden (opcional)
-              </p>
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-40 flex justify-center items-center">
+          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+            <h2 className="text-2xl font-bold text-gray-900">Confirmar Pedido</h2>
+            <p className="text-gray-600 mt-2">
+              Tu pedido para <span className="font-semibold">{customerName}</span> está casi listo.
+            </p>
+            <div className="mt-4">
+              <label htmlFor="order-notes" className="block text-sm font-medium text-gray-700">
+                Notas para la cocina (opcional)
+              </label>
+              <textarea
+                id="order-notes"
+                value={orderNotes}
+                onChange={(e) => setOrderNotes(e.target.value)}
+                rows="3"
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500"
+                placeholder="Ej: sin cebolla, muy picante..."
+              />
             </div>
-
-            <div className="space-y-4 mb-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Tu nombre (opcional)
-                </label>
-                <input
-                  type="text"
-                  value={orderDetails.nombreCliente}
-                  onChange={(e) => setOrderDetails(prev => ({ ...prev, nombreCliente: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  placeholder="Ej: Juan Pérez"
-                  maxLength={100}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Notas especiales (opcional)
-                </label>
-                <textarea
-                  value={orderDetails.notas}
-                  onChange={(e) => setOrderDetails(prev => ({ ...prev, notas: e.target.value }))}
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  placeholder="Ej: Sin cebolla, extra picante, alérgico a..."
-                  maxLength={1000}
-                />
-              </div>
-            </div>
-
-            {/* Resumen del pedido */}
-            <div className="bg-gray-50 rounded-lg p-4 mb-6">
-              <h4 className="font-medium text-gray-900 mb-2">Resumen de tu pedido</h4>
-              <div className="space-y-1">
-                {carrito.map((item) => (
-                  <div key={item.productoId} className="flex justify-between text-sm">
-                    <span>{item.cantidad}x {item.nombre}</span>
-                    <span>{formatCurrency(item.precio * item.cantidad)}</span>
-                  </div>
-                ))}
-              </div>
-              <div className="border-t border-gray-200 mt-2 pt-2 flex justify-between font-semibold">
-                <span>Total:</span>
-                <span className="text-primary-600">{formatCurrency(getTotalPrice())}</span>
-              </div>
-            </div>
-
-            <div className="flex space-x-3">
+            <div className="mt-6 flex justify-end space-x-3">
               <button
                 onClick={() => setShowOrderModal(false)}
-                className="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition-colors"
+                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300"
                 disabled={submittingOrder}
               >
                 Cancelar
               </button>
               <button
                 onClick={confirmOrder}
+                className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-green-400"
                 disabled={submittingOrder}
-                className="flex-1 bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
               >
-                {submittingOrder ? 'Enviando...' : 'Confirmar Pedido'}
+                {submittingOrder ? 'Enviando...' : 'Enviar Pedido'}
               </button>
             </div>
           </div>

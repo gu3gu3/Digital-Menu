@@ -20,7 +20,6 @@ const OrderDetailsModal = ({ isOpen, onClose, order, onOrderUpdate }) => {
   const [updating, setUpdating] = useState(false);
   const [availableMeseros, setAvailableMeseros] = useState([]);
   const [selectedMesero, setSelectedMesero] = useState(null);
-  const [assigningMesero, setAssigningMesero] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
 
   const statusOptions = [
@@ -85,7 +84,7 @@ const OrderDetailsModal = ({ isOpen, onClose, order, onOrderUpdate }) => {
     if (!order) return;
 
     try {
-      setAssigningMesero(true);
+      setUpdating(true);
       await ordersService.assignMeseroToOrder(order.id, selectedMesero?.value || null);
       
       // Notify parent component
@@ -95,7 +94,7 @@ const OrderDetailsModal = ({ isOpen, onClose, order, onOrderUpdate }) => {
       console.error('Error assigning mesero:', error);
       alert('Error al asignar mesero');
     } finally {
-      setAssigningMesero(false);
+      setUpdating(false);
     }
   };
 
@@ -103,7 +102,7 @@ const OrderDetailsModal = ({ isOpen, onClose, order, onOrderUpdate }) => {
     if (!order) return;
 
     try {
-      setAssigningMesero(true);
+      setUpdating(true);
       await ordersService.takeOrder(order.id);
       
       // Notify parent component
@@ -115,7 +114,7 @@ const OrderDetailsModal = ({ isOpen, onClose, order, onOrderUpdate }) => {
       console.error('Error taking order:', error);
       alert('Error al tomar la orden');
     } finally {
-      setAssigningMesero(false);
+      setUpdating(false);
     }
   };
 
@@ -140,13 +139,19 @@ const OrderDetailsModal = ({ isOpen, onClose, order, onOrderUpdate }) => {
   };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleString('es-NI', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    if (!dateString) return 'N/A';
+    try {
+      return new Date(dateString).toLocaleString('es-NI', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'N/A';
+    }
   };
 
   const formatCurrency = (amount) => {
@@ -189,7 +194,7 @@ const OrderDetailsModal = ({ isOpen, onClose, order, onOrderUpdate }) => {
                       Orden #{order.numeroOrden}
                     </Dialog.Title>
                     <p className="text-sm text-gray-600 mt-1">
-                      Mesa {order.mesa?.numero} • {formatDate(order.fechaOrden)}
+                      Mesa {order.mesa?.numero} • {formatDate(order.createdAt)}
                     </p>
                   </div>
                   <div className="flex items-center space-x-3">
@@ -233,7 +238,7 @@ const OrderDetailsModal = ({ isOpen, onClose, order, onOrderUpdate }) => {
                     <div>
                       <p className="text-xs text-gray-500">Tiempo transcurrido</p>
                       <p className="text-sm font-medium">
-                        {Math.floor((new Date() - new Date(order.fechaOrden)) / (1000 * 60))} min
+                        {order.createdAt ? Math.floor((new Date() - new Date(order.createdAt)) / (1000 * 60)) : 'N/A'} min
                       </p>
                     </div>
                   </div>

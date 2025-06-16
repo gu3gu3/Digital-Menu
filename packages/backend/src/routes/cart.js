@@ -1,509 +1,242 @@
 const express = require('express');
-const { prisma } = require('../config/database');
+const { prisma, Prisma } = require('../config/database');
 const Joi = require('joi');
-const { v4: uuidv4 } = require('uuid');
+const { authenticate, requireAdmin } = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
-// Validation schemas
-const addToCartSchema = Joi.object({
-  productoId: Joi.string().required(),
-  cantidad: Joi.number().integer().min(1).max(50).required(),
-  notas: Joi.string().allow('').optional().max(500)
-});
-
-const updateCartItemSchema = Joi.object({
-  cantidad: Joi.number().integer().min(0).max(50).required(),
-  notas: Joi.string().allow('').optional().max(500)
-});
-
-const confirmOrderSchema = Joi.object({
-  nombreClienteFactura: Joi.string().allow('').optional().max(100),
-  notas: Joi.string().allow('').optional().max(1000)
-});
-
-// Utility functions
-const calculateCartTotals = (cartItems) => {
-  const subtotal = cartItems.reduce((total, item) => {
-    return total + (parseFloat(item.precio) * item.cantidad);
-  }, 0);
-  
-  return {
-    subtotal: subtotal.toFixed(2),
-    total: subtotal.toFixed(2) // Por ahora sin impuestos/descuentos
-  };
-};
-
-const validateSession = async (sessionToken) => {
+const findOrCreateCart = async (sesionId) => {
   const sesion = await prisma.sesion.findUnique({
-    where: { sessionToken },
+    where: { id: sesionId },
     include: {
-      mesa: { select: { id: true, numero: true, activa: true } },
-      restaurante: { select: { id: true, activo: true } }
+      restaurante: true,
+      mesa: true
     }
   });
 
-  if (!sesion) {
-    throw new Error('Sesión no encontrada');
+  if (!sesion) throw new Error('Sesión no válida');
+  
+  // Check if session is active
+  if (!sesion.activa) {
+    throw new Error('La sesión está cerrada. No se pueden realizar nuevos pedidos.');
   }
 
-  if (sesion.estado !== 'ACTIVA') {
-    throw new Error('La sesión no está activa');
-  }
-
-  if (!sesion.mesa.activa || !sesion.restaurante.activo) {
-    throw new Error('Mesa o restaurante no disponible');
-  }
-
-  return sesion;
-};
-
-// @desc    Get cart contents
-// @route   GET /api/cart/:sessionToken
-// @access  Public
-const getCart = async (req, res) => {
-  try {
-    const { sessionToken } = req.params;
-    
-    const sesion = await validateSession(sessionToken);
-
-    // Get cart from session metadata
-    const cartItems = sesion.metadata?.cart || [];
-    const totals = calculateCartTotals(cartItems);
-
-    // Update last activity
-    await prisma.sesion.update({
-      where: { id: sesion.id },
-      data: { ultimaActividad: new Date() }
-    });
-
-    res.json({
-      success: true,
-      data: {
-        cart: cartItems,
-        totals,
-        itemCount: cartItems.reduce((count, item) => count + item.cantidad, 0)
+  // Look for any active order in this MESA (not just this session)
+  const activeOrder = await prisma.orden.findFirst({
+    where: {
+      mesaId: sesion.mesaId,
+      restauranteId: sesion.restauranteId,
+      estado: {
+        in: ['CARRITO', 'ENVIADA', 'RECIBIDA', 'CONFIRMADA', 'EN_PREPARACION', 'LISTA']
       }
-    });
+    },
+    include: { 
+      items: { include: { producto: true } },
+      mesa: true,
+      sesion: true 
+    },
+    orderBy: { createdAt: 'desc' }
+  });
 
-  } catch (error) {
-    console.error('Error obteniendo carrito:', error);
-    res.status(error.message.includes('no encontrada') || error.message.includes('no está activa') ? 404 : 500).json({
-      success: false,
-      error: error.message || 'Error interno del servidor'
-    });
-  }
-};
-
-// @desc    Add item to cart
-// @route   POST /api/cart/:sessionToken/add
-// @access  Public
-const addToCart = async (req, res) => {
-  try {
-    const { sessionToken } = req.params;
-    const { error, value } = addToCartSchema.validate(req.body);
-
-    if (error) {
-      console.error('Validation error in addToCart:', error.details[0].message);
-      console.error('Request body:', req.body);
-      return res.status(400).json({
-        success: false,
-        error: error.details[0].message
-      });
-    }
-
-    const { productoId, cantidad, notas } = value;
-
-    const sesion = await validateSession(sessionToken);
-
-    // Validate product exists and is available
-    const producto = await prisma.producto.findFirst({
-      where: {
-        id: productoId,
-        restauranteId: sesion.restauranteId,
-        disponible: true
-      },
-      include: {
-        categoria: { select: { nombre: true, activa: true } }
-      }
-    });
-
-    if (!producto || !producto.categoria.activa) {
-      return res.status(404).json({
-        success: false,
-        error: 'Producto no encontrado o no disponible'
-      });
-    }
-
-    // Get current cart
-    const currentCart = sesion.metadata?.cart || [];
-    
-    // Check if item already exists in cart
-    const existingItemIndex = currentCart.findIndex(item => item.productoId === productoId);
-    
-    let updatedCart;
-    if (existingItemIndex >= 0) {
-      // Update existing item
-      updatedCart = [...currentCart];
-      updatedCart[existingItemIndex] = {
-        ...updatedCart[existingItemIndex],
-        cantidad: updatedCart[existingItemIndex].cantidad + cantidad,
-        notas: notas || updatedCart[existingItemIndex].notas,
-        updatedAt: new Date().toISOString()
-      };
-    } else {
-      // Add new item
-      const newItem = {
-        id: uuidv4(),
-        productoId,
-        nombre: producto.nombre,
-        precio: producto.precio.toString(),
-        cantidad,
-        notas: notas || '',
-        addedAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-      updatedCart = [...currentCart, newItem];
-    }
-
-    // Calculate totals
-    const totals = calculateCartTotals(updatedCart);
-
-    // Update session with new cart
-    const updatedSession = await prisma.sesion.update({
-      where: { id: sesion.id },
-      data: {
-        metadata: {
-          ...sesion.metadata,
-          cart: updatedCart,
-          totals
-        },
-        ultimaActividad: new Date()
-      }
-    });
-
-    res.json({
-      success: true,
-      data: {
-        cart: updatedCart,
-        totals,
-        itemCount: updatedCart.reduce((count, item) => count + item.cantidad, 0)
-      },
-      message: 'Producto agregado al carrito'
-    });
-
-  } catch (error) {
-    console.error('Error agregando al carrito:', error);
-    res.status(error.message.includes('no encontrada') || error.message.includes('no está activa') ? 404 : 500).json({
-      success: false,
-      error: error.message || 'Error interno del servidor'
-    });
-  }
-};
-
-// @desc    Update cart item
-// @route   PUT /api/cart/:sessionToken/item/:itemId
-// @access  Public
-const updateCartItem = async (req, res) => {
-  try {
-    const { sessionToken, itemId } = req.params;
-    const { error, value } = updateCartItemSchema.validate(req.body);
-
-    if (error) {
-      return res.status(400).json({
-        success: false,
-        error: error.details[0].message
-      });
-    }
-
-    const { cantidad, notas } = value;
-
-    const sesion = await validateSession(sessionToken);
-
-    // Get current cart
-    const currentCart = sesion.metadata?.cart || [];
-    
-    // Find item to update
-    const itemIndex = currentCart.findIndex(item => item.id === itemId);
-    
-    if (itemIndex === -1) {
-      return res.status(404).json({
-        success: false,
-        error: 'Item no encontrado en el carrito'
-      });
-    }
-
-    let updatedCart;
-    if (cantidad === 0) {
-      // Remove item from cart
-      updatedCart = currentCart.filter(item => item.id !== itemId);
-    } else {
-      // Update item
-      updatedCart = [...currentCart];
-      updatedCart[itemIndex] = {
-        ...updatedCart[itemIndex],
-        cantidad,
-        notas: notas !== undefined ? notas : updatedCart[itemIndex].notas,
-        updatedAt: new Date().toISOString()
-      };
-    }
-
-    // Calculate totals
-    const totals = calculateCartTotals(updatedCart);
-
-    // Update session
-    await prisma.sesion.update({
-      where: { id: sesion.id },
-      data: {
-        metadata: {
-          ...sesion.metadata,
-          cart: updatedCart,
-          totals
-        },
-        ultimaActividad: new Date()
-      }
-    });
-
-    res.json({
-      success: true,
-      data: {
-        cart: updatedCart,
-        totals,
-        itemCount: updatedCart.reduce((count, item) => count + item.cantidad, 0)
-      },
-      message: cantidad === 0 ? 'Item removido del carrito' : 'Item actualizado'
-    });
-
-  } catch (error) {
-    console.error('Error actualizando item del carrito:', error);
-    res.status(error.message.includes('no encontrada') || error.message.includes('no está activa') ? 404 : 500).json({
-      success: false,
-      error: error.message || 'Error interno del servidor'
-    });
-  }
-};
-
-// @desc    Remove item from cart
-// @route   DELETE /api/cart/:sessionToken/item/:itemId
-// @access  Public
-const removeFromCart = async (req, res) => {
-  try {
-    const { sessionToken, itemId } = req.params;
-
-    const sesion = await validateSession(sessionToken);
-
-    // Get current cart
-    const currentCart = sesion.metadata?.cart || [];
-    
-    // Remove item
-    const updatedCart = currentCart.filter(item => item.id !== itemId);
-    
-    if (updatedCart.length === currentCart.length) {
-      return res.status(404).json({
-        success: false,
-        error: 'Item no encontrado en el carrito'
-      });
-    }
-
-    // Calculate totals
-    const totals = calculateCartTotals(updatedCart);
-
-    // Update session
-    await prisma.sesion.update({
-      where: { id: sesion.id },
-      data: {
-        metadata: {
-          ...sesion.metadata,
-          cart: updatedCart,
-          totals
-        },
-        ultimaActividad: new Date()
-      }
-    });
-
-    res.json({
-      success: true,
-      data: {
-        cart: updatedCart,
-        totals,
-        itemCount: updatedCart.reduce((count, item) => count + item.cantidad, 0)
-      },
-      message: 'Item removido del carrito'
-    });
-
-  } catch (error) {
-    console.error('Error removiendo del carrito:', error);
-    res.status(error.message.includes('no encontrada') || error.message.includes('no está activa') ? 404 : 500).json({
-      success: false,
-      error: error.message || 'Error interno del servidor'
-    });
-  }
-};
-
-// @desc    Clear entire cart
-// @route   DELETE /api/cart/:sessionToken/clear
-// @access  Public
-const clearCart = async (req, res) => {
-  try {
-    const { sessionToken } = req.params;
-
-    const sesion = await validateSession(sessionToken);
-
-    // Update session with empty cart
-    await prisma.sesion.update({
-      where: { id: sesion.id },
-      data: {
-        metadata: {
-          ...sesion.metadata,
-          cart: [],
-          totals: { subtotal: '0.00', total: '0.00' }
-        },
-        ultimaActividad: new Date()
-      }
-    });
-
-    res.json({
-      success: true,
-      data: {
-        cart: [],
-        totals: { subtotal: '0.00', total: '0.00' },
-        itemCount: 0
-      },
-      message: 'Carrito vaciado'
-    });
-
-  } catch (error) {
-    console.error('Error vaciando carrito:', error);
-    res.status(error.message.includes('no encontrada') || error.message.includes('no está activa') ? 404 : 500).json({
-      success: false,
-      error: error.message || 'Error interno del servidor'
-    });
-  }
-};
-
-// @desc    Confirm order from cart
-// @route   POST /api/cart/:sessionToken/confirm
-// @access  Public
-const confirmOrder = async (req, res) => {
-  try {
-    const { sessionToken } = req.params;
-    const { error, value } = confirmOrderSchema.validate(req.body);
-
-    if (error) {
-      console.error('Validation error in confirmOrder:', error.details[0].message);
-      return res.status(400).json({
-        success: false,
-        error: error.details[0].message
-      });
-    }
-
-    const { nombreClienteFactura, notas } = value;
-
-    const sesion = await validateSession(sessionToken);
-
-    // Get cart from session
-    const cartItems = sesion.metadata?.cart || [];
-    
-    if (cartItems.length === 0) {
-      return res.status(400).json({
-        success: false,
-        error: 'El carrito está vacío'
-      });
-    }
-
-    // Validate all products are still available
-    for (const item of cartItems) {
-      const producto = await prisma.producto.findFirst({
-        where: {
-          id: item.productoId,
-          disponible: true
-        }
-      });
-
-      if (!producto) {
-        return res.status(400).json({
-          success: false,
-          error: `El producto "${item.nombre}" ya no está disponible`
+  // If there's an active order, handle it based on state and session validity
+  if (activeOrder) {
+    // If it's in CARRITO state, anyone can add to it
+    if (activeOrder.estado === 'CARRITO') {
+      // Update the order to link it to the current active session if it was orphaned
+      if (!activeOrder.sesionId || (activeOrder.sesion && !activeOrder.sesion.activa)) {
+        await prisma.orden.update({
+          where: { id: activeOrder.id },
+          data: { sesionId: sesionId }
         });
       }
+      return activeOrder;
     }
-
-    // Generate order number
-    const timestamp = Date.now();
-    const numeroOrden = `ORD-${sesion.mesa.numero}-${timestamp}`;
-
-    // Calculate totals
-    const totals = calculateCartTotals(cartItems);
-
-    // Create order
-    const orden = await prisma.orden.create({
-      data: {
-        numeroOrden,
-        nombreClienteFactura,
-        mesaId: sesion.mesaId,
-        restauranteId: sesion.restauranteId,
-        sesionId: sesion.id,
-        subtotal: parseFloat(totals.subtotal),
-        total: parseFloat(totals.total),
-        notas,
-        items: {
-          create: cartItems.map(item => ({
-            productoId: item.productoId,
-            cantidad: item.cantidad,
-            precioUnitario: parseFloat(item.precio),
-            subtotal: parseFloat(item.precio) * item.cantidad,
-            notas: item.notas
-          }))
-        }
-      },
-      include: {
-        items: {
-          include: {
-            producto: {
-              select: { nombre: true }
-            }
-          }
-        }
+    // If it's beyond CARRITO state, check if we can still add items
+    if (['ENVIADA', 'RECIBIDA', 'CONFIRMADA'].includes(activeOrder.estado)) {
+      // Update the order to link it to the current active session for tracking
+      if (!activeOrder.sesionId || (activeOrder.sesion && !activeOrder.sesion.activa)) {
+        await prisma.orden.update({
+          where: { id: activeOrder.id },
+          data: { sesionId: sesionId }
+        });
       }
-    });
+      return activeOrder;
+    }
+    // If it's in preparation or later stages, don't allow new items
+    throw new Error('Ya hay una orden en preparación en esta mesa. Por favor espera a que se complete antes de realizar un nuevo pedido.');
+  }
 
-    // Clear cart from session
-    await prisma.sesion.update({
-      where: { id: sesion.id },
-      data: {
-        metadata: {
-          ...sesion.metadata,
-          cart: [],
-          totals: { subtotal: '0.00', total: '0.00' },
-          lastOrderId: orden.id
-        },
-        ultimaActividad: new Date()
+  // Retry logic to handle race conditions on order creation
+  for (let i = 0; i < 5; i++) {
+    try {
+      // Use a transaction to ensure atomicity
+      return await prisma.$transaction(async (tx) => {
+        const lastOrder = await tx.orden.findFirst({
+          where: { restauranteId: sesion.restauranteId },
+          orderBy: { numeroOrden: 'desc' },
+        });
+        const newOrderNumber = (lastOrder?.numeroOrden || 0) + 1;
+
+        return await tx.orden.create({
+          data: {
+            numeroOrden: newOrderNumber,
+            estado: 'CARRITO',
+            subtotal: 0,
+            total: 0,
+            restaurante: { connect: { id: sesion.restauranteId } },
+            mesa: { connect: { id: sesion.mesaId } },
+            sesion: { connect: { id: sesionId } },
+          },
+          include: { items: { include: { producto: true } } }
+        });
+      });
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
+        if (i === 4) throw new Error('No se pudo crear la orden después de varios intentos. Por favor, intenta de nuevo.');
+        // Add a small delay before retrying
+        await new Promise(resolve => setTimeout(resolve, 100 + Math.random() * 200));
+        continue;
+      } else {
+        // For any other error, throw it immediately.
+        throw e;
       }
-    });
-
-    res.json({
-      success: true,
-      data: { orden },
-      message: 'Pedido confirmado exitosamente'
-    });
-
-  } catch (error) {
-    console.error('=== ERROR IN CONFIRM ORDER ===');
-    console.error('Error confirmando pedido:', error);
-    console.error('Error stack:', error.stack);
-    res.status(error.message.includes('no encontrada') || error.message.includes('no está activa') ? 404 : 500).json({
-      success: false,
-      error: error.message || 'Error interno del servidor'
-    });
+    }
   }
 };
 
-// Routes
-router.get('/:sessionToken', getCart);
-router.post('/:sessionToken/add', addToCart);
-router.put('/:sessionToken/item/:itemId', updateCartItem);
-router.delete('/:sessionToken/item/:itemId', removeFromCart);
-router.delete('/:sessionToken/clear', clearCart);
-router.post('/:sessionToken/confirm', confirmOrder);
+const calculateTotals = (items) => {
+  const subtotal = items.reduce((acc, item) => acc + item.subtotal, 0);
+  return { subtotal, total: subtotal }; // Simplified totals
+};
+
+router.get('/:sesionId', async (req, res) => {
+  try {
+    const cart = await findOrCreateCart(req.params.sesionId);
+    res.json({ success: true, data: cart });
+  } catch (error) {
+    res.status(400).json({ success: false, error: error.message });
+  }
+});
+
+router.post('/:sesionId/add', async (req, res) => {
+  const { productoId, cantidad, notas } = req.body;
+  const { sesionId } = req.params;
+
+  try {
+    const cart = await findOrCreateCart(sesionId);
+    const producto = await prisma.producto.findUnique({ where: { id: productoId } });
+    if (!producto) throw new Error('Producto no encontrado');
+
+    const existingItem = cart.items.find(item => item.productoId === productoId);
+
+    if (existingItem) {
+      await prisma.itemOrden.update({
+        where: { id: existingItem.id },
+        data: {
+          cantidad: existingItem.cantidad + cantidad,
+          subtotal: producto.precio * (existingItem.cantidad + cantidad),
+        },
+      });
+    } else {
+      await prisma.itemOrden.create({
+        data: {
+          ordenId: cart.id,
+          productoId,
+          cantidad,
+          notas,
+          precioUnitario: producto.precio,
+          subtotal: producto.precio * cantidad,
+        },
+      });
+    }
+
+    const updatedCart = await prisma.orden.findUnique({ where: { id: cart.id }, include: { items: true } });
+    const newTotals = calculateTotals(updatedCart.items);
+    
+    const finalCart = await prisma.orden.update({
+        where: { id: cart.id },
+        data: { subtotal: newTotals.subtotal, total: newTotals.total },
+        include: { items: { include: { producto: true } } },
+    });
+
+    res.json({ success: true, data: finalCart });
+  } catch (error) {
+    res.status(400).json({ success: false, error: error.message });
+  }
+});
+
+router.put('/:sesionId/item/:itemId', async (req, res) => {
+    const { itemId } = req.params;
+    const { cantidad } = req.body;
+
+    try {
+        const item = await prisma.itemOrden.findUnique({ where: { id: itemId }, include: { producto: true } });
+        if (!item) throw new Error('Ítem no encontrado');
+
+        if (cantidad <= 0) {
+            await prisma.itemOrden.delete({ where: { id: itemId } });
+        } else {
+            await prisma.itemOrden.update({
+                where: { id: itemId },
+                data: { cantidad, subtotal: item.producto.precio * cantidad },
+            });
+        }
+        
+        const updatedCart = await prisma.orden.findUnique({ where: { id: item.ordenId }, include: { items: true } });
+        const newTotals = calculateTotals(updatedCart.items);
+
+        const finalCart = await prisma.orden.update({
+            where: { id: item.ordenId },
+            data: { subtotal: newTotals.subtotal, total: newTotals.total },
+            include: { items: { include: { producto: true } } },
+        });
+
+        res.json({ success: true, data: finalCart });
+    } catch (error) {
+        res.status(400).json({ success: false, error: error.message });
+    }
+});
+
+
+router.post('/:sesionId/confirm', async (req, res) => {
+  const { sesionId } = req.params;
+  const { notas, nombreCliente, nombreClienteFactura } = req.body;
+  try {
+    const cart = await findOrCreateCart(sesionId);
+    if (cart.items.length === 0) throw new Error('El carrito está vacío');
+    
+    // Append customer name and notes to existing ones if any
+    let finalNotas = cart.notas || '';
+    if (notas) {
+      finalNotas = finalNotas ? `${finalNotas}\n---\n${notas}` : notas;
+    }
+    
+    let finalNombreCliente = cart.nombreClienteFactura || '';
+    const clienteName = nombreClienteFactura || nombreCliente;
+    if (clienteName) {
+      finalNombreCliente = finalNombreCliente ? 
+        `${finalNombreCliente}, ${clienteName}` : clienteName;
+    }
+    
+    const confirmedOrder = await prisma.orden.update({
+      where: { id: cart.id },
+      data: { 
+        estado: 'ENVIADA', 
+        notas: finalNotas,
+        nombreClienteFactura: finalNombreCliente
+      },
+      include: { 
+        items: { include: { producto: true } },
+        mesa: true,
+        sesion: true
+      }
+    });
+    res.json({ success: true, data: { orden: confirmedOrder } });
+  } catch (error) {
+    res.status(400).json({ success: false, error: error.message });
+  }
+});
+
+
 
 module.exports = router; 

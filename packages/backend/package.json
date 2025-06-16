@@ -4,17 +4,17 @@
   "description": "Backend API for Digital Menu QR system",
   "main": "src/index.js",
   "prisma": {
-    "seed": "node seed-unified.js"
+    "seed": "node prisma/seed.js"
   },
   "scripts": {
     "dev": "nodemon src/index.js",
-    "start": "node src/index.js",
+    "start": "npm run db:deploy && npm run db:seed && node src/index.js",
     "build": "echo 'Backend build completed'",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
     "db:generate": "prisma generate",
     "db:studio": "prisma studio",
-    "db:seed": "node seed-unified.js",
+    "db:seed": "node prisma/seed.js",
     "db:reset": "prisma migrate reset",
     "test": "jest",
     "test:watch": "jest --watch"

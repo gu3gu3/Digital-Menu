@@ -26,37 +26,16 @@ const menuImportRoutes = require('./routes/menuImport');
 const staffRoutes = require('./routes/staff');
 const superAdminAuthRoutes = require('./routes/superAdminAuth');
 const superAdminSubscriptionsRoutes = require('./routes/superAdminSubscriptions');
+const notificationRoutes = require('./routes/notifications');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Connect to database
-connectDB();
+// =================================================================
+//  Middleware Setup
+// =================================================================
 
-// Security middleware - Configure Helmet to allow images
-app.use(helmet({
-  crossOriginResourcePolicy: { policy: "cross-origin" },
-  contentSecurityPolicy: {
-    directives: {
-      ...helmet.contentSecurityPolicy.getDefaultDirectives(),
-      'img-src': ["'self'", 'http://localhost:3001', 'http://localhost:5173', 'data:', 'blob:'],
-      'connect-src': ["'self'", 'http://localhost:3001', 'http://localhost:5173']
-    }
-  }
-}));
-app.use(compression());
-
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutes
-  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100,
-  message: {
-    error: 'Demasiadas solicitudes desde esta IP, intenta de nuevo más tarde.'
-  }
-});
-app.use('/api/', limiter);
-
-// CORS configuration
+// 1. CORS Configuration (Apply First!)
 const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:3001',
@@ -70,9 +49,9 @@ if (process.env.FRONTEND_URL && !allowedOrigins.includes(process.env.FRONTEND_UR
   allowedOrigins.push(process.env.FRONTEND_URL);
 }
 
-const corsOptions = {
+app.use(cors({
   origin: (origin, callback) => {
-    // allow requests with no origin (like mobile apps or curl requests)
+    // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
     if (allowedOrigins.indexOf(origin) === -1) {
       const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
@@ -81,21 +60,52 @@ const corsOptions = {
     return callback(null, true);
   },
   credentials: true,
-  optionsSuccessStatus: 200
-};
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
-app.use(cors(corsOptions));
+// 2. Connect to database
+connectDB();
 
-// Body parsing middleware
+// 3. Security Middleware
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  contentSecurityPolicy: {
+    directives: {
+      ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+      'img-src': ["'self'", 'http://localhost:3001', 'http://localhost:5173', 'data:', 'blob:'],
+      'connect-src': ["'self'", 'http://localhost:3001', 'http://localhost:5173']
+    }
+  }
+}));
+app.use(compression());
+
+// 4. Rate limiting
+if (process.env.NODE_ENV !== 'development') {
+  const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutos
+    max: 200, // Límite de 200 solicitudes por IP por ventana
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: 'Demasiadas solicitudes desde esta IP, intenta de nuevo más tarde.'
+  });
+  app.use(limiter);
+}
+
+// 5. Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Logging middleware
+// 6. Logging middleware
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 } else {
   app.use(morgan('combined'));
 }
+
+// =================================================================
+// Routes
+// =================================================================
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -107,10 +117,9 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Serve static files (for uploaded images) - MOVED BEFORE API routes for better performance
+// Serve static files (for uploaded images)
 app.use('/uploads', express.static('uploads', {
   setHeaders: (res, path) => {
-    // Set proper headers for images
     res.set('Cross-Origin-Resource-Policy', 'cross-origin');
     res.set('Access-Control-Allow-Origin', '*');
   }
@@ -133,6 +142,7 @@ app.use('/api/menu-import', menuImportRoutes);
 app.use('/api/staff', staffRoutes);
 app.use('/api/super-admin/auth', superAdminAuthRoutes);
 app.use('/api/super-admin/subscriptions', superAdminSubscriptionsRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // API documentation endpoint
 app.get('/api', (req, res) => {

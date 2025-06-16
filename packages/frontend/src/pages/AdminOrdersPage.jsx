@@ -138,7 +138,7 @@ const AdminOrdersPage = () => {
   };
 
   const getOrderPriority = (order) => {
-    const minutes = Math.floor((new Date() - new Date(order.fechaOrden)) / (1000 * 60));
+    const minutes = Math.floor((new Date() - new Date(order.createdAt)) / (1000 * 60));
     if (order.estado === 'EN_PREPARACION' && minutes > 30) return 'high';
     if (order.estado === 'ENVIADA' && minutes > 15) return 'medium';
     return 'normal';
@@ -418,7 +418,7 @@ const AdminOrdersPage = () => {
                               #{order.numeroOrden}
                             </div>
                             <div className="text-sm text-gray-500">
-                              {formatDate(order.fechaOrden)}
+                              {formatDate(order.createdAt)}
                             </div>
                           </div>
                         </td>
@@ -474,7 +474,7 @@ const AdminOrdersPage = () => {
                             priority === 'medium' ? 'text-yellow-600 font-medium' :
                             'text-gray-600'
                           }`}>
-                            {getTimeElapsed(order.fechaOrden)}
+                            {getTimeElapsed(order.createdAt)}
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -536,7 +536,7 @@ const AdminOrdersPage = () => {
                       <div>
                         <span className="text-gray-500">Hora:</span>
                         <p className="text-gray-900">
-                          {formatDate(order.fechaOrden)}
+                          {formatDate(order.createdAt)}
                         </p>
                       </div>
                       <div>
@@ -546,7 +546,7 @@ const AdminOrdersPage = () => {
                           priority === 'medium' ? 'text-yellow-600' :
                           'text-gray-600'
                         }`}>
-                          {getTimeElapsed(order.fechaOrden)}
+                          {getTimeElapsed(order.createdAt)}
                         </p>
                       </div>
                     </div>

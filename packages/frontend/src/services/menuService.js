@@ -1,57 +1,44 @@
 import { API_ENDPOINTS } from '../config/api'
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+
 class MenuService {
   // Obtener menú público por slug
   async getPublicMenu(slug) {
-    try {
-      const response = await fetch(API_ENDPOINTS.PUBLIC_MENU(slug))
-      const data = await response.json()
-      
-      if (!response.ok) {
-        throw new Error(data.error || 'Error obteniendo menú')
-      }
-      
-      return data.data
-    } catch (error) {
-      console.error('Error en getPublicMenu:', error)
-      throw error
-    }
+    const response = await fetch(`${API_BASE_URL}/api/public/menu/${slug}`);
+    if (!response.ok) throw new Error('Error obteniendo menú');
+    const data = await response.json();
+    return data.data;
   }
 
   // Crear o reanudar sesión de mesa
-  async createOrResumeSession(restauranteSlug, mesaNumero, clienteInfo = {}) {
-    try {
-      const response = await fetch('/api/sessions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          mesaNumero,
-          restauranteSlug,
-          numeroPersonas: clienteInfo.numeroPersonas || 1,
-          clienteNombre: clienteInfo.nombre || undefined,
-          clienteTelefono: clienteInfo.telefono || undefined
-        })
-      })
+  async createOrResumeSession(restauranteSlug, mesaNumero) {
+    const response = await fetch(`${API_BASE_URL}/api/sessions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ restauranteSlug, mesaNumero }),
+    });
+    if (!response.ok) throw new Error('Error creando sesión');
+    const data = await response.json();
+    return data.data.sesion;
+  }
 
-      const data = await response.json()
-      
-      if (!response.ok) {
-        throw new Error(data.error || 'Error creando sesión')
-      }
-
-      return data.data.sesion  // Mantener esto pero usar .id en el frontend
-    } catch (error) {
-      console.error('Error en createOrResumeSession:', error)
-      throw error
-    }
+  // Actualizar sesión con información del cliente
+  async updateSession(sesionId, sessionData) {
+    const response = await fetch(`${API_BASE_URL}/api/sessions/${sesionId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(sessionData),
+    });
+    if (!response.ok) throw new Error('Error actualizando sesión');
+    const data = await response.json();
+    return data.data.sesion;
   }
 
   // Obtener información de sesión por token
   async getSession(sessionToken) {
     try {
-      const response = await fetch(`/api/sessions/${sessionToken}`)
+      const response = await fetch(`${API_BASE_URL}/api/sessions/${sessionToken}`)
       const data = await response.json()
       
       if (!response.ok) {
@@ -66,81 +53,41 @@ class MenuService {
   }
 
   // Obtener carrito
-  async getCart(sessionToken) {
-    try {
-      const response = await fetch(`/api/cart/${sessionToken}`)
-      const data = await response.json()
-      
-      if (!response.ok) {
-        throw new Error(data.error || 'Error obteniendo carrito')
-      }
-      
-      return data.data
-    } catch (error) {
-      console.error('Error en getCart:', error)
-      throw error
-    }
+  async getCart(sesionId) {
+    const response = await fetch(`${API_BASE_URL}/api/cart/${sesionId}`);
+    if (!response.ok) throw new Error('Error obteniendo carrito');
+    const data = await response.json();
+    return data.data;
   }
 
   // Agregar producto al carrito
-  async addToCart(sessionToken, productoId, cantidad = 1, notas = '') {
-    try {
-      const response = await fetch(`/api/cart/${sessionToken}/add`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          productoId,
-          cantidad,
-          notas
-        })
-      })
-
-      const data = await response.json()
-      
-      if (!response.ok) {
-        throw new Error(data.error || 'Error agregando producto al carrito')
-      }
-      
-      return data.data
-    } catch (error) {
-      console.error('Error en addToCart:', error)
-      throw error
-    }
+  async addToCart(sesionId, productoId, cantidad) {
+    const response = await fetch(`${API_BASE_URL}/api/cart/${sesionId}/add`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ productoId, cantidad }),
+    });
+    if (!response.ok) throw new Error('Error agregando al carrito');
+    const data = await response.json();
+    return data.data;
   }
 
   // Actualizar item del carrito
-  async updateCartItem(sessionToken, itemId, cantidad, notas = undefined) {
-    try {
-      const response = await fetch(`/api/cart/${sessionToken}/item/${itemId}`, {
+  async updateCartItem(sesionId, itemId, cantidad) {
+    const response = await fetch(`${API_BASE_URL}/api/cart/${sesionId}/item/${itemId}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          cantidad: Math.max(0, cantidad),
-          ...(notas !== undefined && { notas })
-        })
-      })
-
-      const data = await response.json()
-      
-      if (!response.ok) {
-        throw new Error(data.error || 'Error actualizando carrito')
-      }
-      
-      return data.data
-    } catch (error) {
-      console.error('Error en updateCartItem:', error)
-      throw error
-    }
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cantidad }),
+    });
+    if (!response.ok) throw new Error('Error actualizando ítem');
+    const data = await response.json();
+    return data.data;
   }
 
   // Eliminar item del carrito
   async removeFromCart(sessionToken, itemId) {
     try {
-      const response = await fetch(`/api/cart/${sessionToken}/item/${itemId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/cart/${sessionToken}/item/${itemId}`, {
         method: 'DELETE'
       })
 
@@ -160,7 +107,7 @@ class MenuService {
   // Vaciar carrito
   async clearCart(sessionToken) {
     try {
-      const response = await fetch(`/api/cart/${sessionToken}/clear`, {
+      const response = await fetch(`${API_BASE_URL}/api/cart/${sessionToken}/clear`, {
         method: 'DELETE'
       })
 
@@ -178,30 +125,15 @@ class MenuService {
   }
 
   // Confirmar pedido
-  async confirmOrder(sessionToken, orderData = {}) {
-    try {
-      const response = await fetch(`/api/cart/${sessionToken}/confirm`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          nombreClienteFactura: orderData.nombreCliente || undefined,
-          notas: orderData.notas || undefined
-        })
-      })
-
-      const data = await response.json()
-      
-      if (!response.ok) {
-        throw new Error(data.error || 'Error confirmando pedido')
-      }
-      
-      return data.data
-    } catch (error) {
-      console.error('Error en confirmOrder:', error)
-      throw error
-    }
+  async confirmOrder(sesionId, orderDetails) {
+    const response = await fetch(`${API_BASE_URL}/api/cart/${sesionId}/confirm`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(orderDetails),
+    });
+    if (!response.ok) throw new Error('Error confirmando la orden');
+    const data = await response.json();
+    return data.data;
   }
 
   // Actualizar carrito de sesión (para sincronización con estado local)
@@ -212,7 +144,7 @@ class MenuService {
       await this.clearCart(sessionToken)
       
       for (const item of cartItems) {
-        await this.addToCart(sessionToken, item.productoId, item.cantidad, item.notas || '')
+        await this.addToCart(sessionToken, item.productoId, item.cantidad)
       }
       
       return { success: true, cartItems }
@@ -225,7 +157,7 @@ class MenuService {
   // Cerrar sesión
   async closeSession(sessionToken) {
     try {
-      const response = await fetch(`/api/sessions/${sessionToken}/close`, {
+      const response = await fetch(`${API_BASE_URL}/api/sessions/${sessionToken}/close`, {
         method: 'POST'
       })
 
@@ -240,6 +172,35 @@ class MenuService {
       console.error('Error en closeSession:', error)
       throw error
     }
+  }
+
+  async getOrder(orderId) {
+    const response = await fetch(`${API_BASE_URL}/api/orders/${orderId}`);
+    if (!response.ok) throw new Error('Error obteniendo la orden');
+    const data = await response.json();
+    return data.data;
+  }
+
+  async getOrderStatus(orderId) {
+    const response = await fetch(`${API_BASE_URL}/api/public/orden/${orderId}`);
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Error obteniendo el estado de la orden' }));
+        throw new Error(errorData.error || 'Error obteniendo el estado de la orden');
+    }
+    const data = await response.json();
+    return data.data;
+  }
+
+  async callWaiter(orderId) {
+    const response = await fetch(`${API_BASE_URL}/api/orders/${orderId}/call`, {
+      method: 'POST'
+    });
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Error llamando al mesero' }));
+        throw new Error(errorData.error || 'Error llamando al mesero');
+    }
+    const data = await response.json();
+    return data;
   }
 }
 

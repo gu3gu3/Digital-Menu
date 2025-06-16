@@ -64,13 +64,67 @@ const getStats = async (req, res) => {
       prisma.orden.count({
         where: {
           restauranteId,
-          fechaOrden: {
+          createdAt: {
             gte: today,
             lt: tomorrow
           }
         }
       })
     ]);
+
+    // Lógica para crear notificaciones de límite
+    const plan = admin.restaurante.plan;
+    const notificacionesACrear = [];
+
+    const checkLimit = (count, limit, resourceName, resourceType) => {
+      const notificationKeyLimit = `limit-${resourceType}-${restauranteId}`;
+      const notificationKeyWarning = `limit-warning-${resourceType}-${restauranteId}`;
+
+      if (limit > 0 && count >= limit) {
+        notificacionesACrear.push({
+          titulo: `Límite de ${resourceName} alcanzado`,
+          mensaje: `Has alcanzado el límite de ${count}/${limit} ${resourceName.toLowerCase()} de tu plan ${plan.nombre}. Para agregar más, considera actualizar tu plan.`,
+          tipo: 'WARNING',
+          restauranteId: restauranteId,
+          notificationKey: notificationKeyLimit
+        });
+      } else if (limit > 0 && count >= limit * 0.9) {
+        notificacionesACrear.push({
+          titulo: `Te acercas al límite de ${resourceName}`,
+          mensaje: `Estás cerca de alcanzar el límite de ${count}/${limit} ${resourceName.toLowerCase()} de tu plan ${plan.nombre}.`,
+          tipo: 'INFO',
+          restauranteId: restauranteId,
+          notificationKey: notificationKeyWarning
+        });
+      }
+    };
+    
+    checkLimit(productos, plan.limiteProductos, 'Productos', 'productos');
+    checkLimit(mesas, plan.limiteMesas, 'Mesas', 'mesas');
+    checkLimit(meseros, plan.limiteMeseros, 'Meseros', 'meseros');
+    checkLimit(ordenes, plan.limiteOrdenes, 'Órdenes', 'ordenes');
+    
+    if (notificacionesACrear.length > 0) {
+      for (const notificacion of notificacionesACrear) {
+        await prisma.notificacionUsuario.upsert({
+          where: {
+            notificationKey: notificacion.notificationKey,
+          },
+          update: {
+            mensaje: notificacion.mensaje,
+            leida: false, // Marcar como no leída si se actualiza
+            createdAt: new Date(), // Actualizar la fecha para que aparezca como nueva
+          },
+          create: {
+            titulo: notificacion.titulo,
+            mensaje: notificacion.mensaje,
+            tipo: notificacion.tipo,
+            restauranteId: notificacion.restauranteId,
+            notificationKey: notificacion.notificationKey,
+          }
+        });
+      }
+    }
 
     res.json({
       success: true,

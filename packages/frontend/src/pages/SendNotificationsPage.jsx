@@ -318,38 +318,53 @@ const SendNotificationsPage = () => {
 
             {/* Lista de suscripciones */}
             <div className="max-h-96 overflow-y-auto border border-gray-200 rounded-md">
-              {subscriptions.map((subscription) => (
-                <div key={subscription.id} className="p-3 border-b border-gray-100 hover:bg-gray-50">
-                  <label className="flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={selectedSubscriptions.includes(subscription.restauranteId)}
-                      onChange={() => handleSelectSubscription(subscription.restauranteId)}
-                      className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                    />
-                    <div className="ml-3 flex-1">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">
-                            {subscription.restaurante.nombre}
-                          </p>
-                          <p className="text-sm text-gray-500">
-                            {subscription.restaurante.email}
-                          </p>
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Nombre
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Plan
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Estado
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {subscriptions.map((suscripcion) => (
+                    <tr key={suscripcion.id}>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={selectedSubscriptions.includes(suscripcion.restauranteId)}
+                            onChange={() => handleSelectSubscription(suscripcion.restauranteId)}
+                            className="h-4 w-4 text-indigo-600 border-gray-300 rounded"
+                          />
+                          <div className="ml-4">
+                            <div className="text-sm font-medium text-gray-900">{suscripcion.restaurante.nombre}</div>
+                            <div className="text-sm text-gray-500">{suscripcion.restaurante.email}</div>
+                          </div>
                         </div>
-                        <div className="flex items-center space-x-2">
-                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeClass(subscription.estado)}`}>
-                            {subscription.estado}
-                          </span>
-                          <span className="text-xs text-gray-500">
-                            {subscription.plan.nombre}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </label>
-                </div>
-              ))}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {suscripcion.restaurante.plan.nombre}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span
+                          className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeClass(
+                            suscripcion.estado
+                          )}`}
+                        >
+                          {suscripcion.estado}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
 
             {subscriptions.length === 0 && (

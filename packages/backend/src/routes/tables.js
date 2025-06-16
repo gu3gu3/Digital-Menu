@@ -39,10 +39,15 @@ const getTables = async (req, res) => {
       include: {
         _count: {
           select: {
+            sesiones: {
+              where: {
+                activa: true,
+              }
+            },
             ordenes: {
               where: {
                 estado: {
-                  in: ['ENVIADA', 'RECIBIDA', 'CONFIRMADA', 'EN_PREPARACION']
+                  notIn: ['CANCELADA', 'COMPLETADA']
                 }
               }
             }
@@ -51,16 +56,17 @@ const getTables = async (req, res) => {
       }
     });
 
-    // Transform data to include active orders count
-    const mesasWithStats = mesas.map(mesa => ({
+    // Transform data to include session status and active orders
+    const mesasWithStatus = mesas.map(mesa => ({
       ...mesa,
-      ordenesActivas: mesa._count.ordenes
+      estaActiva: mesa._count.sesiones > 0,
+      ordenesActivas: mesa._count.ordenes,
     }));
 
     res.json({
       success: true,
       data: {
-        mesas: mesasWithStats,
+        mesas: mesasWithStatus,
         total: mesas.length
       }
     });

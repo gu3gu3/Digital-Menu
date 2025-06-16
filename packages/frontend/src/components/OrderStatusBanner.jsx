@@ -7,14 +7,20 @@ import {
   HandRaisedIcon,
   XMarkIcon,
   CreditCardIcon,
-  ChevronRightIcon
+  ChevronRightIcon,
+  ArrowPathIcon,
+  BellIcon
 } from '@heroicons/react/24/outline';
 import OrderTracker from './OrderTracker';
+import menuService from '../services/menuService';
 
-const OrderStatusBanner = ({ ordenId, restauranteSlug }) => {
+const OrderStatusBanner = ({ ordenId, restauranteSlug, onClearOrder, tableNumber }) => {
   const [orden, setOrden] = useState(null);
   const [showTracker, setShowTracker] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [isCalling, setIsCalling] = useState(false);
+  const [callSuccess, setCallSuccess] = useState(false);
 
   // Configuración de estados con colores
   const estadosConfig = {
@@ -114,7 +120,8 @@ const OrderStatusBanner = ({ ordenId, restauranteSlug }) => {
   const fetchOrden = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/public/orden/${ordenId}`);
+      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+      const response = await fetch(`${API_BASE_URL}/api/public/orden/${ordenId}`);
       const data = await response.json();
       
       if (response.ok) {
@@ -136,6 +143,20 @@ const OrderStatusBanner = ({ ordenId, restauranteSlug }) => {
       hour: '2-digit',
       minute: '2-digit'
     });
+  };
+
+  const handleCallWaiter = async () => {
+    setIsCalling(true);
+    try {
+      await menuService.callWaiter(ordenId);
+      setCallSuccess(true);
+      setTimeout(() => setCallSuccess(false), 3000); // Reset success message
+    } catch (err) {
+      console.error('Error calling waiter', err);
+      // Podríamos mostrar un error específico si quisiéramos
+    } finally {
+      setTimeout(() => setIsCalling(false), 15000); // Re-enable after 15 seconds
+    }
   };
 
   if (!ordenId || loading || !orden) return null;
@@ -173,7 +194,7 @@ const OrderStatusBanner = ({ ordenId, restauranteSlug }) => {
                     {estadoActual.label}
                   </h3>
                   <span className="text-xs bg-white px-2 py-1 rounded-full font-medium">
-                    #{orden.numeroOrden.split('-').pop()}
+                    #{orden.numeroOrden}
                   </span>
                 </div>
                 <p className="text-sm text-gray-600 mt-1">
@@ -181,13 +202,33 @@ const OrderStatusBanner = ({ ordenId, restauranteSlug }) => {
                 </p>
               </div>
             </div>
-            <button
-              onClick={() => setShowTracker(true)}
-              className={`flex items-center space-x-1 px-3 py-2 rounded-lg transition-colors ${estadoActual.textColor} hover:bg-white hover:bg-opacity-50`}
-            >
-              <span className="text-sm font-medium">Ver detalles</span>
-              <ChevronRightIcon className="h-4 w-4" />
-            </button>
+            <div className="flex items-center space-x-2">
+              <button 
+                onClick={handleCallWaiter}
+                disabled={isCalling}
+                className={`p-2 rounded-full transition-all duration-300 ${
+                  isCalling 
+                    ? 'bg-gray-200 cursor-not-allowed' 
+                    : callSuccess 
+                    ? 'bg-green-500 text-white transform scale-110'
+                    : 'bg-primary-500 text-white hover:bg-primary-600 hover:scale-110'
+                }`}
+                title="Llamar al mesero"
+              >
+                {callSuccess ? <CheckCircleIcon className="h-5 w-5" /> : <BellIcon className="h-5 w-5" />}
+              </button>
+              <button onClick={fetchOrden} className="p-2 text-gray-500 hover:text-gray-800" title="Actualizar">
+                <ArrowPathIcon className={`h-5 w-5 ${loading ? 'animate-spin' : ''}`} />
+              </button>
+              <button
+                onClick={() => setShowTracker(true)}
+                className={`flex items-center space-x-1 px-3 py-2 rounded-lg transition-colors ${estadoActual.textColor} hover:bg-white hover:bg-opacity-50`}
+                title="Ver detalles completos"
+              >
+                <span className="text-sm font-medium">Ver detalles</span>
+                <ChevronRightIcon className="h-4 w-4" />
+              </button>
+            </div>
           </div>
         </div>
         

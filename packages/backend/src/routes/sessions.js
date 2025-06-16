@@ -21,7 +21,7 @@ const updateSessionSchema = Joi.object({
   metadata: Joi.object().optional()
 });
 
-// Utility function to generate session token
+// Utility function to generate session token - NO LONGER USED, BUT KEPT FOR NOW
 const generateSessionToken = () => {
   return crypto.randomBytes(32).toString('hex');
 };
@@ -56,9 +56,9 @@ const createSession = async (req, res) => {
     // Find mesa by numero and restaurant
     const mesa = await prisma.mesa.findFirst({
       where: {
-        numero: mesaNumero,
+        numero: parseInt(mesaNumero, 10),
         restauranteId: restaurante.id,
-        activa: true
+        activo: true
       }
     });
 
@@ -73,7 +73,7 @@ const createSession = async (req, res) => {
     const existingSession = await prisma.sesion.findFirst({
       where: {
         mesaId: mesa.id,
-        estado: 'ACTIVA'
+        activa: true
       }
     });
 
@@ -108,16 +108,15 @@ const createSession = async (req, res) => {
     }
 
     // Create new session
-    const sessionToken = generateSessionToken();
-    
     const nuevaSesion = await prisma.sesion.create({
       data: {
         mesaId: mesa.id,
         restauranteId: restaurante.id,
-        sessionToken,
         clienteNombre,
         clienteTelefono,
-        numeroPersonas
+        numeroPersonas,
+        activa: true,
+        ultimaActividad: new Date()
       },
       include: {
         mesa: {
@@ -147,15 +146,15 @@ const createSession = async (req, res) => {
   }
 };
 
-// @desc    Get session by token (Public endpoint)
-// @route   GET /api/sessions/:token
+// @desc    Get session by ID (was token) (Public endpoint)
+// @route   GET /api/sessions/:id
 // @access  Public
 const getSession = async (req, res) => {
   try {
-    const { token } = req.params;
+    const { id } = req.params;
 
     const sesion = await prisma.sesion.findUnique({
-      where: { sessionToken: token },
+      where: { id },
       include: {
         mesa: {
           select: { numero: true, nombre: true, capacidad: true }
@@ -188,7 +187,7 @@ const getSession = async (req, res) => {
     }
 
     // Update last activity if session is active
-    if (sesion.estado === 'ACTIVA') {
+    if (sesion.activa) {
       await prisma.sesion.update({
         where: { id: sesion.id },
         data: { ultimaActividad: new Date() }
@@ -209,12 +208,12 @@ const getSession = async (req, res) => {
   }
 };
 
-// @desc    Update session (Public endpoint)
-// @route   PUT /api/sessions/:token
+// @desc    Update session (was token) (Public endpoint)
+// @route   PUT /api/sessions/:id
 // @access  Public
 const updateSession = async (req, res) => {
   try {
-    const { token } = req.params;
+    const { id } = req.params;
     const { error, value } = updateSessionSchema.validate(req.body);
 
     if (error) {
@@ -225,7 +224,7 @@ const updateSession = async (req, res) => {
     }
 
     const sesion = await prisma.sesion.findUnique({
-      where: { sessionToken: token }
+      where: { id }
     });
 
     if (!sesion) {
@@ -235,7 +234,7 @@ const updateSession = async (req, res) => {
       });
     }
 
-    if (sesion.estado !== 'ACTIVA') {
+    if (!sesion.activa) {
       return res.status(400).json({
         success: false,
         error: 'Solo se pueden actualizar sesiones activas'
@@ -273,15 +272,15 @@ const updateSession = async (req, res) => {
   }
 };
 
-// @desc    Close session (Public endpoint)
-// @route   POST /api/sessions/:token/close
+// @desc    Close session (was token) (Public endpoint)
+// @route   POST /api/sessions/:id/close
 // @access  Public
 const closeSession = async (req, res) => {
   try {
-    const { token } = req.params;
+    const { id } = req.params;
 
     const sesion = await prisma.sesion.findUnique({
-      where: { sessionToken: token }
+      where: { id }
     });
 
     if (!sesion) {
@@ -291,7 +290,7 @@ const closeSession = async (req, res) => {
       });
     }
 
-    if (sesion.estado === 'CERRADA') {
+    if (!sesion.activa) {
       return res.status(400).json({
         success: false,
         error: 'La sesión ya está cerrada'
@@ -301,7 +300,7 @@ const closeSession = async (req, res) => {
     const sesionCerrada = await prisma.sesion.update({
       where: { id: sesion.id },
       data: {
-        estado: 'CERRADA',
+        activa: false,
         finSesion: new Date(),
         ultimaActividad: new Date()
       }
@@ -335,7 +334,7 @@ const getRestaurantSessions = async (req, res) => {
     };
 
     if (estado) {
-      whereClause.estado = estado;
+      whereClause.activa = estado === 'activa';
     }
 
     if (mesaId) {
@@ -352,7 +351,7 @@ const getRestaurantSessions = async (req, res) => {
           select: { ordenes: true }
         }
       },
-      orderBy: { inicioSesion: 'desc' },
+      orderBy: { createdAt: 'desc' },
       take: parseInt(limit),
       skip: parseInt(offset)
     });
@@ -388,7 +387,7 @@ const getSessionStats = async (req, res) => {
     const { restauranteId } = req.user;
 
     const stats = await prisma.sesion.groupBy({
-      by: ['estado'],
+      by: ['activa'],
       where: { restauranteId },
       _count: { _all: true }
     });
@@ -399,7 +398,7 @@ const getSessionStats = async (req, res) => {
     const todayStats = await prisma.sesion.count({
       where: {
         restauranteId,
-        inicioSesion: {
+        createdAt: {
           gte: today
         }
       }
@@ -408,7 +407,7 @@ const getSessionStats = async (req, res) => {
     const activeSessions = await prisma.sesion.findMany({
       where: {
         restauranteId,
-        estado: 'ACTIVA'
+        activa: true
       },
       include: {
         mesa: {
@@ -418,7 +417,7 @@ const getSessionStats = async (req, res) => {
     });
 
     const formattedStats = stats.reduce((acc, stat) => {
-      acc[stat.estado.toLowerCase()] = stat._count._all;
+      acc[stat.activa ? 'activas' : 'cerradas'] = stat._count._all;
       return acc;
     }, {});
 
@@ -446,9 +445,9 @@ const { authenticate, requireAdmin } = require('../middleware/authMiddleware');
 
 // Public routes (for customers scanning QR)
 router.post('/', createSession);
-router.get('/:token', getSession);
-router.put('/:token', updateSession);
-router.post('/:token/close', closeSession);
+router.get('/:id', getSession);
+router.put('/:id', updateSession);
+router.post('/:id/close', closeSession);
 
 // Admin routes (for restaurant management)
 router.get('/restaurant/all', authenticate, requireAdmin, getRestaurantSessions);

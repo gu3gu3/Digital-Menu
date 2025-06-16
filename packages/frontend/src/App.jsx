@@ -21,6 +21,7 @@ import ExpiringSubscriptionsPage from './pages/ExpiringSubscriptionsPage'
 import SendNotificationsPage from './pages/SendNotificationsPage'
 import RenewSubscriptionPage from './pages/RenewSubscriptionPage'
 import PlansManagementPage from './pages/PlansManagementPage'
+import NotificationsPage from './pages/NotificationsPage'
 
 function App() {
   return (
@@ -58,6 +59,7 @@ function App() {
             <Route path="tables" element={<AdminTablesPage />} />
             <Route path="orders" element={<AdminOrdersPage />} />
             <Route path="staff" element={<AdminStaffPage />} />
+            <Route path="notifications" element={<NotificationsPage />} />
             {/* Future admin routes will go here */}
             {/* <Route path="settings" element={<AdminSettings />} /> */}
           </Route>

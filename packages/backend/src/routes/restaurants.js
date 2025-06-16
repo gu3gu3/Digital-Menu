@@ -55,14 +55,15 @@ router.get('/me', authenticate, requireAdmin, async (req, res) => {
       include: {
         plan: {
           select: {
-            id: true,
             nombre: true,
-            descripcion: true,
-            precio: true,
             limiteProductos: true,
-            limiteMesas: true,
+            limiteCategorias: true,
             limiteMeseros: true,
-            limiteOrdenes: true
+            limiteMesas: true,
+            limiteOrdenes: true,
+            soporteEmail: true,
+            soporteChat: true,
+            analiticas: true
           }
         }
       }
@@ -130,14 +131,15 @@ router.put('/me', authenticate, requireAdmin, async (req, res) => {
       include: {
         plan: {
           select: {
-            id: true,
             nombre: true,
-            descripcion: true,
-            precio: true,
             limiteProductos: true,
-            limiteMesas: true,
+            limiteCategorias: true,
             limiteMeseros: true,
-            limiteOrdenes: true
+            limiteMesas: true,
+            limiteOrdenes: true,
+            soporteEmail: true,
+            soporteChat: true,
+            analiticas: true
           }
         }
       }

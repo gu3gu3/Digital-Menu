@@ -250,60 +250,52 @@ const SubscriptionsListPage = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {subscriptions.map((subscription) => (
-                  <tr key={subscription.id} className="hover:bg-gray-50">
+                {subscriptions.map(suscripcion => (
+                  <tr key={suscripcion.id}>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div>
-                        <div className="text-sm font-medium text-gray-900">
-                          {subscription.restaurante.nombre}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          {subscription.restaurante.email}
-                        </div>
-                      </div>
+                      <div className="text-sm font-medium text-gray-900">{suscripcion.restaurante.nombre}</div>
+                      <div className="text-sm text-gray-500">{suscripcion.restaurante.email}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
-                        {subscription.plan.nombre}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        ${subscription.plan.precio}/mes
-                      </div>
+                      <div className="text-sm text-gray-900">{suscripcion.restaurante.plan.nombre}</div>
+                      <div className="text-sm text-gray-500">${parseFloat(suscripcion.restaurante.plan.precio).toFixed(2)}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeClass(subscription.estado)}`}>
-                        {subscription.estado}
+                      <span
+                        className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeClass(suscripcion.estado)}`}
+                      >
+                        {suscripcion.estado}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className={`text-sm ${getDaysUntilExpiryColor(subscription.diasHastaVencimiento)}`}>
-                        {superAdminService.formatDate(subscription.fechaVencimiento)}
+                      <div className={`text-sm ${getDaysUntilExpiryColor(suscripcion.diasHastaVencimiento)}`}>
+                        {new Date(suscripcion.fechaVencimiento).toLocaleDateString()}
                       </div>
-                      <div className={`text-xs ${getDaysUntilExpiryColor(subscription.diasHastaVencimiento)}`}>
-                        {subscription.diasHastaVencimiento < 0 
-                          ? `Vencida hace ${Math.abs(subscription.diasHastaVencimiento)} días`
-                          : `${subscription.diasHastaVencimiento} días restantes`
+                      <div className="text-xs text-gray-500">
+                        {suscripcion.diasHastaVencimiento >= 0 
+                          ? `en ${suscripcion.diasHastaVencimiento} días`
+                          : `hace ${-suscripcion.diasHastaVencimiento} días`
                         }
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {subscription.historialPagos.length > 0 
-                        ? superAdminService.formatDate(subscription.historialPagos[0].fechaPago)
-                        : 'Sin pagos'
-                      }
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {suscripcion.historialPagos && suscripcion.historialPagos.length > 0 ? (
+                        <>
+                          <div className="text-sm text-gray-900">${parseFloat(suscripcion.historialPagos[0].monto).toFixed(2)}</div>
+                          <div className="text-xs text-gray-500">
+                            {new Date(suscripcion.historialPagos[0].fechaPago).toLocaleDateString()}
+                          </div>
+                        </>
+                      ) : (
+                        <span className="text-xs text-gray-500">N/A</span>
+                      )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <Link
-                        to={`/super-admin/subscriptions/${subscription.id}`}
+                        to={`/super-admin/subscriptions/${suscripcion.id}`}
                         className="text-indigo-600 hover:text-indigo-900"
                       >
-                        Ver
-                      </Link>
-                      <Link
-                        to={`/super-admin/subscriptions/${subscription.id}/renew`}
-                        className="text-green-600 hover:text-green-900"
-                      >
-                        Renovar
+                        Ver Detalles
                       </Link>
                     </td>
                   </tr>
