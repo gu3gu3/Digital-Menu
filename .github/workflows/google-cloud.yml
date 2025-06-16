@@ -53,11 +53,6 @@ jobs:
           min_instances: 0
           max_instances: 1
           cloud_sql_instances: '${{ env.PROJECT_ID }}:${{ env.REGION }}:digital-menu-db'
-          env_vars: |
-            NODE_ENV=production
-            GCP_PROJECT_ID=${{ env.PROJECT_ID }}
-            GCP_STORAGE_BUCKET=${{ env.PROJECT_ID }}-uploads
-            DATABASE_URL=postgresql://postgres:JAFgQKBgQDZTW@/menuview_db?host=/cloudsql/${{ env.PROJECT_ID }}:${{ env.REGION }}:digital-menu-db
 
       - name: Show Cloud Run URL
         run: echo "Deployment successful. URL: ${{ steps.deploy.outputs.url }}" 
