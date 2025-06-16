@@ -48,7 +48,16 @@ jobs:
           service: ${{ env.SERVICE_NAME }}
           region: ${{ env.REGION }}
           image: ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
-          flags: '--allow-unauthenticated --platform=managed --min-instances=0 --max-instances=1 --set-cloudsql-instances=${{ env.PROJECT_ID }}:${{ env.REGION }}:digital-menu-db'
+          platform: 'managed'
+          allow_unauthenticated: true
+          min_instances: 0
+          max_instances: 1
+          cloud_sql_instances: '${{ env.PROJECT_ID }}:${{ env.REGION }}:digital-menu-db'
+          env_vars: |
+            NODE_ENV=production
+            GCP_PROJECT_ID=${{ env.PROJECT_ID }}
+            GCP_STORAGE_BUCKET=${{ env.PROJECT_ID }}-uploads
+            DATABASE_URL=postgresql://postgres:JAFgQKBgQDZTW@/menuview_db?host=/cloudsql/${{ env.PROJECT_ID }}:${{ env.REGION }}:digital-menu-db
 
       - name: Show Cloud Run URL
         run: echo "Deployment successful. URL: ${{ steps.deploy.outputs.url }}" 
