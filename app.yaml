@@ -17,7 +17,7 @@ beta_settings:
 
 env_variables:
   NODE_ENV: "production"
-  DATABASE_URL: "postgresql://postgres:JAFgQKBgQDZTW@/menuview_db?host=/cloudsql/digital-menu-455517:us-central1:digital-menu-db"
+  DATABASE_URL: 'postgresql://postgres:JAFgQKBgQDZTW@/menuview_db?host=/cloudsql/digital-menu-455517:us-central1:digital-menu-db'
   GCP_STORAGE_BUCKET: "digital-menu-455517-media"
 
 # Force redeploy to fetch latest secrets 
