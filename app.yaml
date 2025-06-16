@@ -1,21 +1,20 @@
 runtime: nodejs20
-env: standard
+
 instance_class: F1
 
 env_variables:
   DATABASE_URL: 'postgresql://postgres:JAFgQKBgQDZTW@/menuview_db?host=/cloudsql/digital-menu-455517:us-central1:digital-menu-db'
 
 handlers:
-  - url: /.*
-    script: auto
-    secure: always
+- url: /.*
+  script: auto
+  secure: always
 
 automatic_scaling:
   min_instances: 0
   max_instances: 1
   target_cpu_utilization: 0.65
 
-# Correct health check configuration for App Engine Standard (nodejs20)
 liveness_check:
   path: "/health"
   check_interval_sec: 30
@@ -30,14 +29,3 @@ readiness_check:
   failure_threshold: 2
   success_threshold: 2
   app_start_timeout_sec: 300
-
-# Force redeploy to fetch latest secrets 
-
-health_check:
-  enable_health_check: true
-  check_interval_sec: 30
-  timeout_sec: 4
-  unhealthy_threshold: 2
-  healthy_threshold: 2
-  restart_threshold: 4
-  path: "/health" 
