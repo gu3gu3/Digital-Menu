@@ -4,6 +4,8 @@ instance_class: F1
 
 env_variables:
   DATABASE_URL: 'postgresql://postgres:JAFgQKBgQDZTW@/menuview_db?host=/cloudsql/digital-menu-455517:us-central1:digital-menu-db'
+  GCP_PROJECT_ID: 'digital-menu-455517'
+  GCP_STORAGE_BUCKET: 'digital-menu-455517-uploads'
 
 handlers:
 - url: /.*
