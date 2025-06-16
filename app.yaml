@@ -2,6 +2,8 @@ service: default
 runtime: nodejs20
 instance_class: F1
 
+entrypoint: bash entrypoint.sh
+
 handlers:
   - url: /.*
     script: auto
