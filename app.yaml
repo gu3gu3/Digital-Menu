@@ -1,6 +1,5 @@
 runtime: nodejs20
 env: standard
-
 instance_class: F1
 
 env_variables:
@@ -15,10 +14,6 @@ automatic_scaling:
   min_instances: 0
   max_instances: 1
   target_cpu_utilization: 0.65
-
-# The following section is not needed if DATABASE_URL is set directly
-# beta_settings:
-#   cloud_sql_instances: digital-menu-455517:us-central1:digital-menu-db
 
 # Correct health check configuration for App Engine Standard (nodejs20)
 liveness_check:
