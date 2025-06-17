@@ -141,13 +141,13 @@ const OrderDetailsModal = ({ isOpen, onClose, order, onOrderUpdate }) => {
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
     try {
-      return new Date(dateString).toLocaleString('es-NI', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
+    return new Date(dateString).toLocaleString('es-NI', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
     } catch (error) {
       console.error('Error formatting date:', error);
       return 'N/A';

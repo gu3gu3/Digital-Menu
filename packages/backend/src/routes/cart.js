@@ -15,7 +15,7 @@ const findOrCreateCart = async (sesionId) => {
   });
 
   if (!sesion) throw new Error('Sesión no válida');
-  
+
   // Check if session is active
   if (!sesion.activa) {
     throw new Error('La sesión está cerrada. No se pueden realizar nuevos pedidos.');
@@ -72,22 +72,22 @@ const findOrCreateCart = async (sesionId) => {
       // Use a transaction to ensure atomicity
       return await prisma.$transaction(async (tx) => {
         const lastOrder = await tx.orden.findFirst({
-          where: { restauranteId: sesion.restauranteId },
-          orderBy: { numeroOrden: 'desc' },
-        });
-        const newOrderNumber = (lastOrder?.numeroOrden || 0) + 1;
+      where: { restauranteId: sesion.restauranteId },
+      orderBy: { numeroOrden: 'desc' },
+    });
+    const newOrderNumber = (lastOrder?.numeroOrden || 0) + 1;
 
         return await tx.orden.create({
-          data: {
-            numeroOrden: newOrderNumber,
-            estado: 'CARRITO',
-            subtotal: 0,
-            total: 0,
-            restaurante: { connect: { id: sesion.restauranteId } },
-            mesa: { connect: { id: sesion.mesaId } },
-            sesion: { connect: { id: sesionId } },
-          },
-          include: { items: { include: { producto: true } } }
+        data: {
+          numeroOrden: newOrderNumber,
+          estado: 'CARRITO',
+          subtotal: 0,
+          total: 0,
+          restaurante: { connect: { id: sesion.restauranteId } },
+          mesa: { connect: { id: sesion.mesaId } },
+          sesion: { connect: { id: sesionId } },
+        },
+        include: { items: { include: { producto: true } } }
         });
       });
     } catch (e) {

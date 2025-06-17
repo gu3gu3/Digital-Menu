@@ -152,10 +152,10 @@ const PublicMenuPage = () => {
     } catch (error) {
       console.error('Error updating session with customer name:', error)
       // Aún así permitir continuar, solo mostrar advertencia
-      setCustomerName(name)
-      localStorage.setItem(`customerName_${slug}_${mesaNumero}`, name)
-      setIsNameModalOpen(false)
-      showNotification(`¡Hola, ${name}! Bienvenido.`, 'success')
+    setCustomerName(name)
+    localStorage.setItem(`customerName_${slug}_${mesaNumero}`, name)
+    setIsNameModalOpen(false)
+    showNotification(`¡Hola, ${name}! Bienvenido.`, 'success')
     }
   }
 

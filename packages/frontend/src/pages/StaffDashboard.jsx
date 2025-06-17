@@ -163,10 +163,10 @@ const StaffDashboard = () => {
   const formatTime = (dateString) => {
     if (!dateString) return 'N/A';
     try {
-      return new Date(dateString).toLocaleString('es-NI', {
-        hour: '2-digit',
-        minute: '2-digit'
-      });
+    return new Date(dateString).toLocaleString('es-NI', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
     } catch (error) {
       console.error('Error formatting time:', error);
       return 'N/A';
