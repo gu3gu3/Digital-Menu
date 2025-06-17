@@ -1,0 +1,121 @@
+[debug] [2025-06-16T22:14:31.743Z] ----------------------------------------------------------------------
+[debug] [2025-06-16T22:14:31.745Z] Command:       /usr/bin/node-22 /home/moisesmorales/Development/Digital-Menu/Digital-Menu/node_modules/.bin/firebase init hosting
+[debug] [2025-06-16T22:14:31.746Z] CLI Version:   14.7.0
+[debug] [2025-06-16T22:14:31.746Z] Platform:      linux
+[debug] [2025-06-16T22:14:31.746Z] Node Version:  v22.15.1
+[debug] [2025-06-16T22:14:31.746Z] Time:          Mon Jun 16 2025 16:14:31 GMT-0600 (Central Standard Time)
+[debug] [2025-06-16T22:14:31.746Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-06-16T22:14:31.751Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-06-16T22:14:31.751Z] > authorizing via signed-in user (gueeguense@gmail.com)
+[info] 
+     ######## #### ########  ######## ########     ###     ######  ########
+     ##        ##  ##     ## ##       ##     ##  ##   ##  ##       ##
+     ######    ##  ########  ######   ########  #########  ######  ######
+     ##        ##  ##    ##  ##       ##     ## ##     ##       ## ##
+     ##       #### ##     ## ######## ########  ##     ##  ######  ########
+
+You're about to initialize a Firebase project in this directory:
+
+  /home/moisesmorales/Development/Digital-Menu/Digital-Menu
+
+[info] 
+=== Project Setup
+[info] 
+[info] First, let's associate this project directory with a Firebase project.
+[info] You can create multiple project aliases by running firebase use --add, 
+[info] but for now we'll just set up a default project.
+[info] 
+[debug] [2025-06-16T22:53:31.002Z] ----------------------------------------------------------------------
+[debug] [2025-06-16T22:53:31.005Z] Command:       /usr/bin/node-22 /home/moisesmorales/Development/Digital-Menu/Digital-Menu/node_modules/.bin/firebase hosting:sites:create digital-menu-455517 --project=digital-menu-455517
+[debug] [2025-06-16T22:53:31.005Z] CLI Version:   14.7.0
+[debug] [2025-06-16T22:53:31.005Z] Platform:      linux
+[debug] [2025-06-16T22:53:31.005Z] Node Version:  v22.15.1
+[debug] [2025-06-16T22:53:31.005Z] Time:          Mon Jun 16 2025 16:53:31 GMT-0600 (Central Standard Time)
+[debug] [2025-06-16T22:53:31.006Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-06-16T22:53:31.177Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-06-16T22:53:31.177Z] > authorizing via signed-in user (gueeguense@gmail.com)
+[debug] [2025-06-16T22:53:31.178Z] [iam] checking project digital-menu-455517 for permissions ["firebase.projects.get","firebasehosting.sites.update"]
+[debug] [2025-06-16T22:53:31.178Z] Checked if tokens are valid: true, expires at: 1750115644194
+[debug] [2025-06-16T22:53:31.179Z] Checked if tokens are valid: true, expires at: 1750115644194
+[debug] [2025-06-16T22:53:31.179Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/digital-menu-455517:testIamPermissions [none]
+[debug] [2025-06-16T22:53:31.179Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/digital-menu-455517:testIamPermissions x-goog-quota-user=projects/digital-menu-455517
+[debug] [2025-06-16T22:53:31.180Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/digital-menu-455517:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2025-06-16T22:53:31.617Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/digital-menu-455517:testIamPermissions 200
+[debug] [2025-06-16T22:53:31.617Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/digital-menu-455517:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2025-06-16T22:53:31.619Z] Checked if tokens are valid: true, expires at: 1750115644194
+[debug] [2025-06-16T22:53:31.619Z] Checked if tokens are valid: true, expires at: 1750115644194
+[debug] [2025-06-16T22:53:31.619Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/digital-menu-455517/services/cloudresourcemanager.googleapis.com [none]
+[debug] [2025-06-16T22:53:31.619Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/digital-menu-455517/services/cloudresourcemanager.googleapis.com x-goog-quota-user=projects/digital-menu-455517
+[debug] [2025-06-16T22:53:32.149Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/digital-menu-455517/services/cloudresourcemanager.googleapis.com 200
+[debug] [2025-06-16T22:53:32.149Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/digital-menu-455517/services/cloudresourcemanager.googleapis.com [omitted]
+[debug] [2025-06-16T22:53:32.149Z] Checked if tokens are valid: true, expires at: 1750115644194
+[debug] [2025-06-16T22:53:32.149Z] Checked if tokens are valid: true, expires at: 1750115644194
+[debug] [2025-06-16T22:53:32.150Z] >>> [apiv2][query] GET https://cloudresourcemanager.googleapis.com/v1/projects/digital-menu-455517 [none]
+[debug] [2025-06-16T22:53:32.315Z] <<< [apiv2][status] GET https://cloudresourcemanager.googleapis.com/v1/projects/digital-menu-455517 200
+[debug] [2025-06-16T22:53:32.315Z] <<< [apiv2][body] GET https://cloudresourcemanager.googleapis.com/v1/projects/digital-menu-455517 {"projectNumber":"433607530847","projectId":"digital-menu-455517","lifecycleState":"ACTIVE","name":"Digital-Menu","createTime":"2025-04-01T17:36:52.854576Z"}
+[debug] [2025-06-16T22:53:32.316Z] Checked if tokens are valid: true, expires at: 1750115644194
+[debug] [2025-06-16T22:53:32.317Z] Checked if tokens are valid: true, expires at: 1750115644194
+[debug] [2025-06-16T22:53:32.318Z] >>> [apiv2][query] POST https://firebasehosting.googleapis.com/v1beta1/projects/433607530847/sites siteId=digital-menu-455517
+[debug] [2025-06-16T22:53:32.318Z] >>> [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/433607530847/sites {"appId":""}
+[debug] [2025-06-16T22:53:32.872Z] <<< [apiv2][status] POST https://firebasehosting.googleapis.com/v1beta1/projects/433607530847/sites 404
+[debug] [2025-06-16T22:53:32.872Z] <<< [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/433607530847/sites {"error":{"code":404,"message":"Requested entity was not found.","status":"NOT_FOUND"}}
+[warn] ⚠  Request to https://firebasehosting.googleapis.com/v1beta1/projects/433607530847/sites?siteId=digital-menu-455517 had HTTP Error: 404, Requested entity was not found. 
+[debug] [2025-06-16T22:55:39.106Z] ----------------------------------------------------------------------
+[debug] [2025-06-16T22:55:39.108Z] Command:       /usr/bin/node-22 /home/moisesmorales/Development/Digital-Menu/Digital-Menu/node_modules/.bin/firebase hosting:sites:create digital-menu-455517 --project=digital-menu-455517
+[debug] [2025-06-16T22:55:39.109Z] CLI Version:   14.7.0
+[debug] [2025-06-16T22:55:39.109Z] Platform:      linux
+[debug] [2025-06-16T22:55:39.109Z] Node Version:  v22.15.1
+[debug] [2025-06-16T22:55:39.109Z] Time:          Mon Jun 16 2025 16:55:39 GMT-0600 (Central Standard Time)
+[debug] [2025-06-16T22:55:39.109Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-06-16T22:55:39.289Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-06-16T22:55:39.289Z] > authorizing via signed-in user (gueeguense@gmail.com)
+[debug] [2025-06-16T22:55:39.289Z] [iam] checking project digital-menu-455517 for permissions ["firebase.projects.get","firebasehosting.sites.update"]
+[debug] [2025-06-16T22:55:39.290Z] Checked if tokens are valid: true, expires at: 1750115644194
+[debug] [2025-06-16T22:55:39.290Z] Checked if tokens are valid: true, expires at: 1750115644194
+[debug] [2025-06-16T22:55:39.291Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/digital-menu-455517:testIamPermissions [none]
+[debug] [2025-06-16T22:55:39.291Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/digital-menu-455517:testIamPermissions x-goog-quota-user=projects/digital-menu-455517
+[debug] [2025-06-16T22:55:39.292Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/digital-menu-455517:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2025-06-16T22:55:39.618Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/digital-menu-455517:testIamPermissions 200
+[debug] [2025-06-16T22:55:39.618Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/digital-menu-455517:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2025-06-16T22:55:39.619Z] Checked if tokens are valid: true, expires at: 1750115644194
+[debug] [2025-06-16T22:55:39.619Z] Checked if tokens are valid: true, expires at: 1750115644194
+[debug] [2025-06-16T22:55:39.619Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/digital-menu-455517/services/cloudresourcemanager.googleapis.com [none]
+[debug] [2025-06-16T22:55:39.619Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/digital-menu-455517/services/cloudresourcemanager.googleapis.com x-goog-quota-user=projects/digital-menu-455517
+[debug] [2025-06-16T22:55:40.130Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/digital-menu-455517/services/cloudresourcemanager.googleapis.com 200
+[debug] [2025-06-16T22:55:40.130Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/digital-menu-455517/services/cloudresourcemanager.googleapis.com [omitted]
+[debug] [2025-06-16T22:55:40.131Z] Checked if tokens are valid: true, expires at: 1750115644194
+[debug] [2025-06-16T22:55:40.131Z] Checked if tokens are valid: true, expires at: 1750115644194
+[debug] [2025-06-16T22:55:40.131Z] >>> [apiv2][query] GET https://cloudresourcemanager.googleapis.com/v1/projects/digital-menu-455517 [none]
+[debug] [2025-06-16T22:55:40.277Z] <<< [apiv2][status] GET https://cloudresourcemanager.googleapis.com/v1/projects/digital-menu-455517 200
+[debug] [2025-06-16T22:55:40.278Z] <<< [apiv2][body] GET https://cloudresourcemanager.googleapis.com/v1/projects/digital-menu-455517 {"projectNumber":"433607530847","projectId":"digital-menu-455517","lifecycleState":"ACTIVE","name":"Digital-Menu","createTime":"2025-04-01T17:36:52.854576Z"}
+[debug] [2025-06-16T22:55:40.279Z] Checked if tokens are valid: true, expires at: 1750115644194
+[debug] [2025-06-16T22:55:40.279Z] Checked if tokens are valid: true, expires at: 1750115644194
+[debug] [2025-06-16T22:55:40.280Z] >>> [apiv2][query] POST https://firebasehosting.googleapis.com/v1beta1/projects/433607530847/sites siteId=digital-menu-455517
+[debug] [2025-06-16T22:55:40.280Z] >>> [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/433607530847/sites {"appId":""}
+[debug] [2025-06-16T22:55:40.859Z] <<< [apiv2][status] POST https://firebasehosting.googleapis.com/v1beta1/projects/433607530847/sites 404
+[debug] [2025-06-16T22:55:40.859Z] <<< [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/433607530847/sites {"error":{"code":404,"message":"Requested entity was not found.","status":"NOT_FOUND"}}
+[warn] ⚠  Request to https://firebasehosting.googleapis.com/v1beta1/projects/433607530847/sites?siteId=digital-menu-455517 had HTTP Error: 404, Requested entity was not found. 
+[debug] [2025-06-16T22:55:59.434Z] Checked if tokens are valid: true, expires at: 1750115644194
+[debug] [2025-06-16T22:55:59.434Z] Checked if tokens are valid: true, expires at: 1750115644194
+[debug] [2025-06-16T22:55:59.435Z] >>> [apiv2][query] POST https://firebasehosting.googleapis.com/v1beta1/projects/433607530847/sites siteId=digital-menu-web
+[debug] [2025-06-16T22:55:59.435Z] >>> [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/433607530847/sites {"appId":""}
+[debug] [2025-06-16T22:56:00.274Z] <<< [apiv2][status] POST https://firebasehosting.googleapis.com/v1beta1/projects/433607530847/sites 400
+[debug] [2025-06-16T22:56:00.275Z] <<< [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/433607530847/sites {"error":{"code":400,"message":"Invalid name: `digital-menu-web` is reserved by another project; try something like `digital-menu-web-73abb` instead","status":"FAILED_PRECONDITION"}}
+[warn] ⚠  Invalid name: `digital-menu-web` is reserved by another project; try something like `digital-menu-web-73abb` instead 
+[debug] [2025-06-16T22:56:42.543Z] Checked if tokens are valid: true, expires at: 1750115644194
+[debug] [2025-06-16T22:56:42.543Z] Checked if tokens are valid: true, expires at: 1750115644194
+[debug] [2025-06-16T22:56:42.544Z] >>> [apiv2][query] POST https://firebasehosting.googleapis.com/v1beta1/projects/433607530847/sites siteId=digital-menu-web
+[debug] [2025-06-16T22:56:42.544Z] >>> [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/433607530847/sites {"appId":""}
+[debug] [2025-06-16T22:56:43.358Z] <<< [apiv2][status] POST https://firebasehosting.googleapis.com/v1beta1/projects/433607530847/sites 400
+[debug] [2025-06-16T22:56:43.358Z] <<< [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/433607530847/sites {"error":{"code":400,"message":"Invalid name: `digital-menu-web` is reserved by another project; try something like `digital-menu-web-12cda` instead","status":"FAILED_PRECONDITION"}}
+[warn] ⚠  Invalid name: `digital-menu-web` is reserved by another project; try something like `digital-menu-web-12cda` instead 
+[debug] [2025-06-16T22:57:14.582Z] Checked if tokens are valid: true, expires at: 1750115644194
+[debug] [2025-06-16T22:57:14.583Z] Checked if tokens are valid: true, expires at: 1750115644194
+[debug] [2025-06-16T22:57:14.583Z] >>> [apiv2][query] POST https://firebasehosting.googleapis.com/v1beta1/projects/433607530847/sites siteId=digital-menu-webab2025
+[debug] [2025-06-16T22:57:14.583Z] >>> [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/433607530847/sites {"appId":""}
+[debug] [2025-06-16T22:57:15.102Z] <<< [apiv2][status] POST https://firebasehosting.googleapis.com/v1beta1/projects/433607530847/sites 404
+[debug] [2025-06-16T22:57:15.103Z] <<< [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/433607530847/sites {"error":{"code":404,"message":"Requested entity was not found.","status":"NOT_FOUND"}}
+[warn] ⚠  Request to https://firebasehosting.googleapis.com/v1beta1/projects/433607530847/sites?siteId=digital-menu-webab2025 had HTTP Error: 404, Requested entity was not found. 

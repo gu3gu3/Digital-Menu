@@ -2,8 +2,6 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline'
 import logo from '../assets/logo.png'
-import { useAuth } from '../context/AuthContext'
-import API_BASE_URL from '../config/api'
 
 const AdminLoginPage = () => {
   const [formData, setFormData] = useState({
@@ -28,7 +26,7 @@ const AdminLoginPage = () => {
     setError('')
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+      const response = await fetch('http://localhost:3001/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

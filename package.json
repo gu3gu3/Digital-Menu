@@ -14,7 +14,12 @@
     "start": "npm run start --workspace=backend",
     "db:migrate": "npm run db:migrate --workspace=backend",
     "db:seed": "npm run db:seed --workspace=backend",
-    "db:studio": "npm run db:studio --workspace=backend"
+    "db:studio": "npm run db:studio --workspace=backend",
+    "railway:build": "npm run build:backend",
+    "railway:start": "npm run start:prod --workspace=backend",
+    "build:backend": "npm run build --workspace=backend",
+    "build:frontend": "npm run build --workspace=frontend",
+    "deploy:setup": "npm run db:migrate && npm run db:seed"
   },
   "devDependencies": {
     "concurrently": "^8.2.2",

@@ -44,17 +44,12 @@ Tecnologías principales:
 
 A continuación se detalla el esquema de la base de datos PostgreSQL, gestionado a través de Prisma. Este esquema representa la "fuente de la verdad" para la estructura de datos de toda la aplicación.
 
+### **Modelos Principales**
+
 ```prisma
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
-
-generator client {
-  provider = "prisma-client-js"
-}
-
-// Modelos de la aplicación
+// ----------------------------------------
+// 1. GESTIÓN DE PLANES Y SUSCRIPCIONES
+// ----------------------------------------
 
 model Plan {
   id               String       @id @default(cuid())
@@ -62,9 +57,7 @@ model Plan {
   precio           Float
   limiteProductos  Int
   limiteCategorias Int
-  limiteMeseros    Int          @default(0) // Renombrado desde limiteUsuarios
-  limiteMesas      Int          @default(0) // Límite de mesas
-  limiteOrdenes    Int          @default(0) // Límite de órdenes mensuales
+  limiteUsuarios   Int
   soporteEmail     Boolean      @default(false)
   soporteChat      Boolean      @default(false)
   analiticas       Boolean      @default(false)
@@ -75,6 +68,44 @@ model Plan {
   restaurantes     Restaurante[]
   @@map("planes")
 }
+
+model Suscripcion {
+  id                String       @id @default(cuid())
+  estado            String       @default("ACTIVA") // ACTIVA, VENCIDA, CANCELADA
+  fechaInicio       DateTime
+  fechaVencimiento  DateTime
+  renovacionAutomatica Boolean   @default(true)
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  restauranteId     String       @unique
+  restaurante       Restaurante  @relation(fields: [restauranteId], references: [id], onDelete: Cascade)
+  historialPagos    HistorialPago[]
+  
+  @@map("suscripciones")
+}
+
+model HistorialPago {
+  id                String       @id @default(cuid())
+  suscripcionId     String
+  monto             Decimal
+  mesesPagados      Int
+  fechaPago         DateTime     @default(now())
+  metodoPago        String?
+  referenciaPago    String?
+  procesadoPor      String?
+  notas             String?
+  createdAt         DateTime     @default(now())
+  
+  suscripcion       Suscripcion  @relation(fields: [suscripcionId], references: [id], onDelete: Cascade)
+  
+  @@map("historial_pagos")
+}
+
+
+// ----------------------------------------
+// 2. ESTRUCTURA DEL RESTAURANTE
+// ----------------------------------------
 
 model Restaurante {
   id                String       @id @default(cuid())
@@ -108,64 +139,6 @@ model Restaurante {
 
   suscripcion       Suscripcion?
   @@map("restaurantes")
-}
-
-model UsuarioAdmin {
-  id                String       @id @default(cuid())
-  email             String       @unique
-  password          String
-  nombre            String
-  apellido          String?
-  telefono          String?
-  activo            Boolean      @default(true)
-  emailVerificado   Boolean      @default(false)
-  lastLogin         DateTime?
-  createdAt         DateTime     @default(now())
-  updatedAt         DateTime     @updatedAt
-
-  restauranteId     String
-  restaurante       Restaurante  @relation(fields: [restauranteId], references: [id], onDelete: Cascade)
-  
-  @@map("usuarios_admin")
-}
-
-model UsuarioMesero {
-  id                String       @id @default(cuid())
-  email             String       @unique
-  password          String
-  nombre            String
-  apellido          String?
-  telefono          String?
-  pin               String?
-  activo            Boolean      @default(true)
-  lastLogin         DateTime?
-  createdAt         DateTime     @default(now())
-  updatedAt         DateTime     @updatedAt
-
-  restauranteId     String
-  restaurante       Restaurante  @relation(fields: [restauranteId], references: [id], onDelete: Cascade)
-  ordenes           Orden[]      // Un mesero puede tener muchas órdenes asignadas
-  
-  @@map("usuarios_mesero")
-}
-
-model Mesa {
-  id                String       @id @default(cuid())
-  nombre            String
-  numero            Int
-  capacidad         Int          @default(1)
-  activo            Boolean      @default(true)
-  qrCodeUrl         String?
-  createdAt         DateTime     @default(now())
-  updatedAt         DateTime     @updatedAt
-
-  restauranteId     String
-  restaurante       Restaurante  @relation(fields: [restauranteId], references: [id], onDelete: Cascade)
-  ordenes           Orden[]      // Una mesa puede tener muchas órdenes
-  sesiones          Sesion[]     // Una mesa puede tener muchas sesiones
-
-  @@unique([restauranteId, numero])
-  @@map("mesas")
 }
 
 model Categoria {
@@ -204,9 +177,32 @@ model Producto {
   restauranteId     String
   restaurante       Restaurante  @relation(fields: [restauranteId], references: [id], onDelete: Cascade)
 
-  @@unique([restauranteId, nombre])
   @@map("productos")
 }
+
+model Mesa {
+  id                String       @id @default(cuid())
+  nombre            String
+  numero            Int
+  capacidad         Int          @default(1)
+  activo            Boolean      @default(true)
+  qrCodeUrl         String?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  restauranteId     String
+  restaurante       Restaurante  @relation(fields: [restauranteId], references: [id], onDelete: Cascade)
+  ordenes           Orden[]
+  sesiones          Sesion[]
+
+  @@unique([restauranteId, numero])
+  @@map("mesas")
+}
+
+
+// ----------------------------------------
+// 3. GESTIÓN DE ÓRDENES Y SESIONES
+// ----------------------------------------
 
 model Orden {
   id                String       @id @default(cuid())
@@ -216,22 +212,15 @@ model Orden {
   impuestos         Float        @default(0)
   total             Float
   notas             String?
-  nombreClienteFactura String?
   createdAt         DateTime     @default(now())
   updatedAt         DateTime     @updatedAt
 
   restauranteId     String
   restaurante       Restaurante  @relation(fields: [restauranteId], references: [id], onDelete: Cascade)
-  
   mesaId            String
   mesa              Mesa         @relation(fields: [mesaId], references: [id])
-  
   sesionId          String?
   sesion            Sesion?      @relation(fields: [sesionId], references: [id])
-
-  meseroId          String?
-  mesero            UsuarioMesero? @relation(fields: [meseroId], references: [id], onDelete: SetNull)
-  
   items             ItemOrden[]
 
   @@unique([restauranteId, numeroOrden])
@@ -258,12 +247,6 @@ model Sesion {
   activa            Boolean      @default(true)
   createdAt         DateTime     @default(now())
   
-  clienteNombre     String?
-  clienteTelefono   String?
-  numeroPersonas    Int?
-  ultimaActividad   DateTime?
-  finSesion         DateTime?
-
   mesaId            String
   mesa              Mesa         @relation(fields: [mesaId], references: [id])
   restauranteId     String
@@ -273,69 +256,79 @@ model Sesion {
   @@map("sesiones")
 }
 
-model Suscripcion {
-  id                String       @id @default(cuid())
-  estado            String       @default("ACTIVA") // ACTIVA, VENCIDA, CANCELADA
-  fechaInicio       DateTime
-  fechaVencimiento  DateTime
-  renovacionAutomatica Boolean   @default(true)
-  createdAt         DateTime     @default(now())
-  updatedAt         DateTime     @updatedAt
 
-  restauranteId     String       @unique
-  restaurante       Restaurante  @relation(fields: [restauranteId], references: [id], onDelete: Cascade)
-  historialPagos    HistorialPago[]
-  
-  @@map("suscripciones")
-}
-
-model HistorialPago {
-  id                String       @id @default(cuid())
-  suscripcionId     String
-  monto             Decimal
-  mesesPagados      Int
-  fechaPago         DateTime     @default(now())
-  metodoPago        String?
-  referenciaPago    String?
-  procesadoPor      String?
-  notas             String?
-  createdAt         DateTime     @default(now())
-  
-  suscripcion       Suscripcion  @relation(fields: [suscripcionId], references: [id], onDelete: Cascade)
-  
-  @@map("historial_pagos")
-}
+// ----------------------------------------
+// 4. SISTEMA DE USUARIOS Y NOTIFICACIONES
+// ----------------------------------------
 
 model SuperUsuario {
   id                String       @id @default(cuid())
   email             String       @unique
   password          String
   nombre            String
-  rol               String       @default("ADMIN") // ADMIN, SOPORTE
+  apellido          String?
   activo            Boolean      @default(true)
+  lastLogin         DateTime?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  
+  notificacionesEnviadas NotificacionUsuario[]
+  @@map("super_usuarios")
+}
+
+model UsuarioAdmin {
+  id                String       @id @default(cuid())
+  email             String       @unique
+  password          String
+  nombre            String
+  apellido          String?
+  telefono          String?
+  activo            Boolean      @default(true)
+  emailVerificado   Boolean      @default(false)
+  lastLogin         DateTime?
   createdAt         DateTime     @default(now())
   updatedAt         DateTime     @updatedAt
 
-  @@map("super_usuarios")
+  restauranteId     String
+  restaurante       Restaurante  @relation(fields: [restauranteId], references: [id], onDelete: Cascade)
+  
+  @@map("usuarios_admin")
+}
+
+model UsuarioMesero {
+  id                String       @id @default(cuid())
+  email             String       @unique
+  password          String
+  nombre            String
+  apellido          String?
+  pin               String?
+  activo            Boolean      @default(true)
+  lastLogin         DateTime?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  restauranteId     String
+  restaurante       Restaurante  @relation(fields: [restauranteId], references: [id], onDelete: Cascade)
+  
+  @@map("usuarios_mesero")
 }
 
 model NotificacionUsuario {
   id                String       @id @default(cuid())
-  tipo              String       // ORDEN_NUEVA, ORDEN_CANCELADA, MESA_LIBERADA
+  tipo              String       // ej: BIENVENIDA, RENOVACION_PROXIMA, etc.
   titulo            String
   mensaje           String
   leida             Boolean      @default(false)
   createdAt         DateTime     @default(now())
   
-  notificationKey   String?
   restauranteId     String
   restaurante       Restaurante  @relation(fields: [restauranteId], references: [id], onDelete: Cascade)
   
   enviadaPorId      String?
+  enviadaPor        SuperUsuario? @relation(fields: [enviadaPorId], references: [id])
   
   @@map("notificaciones_usuario")
 }
-
 ```
 
 ---

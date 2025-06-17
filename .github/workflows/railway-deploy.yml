@@ -1,0 +1,39 @@
+name: 🚀 Railway CI/CD
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    name: 🧪 Test & Validate
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+
+    - name: 📦 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: 📦 Install dependencies
+      run: npm ci
+
+    - name: 📝 Generate Prisma Client
+      run: npm run build --workspace=backend
+
+    - name: 🧪 Run tests (if available)
+      run: npm test --workspace=backend --if-present
+
+    - name: 🏗️ Test Frontend Build
+      run: npm run build --workspace=frontend
+      env:
+        VITE_API_URL: https://api.menuview.app/api
+
+    - name: ✅ Deployment Ready
+      run: echo "✅ All tests passed! Railway will auto-deploy on merge to main." 

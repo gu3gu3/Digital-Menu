@@ -21,6 +21,28 @@ const createSuperUserSchema = Joi.object({
   apellido: Joi.string().optional()
 });
 
+const changePasswordSchema = Joi.object({
+  currentPassword: Joi.string().required().messages({
+    'any.required': 'La contraseña actual es requerida'
+  }),
+  newPassword: Joi.string().min(8).required().messages({
+    'string.min': 'La nueva contraseña debe tener al menos 8 caracteres',
+    'any.required': 'La nueva contraseña es requerida'
+  })
+});
+
+const updateProfileSchema = Joi.object({
+  nombre: Joi.string().min(2).required().messages({
+    'string.min': 'El nombre debe tener al menos 2 caracteres',
+    'any.required': 'El nombre es requerido'
+  }),
+  apellido: Joi.string().min(2).optional(),
+  email: Joi.string().email().required().messages({
+    'string.email': 'Debe ser un email válido',
+    'any.required': 'El email es requerido'
+  })
+});
+
 /**
  * POST /api/super-admin/auth/login
  * Login de super administrador
@@ -208,6 +230,187 @@ router.post('/logout', authenticateSuperAdmin, async (req, res) => {
     });
   } catch (error) {
     console.error('Error en logout de super admin:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor'
+    });
+  }
+});
+
+/**
+ * PUT /api/super-admin/auth/change-password
+ * Cambiar contraseña del super administrador
+ */
+router.put('/change-password', authenticateSuperAdmin, async (req, res) => {
+  try {
+    // Validar entrada
+    const { error, value } = changePasswordSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        message: 'Datos inválidos',
+        errors: error.details.map(detail => detail.message)
+      });
+    }
+
+    const { currentPassword, newPassword } = value;
+    const userId = req.superUser.id;
+
+    // Obtener usuario actual
+    const superUser = await prisma.superUsuario.findUnique({
+      where: { id: userId }
+    });
+
+    if (!superUser) {
+      return res.status(404).json({
+        success: false,
+        message: 'Usuario no encontrado'
+      });
+    }
+
+    // Verificar contraseña actual
+    const isCurrentPasswordValid = await bcrypt.compare(currentPassword, superUser.password);
+    if (!isCurrentPasswordValid) {
+      return res.status(400).json({
+        success: false,
+        message: 'La contraseña actual es incorrecta'
+      });
+    }
+
+    // Verificar que la nueva contraseña sea diferente
+    const isSamePassword = await bcrypt.compare(newPassword, superUser.password);
+    if (isSamePassword) {
+      return res.status(400).json({
+        success: false,
+        message: 'La nueva contraseña debe ser diferente a la actual'
+      });
+    }
+
+    // Hash de la nueva contraseña
+    const hashedNewPassword = await bcrypt.hash(newPassword, 12);
+
+    // Actualizar contraseña
+    await prisma.superUsuario.update({
+      where: { id: userId },
+      data: { password: hashedNewPassword }
+    });
+
+    res.json({
+      success: true,
+      message: 'Contraseña cambiada exitosamente'
+    });
+
+  } catch (error) {
+    console.error('Error cambiando contraseña de super admin:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor'
+    });
+  }
+});
+
+/**
+ * PUT /api/super-admin/auth/profile
+ * Actualizar perfil del super administrador
+ */
+router.put('/profile', authenticateSuperAdmin, async (req, res) => {
+  try {
+    // Validar entrada
+    const { error, value } = updateProfileSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        message: 'Datos inválidos',
+        errors: error.details.map(detail => detail.message)
+      });
+    }
+
+    const { nombre, apellido, email } = value;
+    const userId = req.superUser.id;
+
+    // Verificar si el email está siendo cambiado y ya existe
+    const existingSuperUser = await prisma.superUsuario.findFirst({
+      where: {
+        email: email,
+        id: { not: userId }
+      }
+    });
+
+    if (existingSuperUser) {
+      return res.status(409).json({
+        success: false,
+        message: 'Ya existe un super usuario con este email'
+      });
+    }
+
+    // Actualizar perfil
+    const updatedSuperUser = await prisma.superUsuario.update({
+      where: { id: userId },
+      data: {
+        nombre,
+        apellido,
+        email
+      },
+      select: {
+        id: true,
+        nombre: true,
+        apellido: true,
+        email: true,
+        activo: true,
+        lastLogin: true
+      }
+    });
+
+    res.json({
+      success: true,
+      message: 'Perfil actualizado exitosamente',
+      data: updatedSuperUser
+    });
+
+  } catch (error) {
+    console.error('Error actualizando perfil de super admin:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor'
+    });
+  }
+});
+
+/**
+ * GET /api/super-admin/auth/me
+ * Obtener perfil actual del super administrador
+ */
+router.get('/me', authenticateSuperAdmin, async (req, res) => {
+  try {
+    const userId = req.superUser.id;
+
+    const superUser = await prisma.superUsuario.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        nombre: true,
+        apellido: true,
+        email: true,
+        activo: true,
+        lastLogin: true,
+        createdAt: true
+      }
+    });
+
+    if (!superUser) {
+      return res.status(404).json({
+        success: false,
+        message: 'Usuario no encontrado'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: superUser
+    });
+
+  } catch (error) {
+    console.error('Error obteniendo perfil de super admin:', error);
     res.status(500).json({
       success: false,
       message: 'Error interno del servidor'

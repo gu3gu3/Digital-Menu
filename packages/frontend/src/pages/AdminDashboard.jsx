@@ -9,7 +9,6 @@ import {
   PlusIcon,
   EyeIcon
 } from '@heroicons/react/24/outline'
-import adminService from '../services/adminService'
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState({
@@ -32,22 +31,43 @@ const AdminDashboard = () => {
   const navigate = useNavigate()
 
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const statsData = await adminService.getDashboardStats();
-        setStats(statsData.data);
-
-        const ordersData = await adminService.getRecentOrders(5);
-        setRecentOrders(ordersData.data || []);
-      } catch (error) {
-        console.error('Error loading dashboard data:', error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchData();
+    loadDashboardData()
   }, [])
+
+  const loadDashboardData = async () => {
+    try {
+      const token = localStorage.getItem('adminToken')
+      
+      // Cargar estadísticas generales
+      const statsResponse = await fetch('http://localhost:3001/api/admin/stats', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      
+      if (statsResponse.ok) {
+        const statsData = await statsResponse.json()
+        setStats(statsData.data)
+      }
+
+      // Cargar órdenes recientes
+      const ordersResponse = await fetch('http://localhost:3001/api/orders?limit=5', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      
+      if (ordersResponse.ok) {
+        const ordersData = await ordersResponse.json()
+        setRecentOrders(ordersData.data || [])
+      }
+
+    } catch (error) {
+      console.error('Error loading dashboard data:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const getUsagePercentage = (current, limit) => {
     if (limit === 0) {

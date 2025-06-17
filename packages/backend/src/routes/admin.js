@@ -1,8 +1,34 @@
 const express = require('express');
+const bcrypt = require('bcryptjs');
+const Joi = require('joi');
 const { authenticate, requireAdmin } = require('../middleware/authMiddleware');
 const { prisma } = require('../config/database');
 
 const router = express.Router();
+
+// Validation schemas
+const changePasswordSchema = Joi.object({
+  currentPassword: Joi.string().required().messages({
+    'any.required': 'La contraseña actual es requerida'
+  }),
+  newPassword: Joi.string().min(6).required().messages({
+    'string.min': 'La nueva contraseña debe tener al menos 6 caracteres',
+    'any.required': 'La nueva contraseña es requerida'
+  })
+});
+
+const updateProfileSchema = Joi.object({
+  nombre: Joi.string().min(2).required().messages({
+    'string.min': 'El nombre debe tener al menos 2 caracteres',
+    'any.required': 'El nombre es requerido'
+  }),
+  apellido: Joi.string().min(2).optional(),
+  email: Joi.string().email().required().messages({
+    'string.email': 'Debe ser un email válido',
+    'any.required': 'El email es requerido'
+  }),
+  telefono: Joi.string().optional()
+});
 
 // @desc    Get admin stats
 // @route   GET /api/admin/stats
@@ -180,8 +206,154 @@ const getDashboard = async (req, res) => {
   }
 };
 
+// @desc    Change admin password
+// @route   PUT /api/admin/change-password
+// @access  Private (Admin)
+const changePassword = async (req, res) => {
+  try {
+    // Validate input
+    const { error, value } = changePasswordSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        error: error.details[0].message
+      });
+    }
+
+    const { currentPassword, newPassword } = value;
+    const userId = req.user.userId;
+
+    // Get current user
+    const user = await prisma.usuarioAdmin.findUnique({
+      where: { id: userId }
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: 'Usuario no encontrado'
+      });
+    }
+
+    // Verify current password
+    const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password);
+    if (!isCurrentPasswordValid) {
+      return res.status(400).json({
+        success: false,
+        error: 'La contraseña actual es incorrecta'
+      });
+    }
+
+    // Check if new password is different
+    const isSamePassword = await bcrypt.compare(newPassword, user.password);
+    if (isSamePassword) {
+      return res.status(400).json({
+        success: false,
+        error: 'La nueva contraseña debe ser diferente a la actual'
+      });
+    }
+
+    // Hash new password
+    const saltRounds = 10;
+    const hashedNewPassword = await bcrypt.hash(newPassword, saltRounds);
+
+    // Update password
+    await prisma.usuarioAdmin.update({
+      where: { id: userId },
+      data: { password: hashedNewPassword }
+    });
+
+    res.json({
+      success: true,
+      message: 'Contraseña cambiada exitosamente'
+    });
+
+  } catch (error) {
+    console.error('Error changing password:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error interno del servidor'
+    });
+  }
+};
+
+// @desc    Update admin profile
+// @route   PUT /api/admin/profile
+// @access  Private (Admin)
+const updateProfile = async (req, res) => {
+  try {
+    // Validate input
+    const { error, value } = updateProfileSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        error: error.details[0].message
+      });
+    }
+
+    const { nombre, apellido, email, telefono } = value;
+    const userId = req.user.userId;
+
+    // Check if email is being changed and already exists
+    const existingUser = await prisma.usuarioAdmin.findFirst({
+      where: {
+        email: email,
+        id: { not: userId }
+      }
+    });
+
+    if (existingUser) {
+      return res.status(409).json({
+        success: false,
+        error: 'Ya existe un usuario con este email'
+      });
+    }
+
+    // Update profile
+    const updatedUser = await prisma.usuarioAdmin.update({
+      where: { id: userId },
+      data: {
+        nombre,
+        apellido,
+        email,
+        telefono
+      },
+      select: {
+        id: true,
+        nombre: true,
+        apellido: true,
+        email: true,
+        telefono: true,
+        restauranteId: true,
+        restaurante: {
+          select: {
+            id: true,
+            nombre: true,
+            slug: true
+          }
+        }
+      }
+    });
+
+    res.json({
+      success: true,
+      message: 'Perfil actualizado exitosamente',
+      data: updatedUser
+    });
+
+  } catch (error) {
+    console.error('Error updating profile:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error interno del servidor'
+    });
+  }
+};
+
 // Routes
 router.get('/stats', authenticate, requireAdmin, getStats);
 router.get('/dashboard', authenticate, requireAdmin, getDashboard);
+router.put('/change-password', authenticate, requireAdmin, changePassword);
+router.put('/profile', authenticate, requireAdmin, updateProfile);
 
 module.exports = router; 

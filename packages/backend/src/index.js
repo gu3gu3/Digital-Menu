@@ -1,14 +1,10 @@
 const express = require('express');
-const { execSync } = require('child_process');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
-// Load env vars only in development
-if (process.env.NODE_ENV !== 'production') {
-  require('dotenv').config();
-}
+require('dotenv').config();
 
 const { errorHandler, notFound } = require('./middleware/errorMiddleware');
 const { connectDB } = require('./config/database');
@@ -33,9 +29,6 @@ const superAdminSubscriptionsRoutes = require('./routes/superAdminSubscriptions'
 const notificationRoutes = require('./routes/notifications');
 
 const app = express();
-// Trust the first proxy in front of the app (App Engine's load balancer)
-app.set('trust proxy', 1);
-
 const PORT = process.env.PORT || 3001;
 
 // =================================================================
@@ -186,8 +179,8 @@ app.use(errorHandler);
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`🚀 Server ready at: http://localhost:${PORT}`);
-  console.log(`📱 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
+  console.log(`📱 Entorno: ${process.env.NODE_ENV || 'development'}`);
   console.log(`🔗 Health check: http://localhost:${PORT}/health`);
   console.log(`📖 API docs: http://localhost:${PORT}/api`);
 });

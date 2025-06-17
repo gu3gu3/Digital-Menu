@@ -7,9 +7,9 @@ import {
   ArrowDownTrayIcon,
   EyeIcon,
   TableCellsIcon,
-  UsersIcon
+  UsersIcon,
+  XMarkIcon
 } from '@heroicons/react/24/outline'
-import API_BASE_URL from '../config/api'
 
 const AdminTablesPage = () => {
   const [mesas, setMesas] = useState([])
@@ -21,6 +21,7 @@ const AdminTablesPage = () => {
   const [editingTable, setEditingTable] = useState(null)
   const [selectedTable, setSelectedTable] = useState(null)
   const [qrCode, setQrCode] = useState(null)
+  const [clearingSession, setClearingSession] = useState(null)
 
   // Table form state
   const [tableForm, setTableForm] = useState({
@@ -38,7 +39,7 @@ const AdminTablesPage = () => {
     setLoading(true)
     try {
       const token = localStorage.getItem('adminToken')
-      const response = await fetch(`${API_BASE_URL}/api/tables`, {
+      const response = await fetch('http://localhost:3001/api/tables', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -68,8 +69,8 @@ const AdminTablesPage = () => {
     try {
       const token = localStorage.getItem('adminToken')
       const url = editingTable 
-        ? `${API_BASE_URL}/api/tables/${editingTable.id}`
-        : `${API_BASE_URL}/api/tables`
+        ? `http://localhost:3001/api/tables/${editingTable.id}`
+        : 'http://localhost:3001/api/tables'
       
       const method = editingTable ? 'PUT' : 'POST'
 
@@ -117,7 +118,7 @@ const AdminTablesPage = () => {
     setLoading(true)
     try {
       const token = localStorage.getItem('adminToken')
-      const response = await fetch(`${API_BASE_URL}/api/tables/${table.id}`, {
+      const response = await fetch(`http://localhost:3001/api/tables/${table.id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -143,7 +144,7 @@ const AdminTablesPage = () => {
     setLoading(true)
     try {
       const token = localStorage.getItem('adminToken')
-      const response = await fetch(`${API_BASE_URL}/api/tables/${table.id}/qr`, {
+      const response = await fetch(`http://localhost:3001/api/tables/${table.id}/qr`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -170,7 +171,7 @@ const AdminTablesPage = () => {
     setLoading(true)
     try {
       const token = localStorage.getItem('adminToken')
-      const response = await fetch(`${API_BASE_URL}/api/tables/qr/all`, {
+      const response = await fetch('http://localhost:3001/api/tables/qr/all', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -270,6 +271,99 @@ const AdminTablesPage = () => {
       setTableForm({ numero: '', nombre: '', descripcion: '', capacidad: 4 })
     }
     setShowTableModal(true)
+  }
+
+  const handleClearTable = async (mesa) => {
+    if (!mesa.estaActiva) {
+      setError('Esta mesa no tiene sesiones activas')
+      return
+    }
+
+    if (!confirm(`¿Estás seguro de que quieres limpiar la Mesa ${mesa.numero}?\n\nEsto cerrará todas las sesiones activas y los clientes perderán acceso a sus carritos.`)) {
+      return
+    }
+
+    setClearingSession(mesa.id)
+    setError('') // Limpiar errores previos
+    setSuccess('') // Limpiar éxitos previos
+
+    try {
+      const token = localStorage.getItem('adminToken')
+      
+      // Obtener sesiones activas de esta mesa específica
+      const sessionsResponse = await fetch(`http://localhost:3001/api/sessions/restaurant/all?mesaId=${mesa.id}&estado=activa&limit=100`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      if (!sessionsResponse.ok) {
+        const errorData = await sessionsResponse.json()
+        throw new Error(errorData.error || 'Error al obtener sesiones activas')
+      }
+
+      const sessionsData = await sessionsResponse.json()
+      const sesionesActivas = sessionsData.data.sesiones
+
+      if (sesionesActivas.length === 0) {
+        setError(`La Mesa ${mesa.numero} no tiene sesiones activas para cerrar`)
+        return
+      }
+
+      // Cerrar cada sesión activa
+      let sessionsCerradas = 0
+      let erroresCierre = 0
+
+      for (const sesion of sesionesActivas) {
+        try {
+          const closeResponse = await fetch(`http://localhost:3001/api/sessions/${sesion.id}/close`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ 
+              notas: `Sesión cerrada manualmente por administrador desde panel de mesas - Mesa ${mesa.numero}` 
+            })
+          })
+
+          if (closeResponse.ok) {
+            sessionsCerradas++
+          } else {
+            erroresCierre++
+            console.error(`Error cerrando sesión ${sesion.id}`)
+          }
+        } catch (error) {
+          erroresCierre++
+          console.error(`Error cerrando sesión ${sesion.id}:`, error)
+        }
+      }
+
+      // Mostrar resultado
+      if (sessionsCerradas > 0) {
+        let mensaje = `Mesa ${mesa.numero} limpiada exitosamente. ${sessionsCerradas} sesión(es) cerrada(s).`
+        if (erroresCierre > 0) {
+          mensaje += ` (${erroresCierre} error(es) al cerrar algunas sesiones)`
+        }
+        setSuccess(mensaje)
+        
+        // Recargar las mesas para reflejar el cambio
+        await loadTables()
+      } else {
+        setError(`No se pudieron cerrar las sesiones de la Mesa ${mesa.numero}`)
+      }
+
+    } catch (error) {
+      console.error('Error clearing table:', error)
+      setError(`Error al limpiar la Mesa ${mesa.numero}: ${error.message}`)
+    } finally {
+      setClearingSession(null)
+      // Limpiar mensajes después de 8 segundos
+      setTimeout(() => {
+        setError('')
+        setSuccess('')
+      }, 8000)
+    }
   }
 
   return (
@@ -410,16 +504,35 @@ const AdminTablesPage = () => {
                   <QrCodeIcon className="h-4 w-4 mr-2" />
                   Ver QR
                 </button>
+                
+                {mesa.estaActiva && (
+                  <button
+                    onClick={() => handleClearTable(mesa)}
+                    disabled={clearingSession === mesa.id}
+                    className="inline-flex items-center px-3 py-2 border border-orange-300 rounded-lg text-sm font-medium text-orange-700 bg-white hover:bg-orange-50 disabled:opacity-50 disabled:cursor-not-allowed ml-2 transition-colors duration-200"
+                    title={`Limpiar Mesa ${mesa.numero} - Cerrar todas las sesiones activas`}
+                  >
+                    {clearingSession === mesa.id ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-orange-600"></div>
+                    ) : (
+                      <>
+                        <XMarkIcon className="h-4 w-4" />
+                        <span className="sr-only">Limpiar mesa</span>
+                      </>
+                    )}
+                  </button>
+                )}
+                
                 <button
                   onClick={() => openTableModal(mesa)}
-                  className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                  className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 ml-2"
                 >
                   <PencilIcon className="h-4 w-4" />
                 </button>
                 <button
                   onClick={() => handleDeleteTable(mesa)}
                   disabled={mesa.ordenesActivas > 0}
-                  className="inline-flex items-center px-3 py-2 border border-red-300 rounded-lg text-sm font-medium text-red-700 bg-white hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="inline-flex items-center px-3 py-2 border border-red-300 rounded-lg text-sm font-medium text-red-700 bg-white hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed ml-2"
                 >
                   <TrashIcon className="h-4 w-4" />
                 </button>

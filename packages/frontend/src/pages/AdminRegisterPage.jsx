@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline'
 import logo from '../assets/logo.png'
-import API_BASE_URL from '../config/api'
 
 const AdminRegisterPage = () => {
   const [formData, setFormData] = useState({
@@ -20,7 +19,7 @@ const AdminRegisterPage = () => {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
+  const [errors, setErrors] = useState({})
   const navigate = useNavigate()
 
   const handleChange = (e) => {
@@ -29,34 +28,34 @@ const AdminRegisterPage = () => {
       [e.target.name]: e.target.value
     })
     // Limpiar error específico cuando el usuario empiece a escribir
-    if (error && e.target.name in error) {
-      setError({
-        ...error,
+    if (errors[e.target.name]) {
+      setErrors({
+        ...errors,
         [e.target.name]: ''
       })
     }
   }
 
   const validateForm = () => {
-    const newError = {}
+    const newErrors = {}
 
     // Validaciones del administrador
-    if (!formData.nombre.trim()) newError.nombre = 'El nombre es requerido'
-    if (!formData.email.trim()) newError.email = 'El email es requerido'
-    if (!formData.email.includes('@')) newError.email = 'Email no válido'
-    if (!formData.password) newError.password = 'La contraseña es requerida'
-    if (formData.password.length < 6) newError.password = 'La contraseña debe tener al menos 6 caracteres'
+    if (!formData.nombre.trim()) newErrors.nombre = 'El nombre es requerido'
+    if (!formData.email.trim()) newErrors.email = 'El email es requerido'
+    if (!formData.email.includes('@')) newErrors.email = 'Email no válido'
+    if (!formData.password) newErrors.password = 'La contraseña es requerida'
+    if (formData.password.length < 6) newErrors.password = 'La contraseña debe tener al menos 6 caracteres'
     if (formData.password !== formData.confirmPassword) {
-      newError.confirmPassword = 'Las contraseñas no coinciden'
+      newErrors.confirmPassword = 'Las contraseñas no coinciden'
     }
 
     // Validaciones del restaurante
-    if (!formData.nombreRestaurante.trim()) newError.nombreRestaurante = 'El nombre del restaurante es requerido'
-    if (!formData.telefono.trim()) newError.telefono = 'El teléfono es requerido'
-    if (!formData.direccion.trim()) newError.direccion = 'La dirección es requerida'
+    if (!formData.nombreRestaurante.trim()) newErrors.nombreRestaurante = 'El nombre del restaurante es requerido'
+    if (!formData.telefono.trim()) newErrors.telefono = 'El teléfono es requerido'
+    if (!formData.direccion.trim()) newErrors.direccion = 'La dirección es requerida'
 
-    setError(newError)
-    return Object.keys(newError).length === 0
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
   }
 
   const handleSubmit = async (e) => {
@@ -67,10 +66,9 @@ const AdminRegisterPage = () => {
     }
 
     setLoading(true)
-    setError(null)
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
+      const response = await fetch('http://localhost:3001/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -101,13 +99,13 @@ const AdminRegisterPage = () => {
         navigate('/admin/dashboard')
       } else {
         if (data.errors) {
-          setError(data.errors)
+          setErrors(data.errors)
         } else {
-          setError({ general: data.message || 'Error al registrar' })
+          setErrors({ general: data.message || 'Error al registrar' })
         }
       }
     } catch (error) {
-      setError({ general: 'Error de conexión. Inténtalo de nuevo.' })
+      setErrors({ general: 'Error de conexión. Inténtalo de nuevo.' })
     } finally {
       setLoading(false)
     }
@@ -136,9 +134,9 @@ const AdminRegisterPage = () => {
 
         <div className="bg-white shadow-xl rounded-lg">
           <form onSubmit={handleSubmit} className="space-y-6 p-8">
-            {error && (
+            {errors.general && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-                {error.general}
+                {errors.general}
               </div>
             )}
 
@@ -156,13 +154,13 @@ const AdminRegisterPage = () => {
                     type="text"
                     required
                     className={`mt-1 block w-full px-3 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm ${
-                      error.nombre ? 'border-red-300' : 'border-gray-300'
+                      errors.nombre ? 'border-red-300' : 'border-gray-300'
                     }`}
                     placeholder="Tu nombre completo"
                     value={formData.nombre}
                     onChange={handleChange}
                   />
-                  {error.nombre && <p className="mt-1 text-sm text-red-600">{error.nombre}</p>}
+                  {errors.nombre && <p className="mt-1 text-sm text-red-600">{errors.nombre}</p>}
                 </div>
 
                 <div>
@@ -175,13 +173,13 @@ const AdminRegisterPage = () => {
                     type="email"
                     required
                     className={`mt-1 block w-full px-3 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm ${
-                      error.email ? 'border-red-300' : 'border-gray-300'
+                      errors.email ? 'border-red-300' : 'border-gray-300'
                     }`}
                     placeholder="admin@restaurante.com"
                     value={formData.email}
                     onChange={handleChange}
                   />
-                  {error.email && <p className="mt-1 text-sm text-red-600">{error.email}</p>}
+                  {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
                 </div>
 
                 <div>
@@ -195,7 +193,7 @@ const AdminRegisterPage = () => {
                       type={showPassword ? 'text' : 'password'}
                       required
                       className={`block w-full px-3 py-3 pr-10 border rounded-lg shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm ${
-                        error.password ? 'border-red-300' : 'border-gray-300'
+                        errors.password ? 'border-red-300' : 'border-gray-300'
                       }`}
                       placeholder="Mínimo 6 caracteres"
                       value={formData.password}
@@ -213,7 +211,7 @@ const AdminRegisterPage = () => {
                       )}
                     </button>
                   </div>
-                  {error.password && <p className="mt-1 text-sm text-red-600">{error.password}</p>}
+                  {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
                 </div>
 
                 <div>
@@ -227,7 +225,7 @@ const AdminRegisterPage = () => {
                       type={showConfirmPassword ? 'text' : 'password'}
                       required
                       className={`block w-full px-3 py-3 pr-10 border rounded-lg shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm ${
-                        error.confirmPassword ? 'border-red-300' : 'border-gray-300'
+                        errors.confirmPassword ? 'border-red-300' : 'border-gray-300'
                       }`}
                       placeholder="Repite tu contraseña"
                       value={formData.confirmPassword}
@@ -245,7 +243,7 @@ const AdminRegisterPage = () => {
                       )}
                     </button>
                   </div>
-                  {error.confirmPassword && <p className="mt-1 text-sm text-red-600">{error.confirmPassword}</p>}
+                  {errors.confirmPassword && <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>}
                 </div>
               </div>
             </div>
@@ -264,13 +262,13 @@ const AdminRegisterPage = () => {
                     type="text"
                     required
                     className={`mt-1 block w-full px-3 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm ${
-                      error.nombreRestaurante ? 'border-red-300' : 'border-gray-300'
+                      errors.nombreRestaurante ? 'border-red-300' : 'border-gray-300'
                     }`}
                     placeholder="Nombre de tu restaurante"
                     value={formData.nombreRestaurante}
                     onChange={handleChange}
                   />
-                  {error.nombreRestaurante && <p className="mt-1 text-sm text-red-600">{error.nombreRestaurante}</p>}
+                  {errors.nombreRestaurante && <p className="mt-1 text-sm text-red-600">{errors.nombreRestaurante}</p>}
                 </div>
 
                 <div>
@@ -299,13 +297,13 @@ const AdminRegisterPage = () => {
                       type="tel"
                       required
                       className={`mt-1 block w-full px-3 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm ${
-                        error.telefono ? 'border-red-300' : 'border-gray-300'
+                        errors.telefono ? 'border-red-300' : 'border-gray-300'
                       }`}
                       placeholder="+1-234-567-8900"
                       value={formData.telefono}
                       onChange={handleChange}
                     />
-                    {error.telefono && <p className="mt-1 text-sm text-red-600">{error.telefono}</p>}
+                    {errors.telefono && <p className="mt-1 text-sm text-red-600">{errors.telefono}</p>}
                   </div>
 
                   <div>
@@ -318,13 +316,13 @@ const AdminRegisterPage = () => {
                       type="text"
                       required
                       className={`mt-1 block w-full px-3 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm ${
-                        error.direccion ? 'border-red-300' : 'border-gray-300'
+                        errors.direccion ? 'border-red-300' : 'border-gray-300'
                       }`}
                       placeholder="Dirección del restaurante"
                       value={formData.direccion}
                       onChange={handleChange}
                     />
-                    {error.direccion && <p className="mt-1 text-sm text-red-600">{error.direccion}</p>}
+                    {errors.direccion && <p className="mt-1 text-sm text-red-600">{errors.direccion}</p>}
                   </div>
                 </div>
               </div>

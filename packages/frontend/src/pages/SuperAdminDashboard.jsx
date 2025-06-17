@@ -98,6 +98,12 @@ const SuperAdminDashboard = () => {
                 <p className="text-sm font-medium text-gray-900">{currentUser?.nombre} {currentUser?.apellido}</p>
                 <p className="text-xs text-gray-500">{currentUser?.email}</p>
               </div>
+              <Link
+                to="/super-admin/settings"
+                className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md text-sm font-medium mr-2"
+              >
+                Configuración
+              </Link>
               <button
                 onClick={handleLogout}
                 className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium"

@@ -13,7 +13,6 @@ import {
 } from '@heroicons/react/24/outline';
 import OrderTracker from './OrderTracker';
 import menuService from '../services/menuService';
-import API_BASE_URL from '../config/api';
 
 const OrderStatusBanner = ({ ordenId, restauranteSlug, onClearOrder, tableNumber }) => {
   const [orden, setOrden] = useState(null);
@@ -22,7 +21,6 @@ const OrderStatusBanner = ({ ordenId, restauranteSlug, onClearOrder, tableNumber
   const [error, setError] = useState('');
   const [isCalling, setIsCalling] = useState(false);
   const [callSuccess, setCallSuccess] = useState(false);
-  const API_URL = `${API_BASE_URL}/api`;
 
   // Configuración de estados con colores
   const estadosConfig = {
@@ -122,7 +120,8 @@ const OrderStatusBanner = ({ ordenId, restauranteSlug, onClearOrder, tableNumber
   const fetchOrden = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_URL}/public/orden/${ordenId}`);
+      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+      const response = await fetch(`${API_BASE_URL}/api/public/orden/${ordenId}`);
       const data = await response.json();
       
       if (response.ok) {

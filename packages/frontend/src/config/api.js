@@ -51,4 +51,9 @@ export const apiRequest = async (url, options = {}) => {
   return fetch(url, { ...defaultOptions, ...options })
 }
 
-export default API_BASE_URL; 
+export default {
+  API_BASE_URL,
+  API_ENDPOINTS,
+  getImageUrl,
+  apiRequest
+} 

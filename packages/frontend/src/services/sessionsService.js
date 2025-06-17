@@ -1,4 +1,4 @@
-import API_BASE_URL from '../config/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
 
 class SessionsService {
   constructor() {
@@ -79,22 +79,6 @@ class SessionsService {
     
     return this.makeRequest(endpoint);
   }
-
-  createSession: async (sessionData) => {
-    const response = await fetch(`${API_BASE_URL}/api/sessions`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(sessionData),
-    });
-    return response.json();
-  },
-
-  getSession: async (sessionId) => {
-    const response = await fetch(`${API_BASE_URL}/api/sessions/${sessionId}`);
-    return response.json();
-  },
 }
 
 export default new SessionsService(); 
