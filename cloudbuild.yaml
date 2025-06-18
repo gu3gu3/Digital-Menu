@@ -22,7 +22,7 @@ steps:
 
 # 4. Ejecutar las migraciones de la base de datos (versión corregida y robusta)
 # Este paso se conecta de forma segura a la base de datos y aplica las migraciones de Prisma.
-- name: 'google/cloud-sdk:slim'
+- name: 'node:18'
   id: 'Aplicar-Migraciones'
   entrypoint: 'bash'
   args:
