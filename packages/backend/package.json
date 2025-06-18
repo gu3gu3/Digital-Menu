@@ -2,7 +2,7 @@
   "name": "backend",
   "version": "1.0.0",
   "description": "Backend API for Digital Menu QR system",
-  "main": "src/server.js",
+  "main": "src/index.js",
   "prisma": {
     "seed": "node prisma/seed.js"
   },

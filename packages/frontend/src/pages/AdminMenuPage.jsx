@@ -46,7 +46,7 @@ const AdminMenuPage = () => {
   const loadCategories = async () => {
     try {
       const token = localStorage.getItem('adminToken')
-      const response = await fetch('http://localhost:3001/api/categories', {
+      const response = await fetch('/api/categories', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -65,8 +65,8 @@ const AdminMenuPage = () => {
     try {
       const token = localStorage.getItem('adminToken')
       const url = categoriaId 
-        ? `http://localhost:3001/api/products?categoriaId=${categoriaId}`
-        : 'http://localhost:3001/api/products'
+        ? `/api/products?categoriaId=${categoriaId}`
+        : '/api/products'
       
       const response = await fetch(url, {
         headers: {
@@ -92,8 +92,8 @@ const AdminMenuPage = () => {
     try {
       const token = localStorage.getItem('adminToken')
       const url = editingCategory 
-        ? `http://localhost:3001/api/categories/${editingCategory.id}`
-        : 'http://localhost:3001/api/categories'
+        ? `/api/categories/${editingCategory.id}`
+        : '/api/categories'
       
       const method = editingCategory ? 'PUT' : 'POST'
 
@@ -143,8 +143,8 @@ const AdminMenuPage = () => {
       }
 
       const url = editingProduct 
-        ? `http://localhost:3001/api/products/${editingProduct.id}`
-        : 'http://localhost:3001/api/products'
+        ? `/api/products/${editingProduct.id}`
+        : '/api/products'
       
       const method = editingProduct ? 'PUT' : 'POST'
 
@@ -178,7 +178,7 @@ const AdminMenuPage = () => {
 
     try {
       const token = localStorage.getItem('adminToken')
-      const response = await fetch(`http://localhost:3001/api/categories/${category.id}`, {
+      const response = await fetch(`/api/categories/${category.id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -202,7 +202,7 @@ const AdminMenuPage = () => {
 
     try {
       const token = localStorage.getItem('adminToken')
-      const response = await fetch(`http://localhost:3001/api/products/${product.id}`, {
+      const response = await fetch(`/api/products/${product.id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -224,7 +224,7 @@ const AdminMenuPage = () => {
   const handleToggleAvailability = async (product) => {
     try {
       const token = localStorage.getItem('adminToken')
-      const response = await fetch(`http://localhost:3001/api/products/${product.id}/toggle-availability`, {
+      const response = await fetch(`/api/products/${product.id}/toggle-availability`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`

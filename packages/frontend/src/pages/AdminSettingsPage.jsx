@@ -67,7 +67,7 @@ const AdminSettingsPage = () => {
 
     try {
       const token = localStorage.getItem('adminToken')
-      const response = await fetch('http://localhost:3001/api/admin/profile', {
+      const response = await fetch('/api/admin/profile', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -122,7 +122,7 @@ const AdminSettingsPage = () => {
 
     try {
       const token = localStorage.getItem('adminToken')
-      const response = await fetch('http://localhost:3001/api/admin/change-password', {
+      const response = await fetch('/api/admin/change-password', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

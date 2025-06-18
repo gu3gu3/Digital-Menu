@@ -1,5 +1,5 @@
 // API Configuration
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
 export const API_ENDPOINTS = {
   // Auth endpoints
@@ -51,9 +51,4 @@ export const apiRequest = async (url, options = {}) => {
   return fetch(url, { ...defaultOptions, ...options })
 }
 
-export default {
-  API_BASE_URL,
-  API_ENDPOINTS,
-  getImageUrl,
-  apiRequest
-} 
+export default API_BASE_URL; 
