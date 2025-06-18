@@ -48,10 +48,12 @@ const updateProfileSchema = Joi.object({
  * Login de super administrador
  */
 router.post('/login', async (req, res) => {
+  console.log('--- Super Admin Login: Intento recibido ---');
   try {
     // Validar entrada
     const { error, value } = loginSchema.validate(req.body);
     if (error) {
+      console.log('Error de validación de Joi.');
       return res.status(400).json({
         success: false,
         message: 'Datos inválidos',
@@ -60,6 +62,7 @@ router.post('/login', async (req, res) => {
     }
 
     const { email, password } = value;
+    console.log(`Buscando super admin con email: ${email}`);
 
     // Buscar super usuario
     const superUser = await prisma.superUsuario.findUnique({
@@ -67,15 +70,20 @@ router.post('/login', async (req, res) => {
     });
 
     if (!superUser || !superUser.activo) {
+      console.log('Super admin no encontrado o inactivo.');
       return res.status(401).json({
         success: false,
         message: 'Credenciales inválidas'
       });
     }
 
+    console.log('Super admin encontrado. Comparando contraseñas...');
     // Verificar contraseña
     const isValidPassword = await bcrypt.compare(password, superUser.password);
+    console.log(`Contraseña válida: ${isValidPassword}`);
+
     if (!isValidPassword) {
+      console.log('La contraseña no coincide.');
       return res.status(401).json({
         success: false,
         message: 'Credenciales inválidas'
@@ -89,6 +97,7 @@ router.post('/login', async (req, res) => {
     });
 
     // Generar token JWT
+    console.log('Contraseña correcta. Generando token JWT...');
     const token = jwt.sign(
       {
         userId: superUser.id,
@@ -99,6 +108,7 @@ router.post('/login', async (req, res) => {
       { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
     );
 
+    console.log('Login de super admin exitoso.');
     res.json({
       success: true,
       message: 'Login exitoso',
@@ -115,7 +125,10 @@ router.post('/login', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error en login de super admin:', error);
+    console.error('--- !!! ERROR CRÍTICO EN LOGIN DE SUPER ADMIN !!! ---');
+    console.error('Mensaje de error:', error.message);
+    console.error('Stack de error:', error.stack);
+    console.error('--- FIN DEL REPORTE DE ERROR ---');
     res.status(500).json({
       success: false,
       message: 'Error interno del servidor'
