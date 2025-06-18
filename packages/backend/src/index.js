@@ -19,6 +19,9 @@ console.log(`JWT_SECRET (definido?): ${process.env.JWT_SECRET ? 'Sí' : 'NO'}`);
 console.log("===================================");
 // --- FIN DEL PASO DE DEPURACIÓN ---
 
+// Conectar a la base de datos INMEDIATAMENTE para forzar cualquier error.
+connectDB();
+
 // Import routes
 const authRoutes = require('./routes/auth');
 const restaurantRoutes = require('./routes/restaurants');
@@ -77,7 +80,6 @@ app.use(cors({
 }));
 
 // 2. Connect to database
-connectDB();
 
 // 3. Security Middleware
 app.use(helmet({
