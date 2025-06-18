@@ -1,5 +1,5 @@
 # Etapa 1: Construir el Backend
-FROM node:20 AS build-backend
+FROM node:20-alpine AS build-backend
 WORKDIR /app
 
 # Copiar primero los manifiestos del paquete
@@ -16,7 +16,7 @@ RUN npx prisma generate --schema=./packages/backend/prisma/schema.prisma
 RUN npm run build --workspace=backend
 
 # Etapa 2: Construir el Frontend
-FROM node:20 AS build-frontend
+FROM node:20-alpine AS build-frontend
 WORKDIR /app
 
 # Copiar primero los manifiestos del paquete
