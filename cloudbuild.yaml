@@ -44,9 +44,13 @@ steps:
     # Dar tiempo al proxy para que inicie
     sleep 5
     
-    # Ejecutar la migración. Prisma usará la DATABASE_URL del secreto.
+    # Generar el cliente de Prisma para este paso, especificando la ruta al schema
+    echo "Generando Prisma Client..."
+    npx prisma generate --schema=./packages/backend/prisma/schema.prisma
+    
+    # Ejecutar la migración, especificando la ruta al schema
     echo "Aplicando migraciones..."
-    npx prisma migrate deploy
+    npx prisma migrate deploy --schema=./packages/backend/prisma/schema.prisma
     
     # Ejecutar el seeder para poblar la base de datos
     echo "Poblando la base de datos con datos iniciales..."
