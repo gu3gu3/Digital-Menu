@@ -9,6 +9,16 @@ require('dotenv').config();
 const { errorHandler, notFound } = require('./middleware/errorMiddleware');
 const { connectDB } = require('./config/database');
 
+// --- PASO DE DEPURACIÓN FINAL ---
+console.log("===================================");
+console.log("INICIANDO SERVIDOR - VERIFICANDO VARIABLES DE ENTORNO");
+console.log(`NODE_ENV: ${process.env.NODE_ENV}`);
+// Por seguridad, solo confirmamos si las variables existen, no imprimimos sus valores.
+console.log(`DATABASE_URL (definida?): ${process.env.DATABASE_URL ? 'Sí' : 'NO'}`);
+console.log(`JWT_SECRET (definido?): ${process.env.JWT_SECRET ? 'Sí' : 'NO'}`);
+console.log("===================================");
+// --- FIN DEL PASO DE DEPURACIÓN ---
+
 // Import routes
 const authRoutes = require('./routes/auth');
 const restaurantRoutes = require('./routes/restaurants');
