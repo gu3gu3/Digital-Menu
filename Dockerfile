@@ -49,10 +49,9 @@ COPY --from=build-backend /app/packages/backend/package.json ./package.json
 # Copiar el schema de Prisma es crucial para producción.
 COPY --from=build-backend /app/packages/backend/prisma ./prisma
 
-# 3. Configurar y copiar los archivos de Nginx.
+# 3. Configurar Nginx.
+# Simplemente copiamos nuestra configuración al directorio correcto que lee Nginx en Alpine.
 COPY nginx.conf /etc/nginx/http.d/default.conf
-RUN rm -f /etc/nginx/http.d/default.conf && \
-    ln -s /etc/nginx/http.d/default.conf /etc/nginx/conf.d/default.conf
 
 # 4. Copiar el frontend compilado a su directorio.
 COPY --from=build-frontend /app/packages/frontend/dist /usr/share/nginx/html
