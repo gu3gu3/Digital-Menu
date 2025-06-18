@@ -32,28 +32,30 @@ RUN npm run build --workspace=frontend
 # Etapa 3: Servidor de producción con Node y Nginx
 FROM node:20-alpine
 
-# Instalar Nginx y realizar limpieza. Corremos como root temporalmente.
+# Instalar Nginx y dependencias. Corremos como root temporalmente.
 USER root
 RUN apk add --no-cache nginx
 
-# Eliminar la configuración por defecto de Nginx para evitar conflictos
-RUN rm -f /etc/nginx/http.d/default.conf
+# 1. Crear y establecer el directorio de trabajo para el backend
+WORKDIR /app
 
-# Copiar nuestra configuración personalizada de Nginx
+# 2. Copiar los artefactos del backend a /app
+# Es importante copiar el package.json específico del backend para dependencias de producción
+COPY --from=build-backend /app/packages/backend/package.json ./package.json
+# Asegúrate de tener un script "start" en tu backend/package.json, ej: "start": "node dist/index.js"
+COPY --from=build-backend /app/packages/backend/dist ./dist
+COPY --from=build-backend /app/node_modules ./node_modules
+
+# 3. Configurar Nginx
+# Eliminar la configuración por defecto para evitar conflictos
+RUN rm -f /etc/nginx/http.d/default.conf
+# Copiar nuestra configuración personalizada
 COPY nginx.conf /etc/nginx/http.d/default.conf
 
-# Establecer el directorio de trabajo a la raíz web de Nginx
-WORKDIR /usr/share/nginx/html
+# 4. Copiar el build del frontend a la raíz web de Nginx
+COPY --from=build-frontend /app/packages/frontend/dist /usr/share/nginx/html
 
-# Copiar el build del frontend desde la etapa de construcción a la raíz de Nginx
-COPY --from=build-frontend /app/packages/frontend/dist .
-
-# Copiar los artefactos del backend y sus dependencias
-COPY --from=build-backend /app/node_modules ./node_modules
-COPY --from=build-backend /app/packages/backend/dist ./dist
-COPY --from=build-backend /app/package.json ./package.json
-
-# Copiar y dar permisos de ejecución al script de inicio
+# 5. Copiar y dar permisos de ejecución al script de inicio
 COPY start.sh /start.sh
 RUN chmod +x /start.sh
 

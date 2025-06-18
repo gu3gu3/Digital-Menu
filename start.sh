@@ -1,12 +1,10 @@
 #!/bin/sh
 
-# Iniciar el servidor de backend de Node.js en segundo plano
-# Nos movemos al directorio donde está el código del backend
-cd /usr/share/nginx/html
-# Usamos 'node .' para iniciar el servidor basado en el package.json
-node ./dist/index.js &
+# Iniciar el servidor de backend de Node.js en segundo plano.
+# Nos movemos a su directorio /app y lo iniciamos.
+cd /app
+node dist/index.js &
 
-# Iniciar Nginx en primer plano
-# 'daemon off;' es crucial para que Nginx no se vaya a segundo plano
-# y mantenga el contenedor activo.
-nginx -g 'daemon off;' 
+# Iniciar Nginx en primer plano. Esto mantiene el contenedor activo.
+# Nginx servirá el frontend y actuará como proxy para el backend.
+exec nginx -g 'daemon off;' 
