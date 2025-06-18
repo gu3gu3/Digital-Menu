@@ -58,10 +58,11 @@ class CloudStorage {
     
     if (this.isProduction) {
       try {
-        this.storage = new Storage({
-          projectId: process.env.GCP_PROJECT_ID,
-          keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS
-        });
+        // En un entorno de Google Cloud (como Cloud Run), el constructor de Storage
+        // detecta automáticamente el proyecto y las credenciales.
+        // No es necesario pasar `projectId` o `keyFilename`.
+        this.storage = new Storage();
+        
         this.bucket = this.storage.bucket(process.env.GCP_STORAGE_BUCKET);
         console.log('✅ Google Cloud Storage configurado correctamente');
       } catch (error) {
