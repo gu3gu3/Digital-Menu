@@ -34,7 +34,7 @@ FROM node:20-alpine
 
 # Instalar Nginx y la librería de compatibilidad de OpenSSL 1.1 que Prisma necesita
 USER root
-RUN apk add --no-cache nginx openssl1.1-compat
+RUN apk add --no-cache nginx openssl-legacy
 
 # 1. Establecer el directorio de trabajo para el backend.
 # Esta será la ubicación principal desde donde se ejecutará Node.
