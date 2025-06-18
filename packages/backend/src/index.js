@@ -16,6 +16,9 @@ console.log(`NODE_ENV: ${process.env.NODE_ENV}`);
 // Por seguridad, solo confirmamos si las variables existen, no imprimimos sus valores.
 console.log(`DATABASE_URL (definida?): ${process.env.DATABASE_URL ? 'Sí' : 'NO'}`);
 console.log(`JWT_SECRET (definido?): ${process.env.JWT_SECRET ? 'Sí' : 'NO'}`);
+console.log(`GCP_STORAGE_BUCKET (definida?): ${process.env.GCP_STORAGE_BUCKET ? 'Sí' : 'NO'}`);
+console.log(`GCP_PROJECT_ID (definida?): ${process.env.GCP_PROJECT_ID ? 'Sí' : 'NO'}`);
+console.log(`GOOGLE_APPLICATION_CREDENTIALS (definida?): ${process.env.GOOGLE_APPLICATION_CREDENTIALS ? 'Sí' : 'NO'}`);
 console.log("===================================");
 // --- FIN DEL PASO DE DEPURACIÓN ---
 
