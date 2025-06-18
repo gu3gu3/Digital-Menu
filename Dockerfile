@@ -2,34 +2,29 @@
 FROM node:20 AS build-backend
 WORKDIR /app
 
-# Copiar solo los archivos de manifiesto del monorepo
-COPY package.json package-lock.json ./
-
-# Instalar todas las dependencias (incluidas las de desarrollo para la compilación)
-RUN npm install
-
-# Copiar todo el código fuente
+# Copiar primero los manifiestos del paquete
+COPY package*.json ./
+# Copiar TODO el código fuente para que npm vea los workspaces
 COPY . .
+# Ahora, instalar todas las dependencias
+RUN npm install
 
 # Generar el cliente de Prisma, especificando la ruta al schema
 RUN npx prisma generate --schema=./packages/backend/prisma/schema.prisma
 
-# Ejecutar el build del backend (si existe un script para ello)
-# Asegúrate de que tu package.json tenga un script "build" en el workspace del backend
+# Ejecutar el build del backend
 RUN npm run build --workspace=backend
 
 # Etapa 2: Construir el Frontend
 FROM node:20 AS build-frontend
 WORKDIR /app
 
-# Copiar solo los archivos de manifiesto del monorepo
-COPY package.json package-lock.json ./
-
-# Instalar todas las dependencias
+# Copiar primero los manifiestos del paquete
+COPY package*.json ./
+# Copiar TODO el código fuente para que npm vea los workspaces
+COPY . .
+# Ahora, instalar todas las dependencias
 RUN npm install
-
-# Copiar el código del frontend
-COPY ./packages/frontend ./packages/frontend
 
 # Construir el frontend
 RUN npm run build --workspace=frontend
