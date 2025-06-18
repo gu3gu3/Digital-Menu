@@ -29,7 +29,9 @@ const superAdminSubscriptionsRoutes = require('./routes/superAdminSubscriptions'
 const notificationRoutes = require('./routes/notifications');
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+// En producción (dentro de Docker), siempre usaremos 3001 para el backend,
+// ya que Nginx es quien expone el puerto 8080 al exterior.
+const PORT = process.env.NODE_ENV === 'production' ? 3001 : (process.env.PORT || 3001);
 
 // =================================================================
 //  Middleware Setup
