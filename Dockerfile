@@ -1,5 +1,5 @@
 # Etapa 1: Construir el Backend
-FROM node:20-alpine AS build-backend
+FROM node:20 AS build-backend
 WORKDIR /app
 
 # Copiar primero los manifiestos del paquete
@@ -16,7 +16,7 @@ RUN npx prisma generate --schema=./packages/backend/prisma/schema.prisma
 RUN npm run build --workspace=backend
 
 # Etapa 2: Construir el Frontend
-FROM node:20-alpine AS build-frontend
+FROM node:20 AS build-frontend
 WORKDIR /app
 
 # Copiar primero los manifiestos del paquete
@@ -30,11 +30,11 @@ RUN npm install
 RUN npm run build --workspace=frontend
 
 # Etapa 3: Servidor de producción final
-FROM node:20-alpine
+FROM node:20-slim
 
-# Instalar Nginx y las librerías de compatibilidad de OpenSSL 1.1 que Prisma necesita
+# Instalar Nginx en la imagen de Debian
 USER root
-RUN apk add --no-cache nginx libssl1.1 libcrypto1.1
+RUN apt-get update && apt-get install -y --no-install-recommends nginx && rm -rf /var/lib/apt/lists/*
 
 # 1. Establecer el directorio de trabajo para el backend.
 # Esta será la ubicación principal desde donde se ejecutará Node.
@@ -50,8 +50,8 @@ COPY --from=build-backend /app/packages/backend/package.json ./package.json
 COPY --from=build-backend /app/packages/backend/prisma ./prisma
 
 # 3. Configurar Nginx.
-# Simplemente copiamos nuestra configuración al directorio correcto que lee Nginx en Alpine.
-COPY nginx.conf /etc/nginx/http.d/default.conf
+# La ruta de configuración de Nginx en Debian es diferente a la de Alpine.
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # 4. Copiar el frontend compilado a su directorio.
 COPY --from=build-frontend /app/packages/frontend/dist /usr/share/nginx/html
