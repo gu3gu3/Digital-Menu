@@ -1,9 +1,11 @@
 #!/bin/sh
+set -e
 
-# Moverse al directorio del backend y iniciar el servidor de Node en segundo plano.
-cd /app/backend
+# Iniciar el servidor de Node en segundo plano.
+# Se ejecuta desde /app, que es nuestro WORKDIR.
+echo "Iniciando servidor de Node.js..."
 node dist/index.js &
 
 # Iniciar Nginx en primer plano.
-# Esto mantiene el contenedor activo y sirve el frontend.
+echo "Iniciando Nginx..."
 exec nginx -g 'daemon off;' 

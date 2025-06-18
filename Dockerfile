@@ -29,35 +29,39 @@ RUN npm install
 # Construir el frontend
 RUN npm run build --workspace=frontend
 
-# Etapa 3: Servidor de producción con Node y Nginx
+# Etapa 3: Servidor de producción final
 FROM node:20-alpine
 
-# Instalar Nginx.
+# Instalar Nginx
 USER root
 RUN apk add --no-cache nginx
 
-# Crear un directorio de aplicación.
+# 1. Establecer el directorio de trabajo para el backend.
+# Esta será la ubicación principal desde donde se ejecutará Node.
 WORKDIR /app
 
-# Copiar el backend compilado a un subdirectorio para mantenerlo encapsulado.
-COPY --from=build-backend /app/packages/backend ./backend
-
-# Copiar las dependencias de producción a la raíz de /app.
-# Node.js buscará en directorios superiores, así que /app/backend encontrará /app/node_modules.
+# 2. Copiar las dependencias de producción del backend.
 COPY --from=build-backend /app/node_modules ./node_modules
+# Copiar el código compilado del backend.
+COPY --from=build-backend /app/packages/backend/dist ./dist
+# Copiar el package.json del backend.
+COPY --from=build-backend /app/packages/backend/package.json ./package.json
+# Copiar el schema de Prisma es crucial para producción.
+COPY --from=build-backend /app/packages/backend/prisma ./prisma
 
-# Configurar Nginx.
-RUN rm -f /etc/nginx/http.d/default.conf
+# 3. Configurar y copiar los archivos de Nginx.
 COPY nginx.conf /etc/nginx/http.d/default.conf
+RUN rm -f /etc/nginx/http.d/default.conf && \
+    ln -s /etc/nginx/http.d/default.conf /etc/nginx/conf.d/default.conf
 
-# Copiar el frontend compilado a la raíz web de Nginx.
+# 4. Copiar el frontend compilado a su directorio.
 COPY --from=build-frontend /app/packages/frontend/dist /usr/share/nginx/html
 
-# Copiar y dar permisos al script de inicio.
+# 5. Copiar y dar permisos al script de inicio.
 COPY start.sh /start.sh
 RUN chmod +x /start.sh
 
-# Exponer el puerto que Cloud Run utiliza.
+# Exponer el puerto de Cloud Run.
 EXPOSE 8080
 
 # Iniciar el script.
