@@ -2,19 +2,23 @@ const { PrismaClient } = require('@prisma/client');
 
 // Create a single instance that will be used throughout the app
 const prisma = new PrismaClient({
-  log: process.env.NODE_ENV === 'development' ? ['query', 'info', 'warn', 'error'] : ['error'],
-  errorFormat: 'pretty',
+  log: [
+    { emit: 'stdout', level: 'query' },
+    { emit: 'stdout', level: 'info' },
+    { emit: 'stdout', level: 'warn' },
+    { emit: 'stdout', level: 'error' },
+  ],
 });
 
 const connectDB = async () => {
   try {
-    // Test the connection
+    console.log("🔵 Intentando conectar a la base de datos...");
     await prisma.$connect();
-    console.log('✅ Base de datos conectada correctamente');
+    console.log("✅ Base de datos conectada correctamente");
     
     return prisma;
   } catch (error) {
-    console.error('❌ Error al conectar con la base de datos:', error.message);
+    console.error("❌ Error al conectar a la base de datos:", error);
     process.exit(1);
   }
 };
