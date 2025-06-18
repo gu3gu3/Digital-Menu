@@ -79,8 +79,8 @@ images:
 # Configuración para acceder a los secretos
 availableSecrets:
   secretManager:
-  - versionName: projects/${PROJECT_ID}/secrets/DATABASE_URL/versions/latest
-    env: 'DATABASE_URL' # Se usa en el paso de migración y se pasa al despliegue
+  - versionName: projects/${PROJECT_ID}/secrets/${_DATABASE_URL_MIGRATE}/versions/latest
+    env: 'DATABASE_URL' # Para el paso de migración, usamos el secreto MIGRATE y lo mapeamos a la variable DATABASE_URL
 
 # Opciones de Build - NUEVA SECCIÓN
 options:
