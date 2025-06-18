@@ -38,8 +38,8 @@ steps:
     wget https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/v2.8.2/cloud-sql-proxy.linux.amd64 -O /cloud_sql_proxy
     chmod +x /cloud_sql_proxy
     
-    # Iniciar el proxy en segundo plano
-    ./cloud_sql_proxy --address 0.0.0.0 --port 5432 "${_DB_CONNECTION_NAME}" &
+    # Iniciar el proxy en segundo plano (usando la ruta absoluta)
+    /cloud_sql_proxy --address 0.0.0.0 --port 5432 "${_DB_CONNECTION_NAME}" &
     
     # Dar tiempo al proxy para que inicie
     sleep 5
