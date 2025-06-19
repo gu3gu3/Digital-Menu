@@ -38,22 +38,7 @@ steps:
     echo "Esperando que el proxy inicie (10 segundos)..."
     sleep 10
     
-    # Usamos la variable MIGRATE_DB_URL que es única para este paso
-    # Se usa $$ para escapar el $ y que Cloud Build lo interprete como una variable de shell
-    export DATABASE_URL="$${MIGRATE_DB_URL}"
-
-    # --- PASO DE DIAGNÓSTICO ---
-    echo "------------------------------------------------"
-    echo "--- DIAGNÓSTICO DE CONEXIÓN CON psql ---"
-    echo "Intentando conectar para verificar las credenciales..."
-    psql "${DATABASE_URL}" -c "\conninfo"
-    if [ $? -ne 0 ]; then
-      echo "### ERROR: La conexión con psql falló. Revisa las credenciales en el secreto ${_DATABASE_URL_MIGRATE} ###"
-      exit 1
-    fi
-    echo "--- CONEXIÓN CON psql EXITOSA ---"
-    echo "------------------------------------------------"
-    # --- FIN DEL PASO DE DIAGNÓSTICO ---
+    # La variable de entorno DATABASE_URL ahora está disponible directamente desde availableSecrets
     
     # Ejecutar migraciones y seed
     echo "Aplicando migraciones..."
@@ -62,7 +47,7 @@ steps:
     echo "Poblando la base de datos..."
     npx prisma db seed --schema=./packages/backend/prisma/schema.prisma
 
-  secretEnv: ['MIGRATE_DB_URL']
+  secretEnv: ['DATABASE_URL']
 
 # 5. Desplegar la nueva imagen en Cloud Run
 - name: 'gcr.io/cloud-builders/gcloud'
@@ -87,7 +72,7 @@ images:
 availableSecrets:
   secretManager:
   - versionName: projects/${PROJECT_ID}/secrets/${_DATABASE_URL_MIGRATE}/versions/latest
-    env: 'MIGRATE_DB_URL'
+    env: 'DATABASE_URL' # Mapea el secreto de migración directamente a DATABASE_URL para el paso de migración
 
 # Opciones de Build - NUEVA SECCIÓN
 options:
