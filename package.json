@@ -16,6 +16,9 @@
     "db:seed": "npm run db:seed --workspace=backend",
     "db:studio": "npm run db:studio --workspace=backend"
   },
+  "prisma": {
+    "seed": "node packages/backend/prisma/seed.js"
+  },
   "devDependencies": {
     "concurrently": "^8.2.2",
     "firebase-tools": "^14.7.0"

@@ -22,7 +22,7 @@ steps:
 
 # 4. Ejecutar las migraciones de la base de datos (versión corregida y robusta)
 # Este paso se conecta de forma segura a la base de datos y aplica las migraciones de Prisma.
-- name: 'node:18'
+- name: 'gcr.io/google-appengine/exec-wrapper'
   id: 'Aplicar-Migraciones'
   entrypoint: 'bash'
   args:
@@ -34,15 +34,26 @@ steps:
 
     # Iniciar Cloud SQL Proxy
     echo "Iniciando Cloud SQL Proxy..."
-    wget https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/v2.8.2/cloud-sql-proxy.linux.amd64 -O /cloud_sql_proxy
-    chmod +x /cloud_sql_proxy
-    /cloud_sql_proxy --address 0.0.0.0 --port 5432 "${_DB_CONNECTION_NAME}" &
+    /bin/cloud_sql_proxy --address 0.0.0.0 --port 5432 "${_DB_CONNECTION_NAME}" &
     echo "Esperando que el proxy inicie (10 segundos)..."
     sleep 10
-
+    
     # Usamos la variable MIGRATE_DB_URL que es única para este paso
     # Se usa $$ para escapar el $ y que Cloud Build lo interprete como una variable de shell
     export DATABASE_URL="$${MIGRATE_DB_URL}"
+
+    # --- PASO DE DIAGNÓSTICO ---
+    echo "------------------------------------------------"
+    echo "--- DIAGNÓSTICO DE CONEXIÓN CON psql ---"
+    echo "Intentando conectar para verificar las credenciales..."
+    psql "${DATABASE_URL}" -c "\conninfo"
+    if [ $? -ne 0 ]; then
+      echo "### ERROR: La conexión con psql falló. Revisa las credenciales en el secreto ${_DATABASE_URL_MIGRATE} ###"
+      exit 1
+    fi
+    echo "--- CONEXIÓN CON psql EXITOSA ---"
+    echo "------------------------------------------------"
+    # --- FIN DEL PASO DE DIAGNÓSTICO ---
     
     # Ejecutar migraciones y seed
     echo "Aplicando migraciones..."
