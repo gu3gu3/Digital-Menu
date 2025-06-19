@@ -52,30 +52,17 @@ app.use((req, res, next) => {
 });
 
 // 1. CORS Configuration (Apply First!)
-const allowedOrigins = [
-  'http://localhost:3000',
-  'http://localhost:3001',
-  'http://localhost:5173',
-  'http://localhost:5174',
-  'https://menuview.app',
-  'https://www.menuview.app',
-  'https://menuviewapp-849336740073.us-central1.run.app'
-];
-
-if (process.env.FRONTEND_URL && !allowedOrigins.includes(process.env.FRONTEND_URL)) {
-  allowedOrigins.push(process.env.FRONTEND_URL);
-}
+const allowedOriginsRegex = /(^https:\/\/(.*\.)?menuview\.app$)|(^https:\/\/(.*\.)?run\.app$)|(^http:\/\/localhost:)/;
 
 console.log('Checkpoint 1: Configurando CORS...');
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) === -1) {
-      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
-      return callback(new Error(msg), false);
+    // Permitir peticiones sin origen (apps de escritorio, curl) o que coincidan con nuestra regex.
+    if (!origin || allowedOriginsRegex.test(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
     }
-    return callback(null, true);
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
