@@ -20,25 +20,29 @@ steps:
   args: ['push', 'us-central1-docker.pkg.dev/${PROJECT_ID}/menu-repo/menuviewapp:$SHORT_SHA']
   id: 'Subir-Imagen'
 
-# 4. Ejecutar las migraciones de la base de datos (versión corregida y robusta)
-# Este paso se conecta de forma segura a la base de datos y aplica las migraciones de Prisma.
-- name: 'gcr.io/google-appengine/exec-wrapper'
+# 4. Ejecutar las migraciones de la base de datos
+- name: 'node:18'
   id: 'Aplicar-Migraciones'
   entrypoint: 'bash'
   args:
   - '-c'
   - |
-    # Instalar dependencias
-    echo "Instalando dependencias..."
+    # Instalar dependencias del proyecto
+    echo "Instalando dependencias de producción..."
     npm install --only=production
 
-    # Iniciar Cloud SQL Proxy
+    # Descargar y hacer ejecutable el Cloud SQL Auth Proxy
+    echo "Descargando Cloud SQL Proxy..."
+    wget https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/v2.8.2/cloud-sql-proxy.linux.amd64 -O /cloud_sql_proxy
+    chmod +x /cloud_sql_proxy
+
+    # Iniciar el proxy en segundo plano
     echo "Iniciando Cloud SQL Proxy..."
-    /bin/cloud_sql_proxy --address 0.0.0.0 --port 5432 "${_DB_CONNECTION_NAME}" &
-    echo "Esperando que el proxy inicie (10 segundos)..."
+    /cloud_sql_proxy --address 0.0.0.0 --port 5432 "${_DB_CONNECTION_NAME}" &
+    echo "Esperando 10 segundos para que el proxy establezca la conexión..."
     sleep 10
     
-    # La variable de entorno DATABASE_URL ahora está disponible directamente desde availableSecrets
+    # La variable DATABASE_URL está disponible aquí gracias a 'secretEnv'
     
     # Ejecutar migraciones y seed
     echo "Aplicando migraciones..."
