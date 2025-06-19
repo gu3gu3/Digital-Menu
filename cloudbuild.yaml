@@ -44,6 +44,10 @@ steps:
     
     # La variable DATABASE_URL está disponible aquí gracias a 'secretEnv'
     
+    # Generar el cliente de Prisma para este entorno específico ANTES de usarlo.
+    echo "Generando Prisma Client para el entorno de migración..."
+    npx prisma generate --schema=./packages/backend/prisma/schema.prisma
+    
     # Ejecutar migraciones y seed
     echo "Aplicando migraciones..."
     npx prisma migrate deploy --schema=./packages/backend/prisma/schema.prisma
