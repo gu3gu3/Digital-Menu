@@ -58,7 +58,8 @@ const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:5174',
   'https://menuview.app',
-  'https://www.menuview.app'
+  'https://www.menuview.app',
+  'https://menuviewapp-849336740073.us-central1.run.app'
 ];
 
 if (process.env.FRONTEND_URL && !allowedOrigins.includes(process.env.FRONTEND_URL)) {
