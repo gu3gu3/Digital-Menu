@@ -41,7 +41,8 @@ steps:
     sleep 10
 
     # Usamos la variable MIGRATE_DB_URL que es única para este paso
-    export DATABASE_URL="${MIGRATE_DB_URL}"
+    # Se usa $$ para escapar el $ y que Cloud Build lo interprete como una variable de shell
+    export DATABASE_URL="$${MIGRATE_DB_URL}"
     
     # Ejecutar migraciones y seed
     echo "Aplicando migraciones..."
