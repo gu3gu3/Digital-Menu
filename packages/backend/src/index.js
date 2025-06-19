@@ -1,3 +1,8 @@
+console.log("===================================");
+console.log("INICIANDO SERVIDOR - VARIABLES DE ENTORNO DISPONIBLES:");
+console.log(JSON.stringify(process.env, null, 2));
+console.log("===================================");
+
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');

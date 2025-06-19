@@ -42,7 +42,9 @@ steps:
     echo "Esperando 10 segundos para que el proxy establezca la conexión..."
     sleep 10
     
-    # La variable DATABASE_URL está disponible aquí gracias a 'secretEnv'
+    # EXPORTAR LA VARIABLE DE BD PARA ESTE PASO
+    # Se usa un nombre de variable temporal para evitar conflictos con el paso de despliegue.
+    export DATABASE_URL="$DATABASE_URL_FOR_MIGRATION"
     
     # Generar el cliente de Prisma para este entorno específico ANTES de usarlo.
     echo "Generando Prisma Client para el entorno de migración..."
@@ -55,7 +57,7 @@ steps:
     echo "Poblando la base de datos..."
     npx prisma db seed --schema=./packages/backend/prisma/schema.prisma
 
-  secretEnv: ['DATABASE_URL']
+  secretEnv: ['DATABASE_URL_FOR_MIGRATION']
 
 # 5. Desplegar la nueva imagen en Cloud Run
 - name: 'gcr.io/cloud-builders/gcloud'
@@ -80,7 +82,7 @@ images:
 availableSecrets:
   secretManager:
   - versionName: projects/${PROJECT_ID}/secrets/${_DATABASE_URL_MIGRATE}/versions/latest
-    env: 'DATABASE_URL' # Mapea el secreto de migración directamente a DATABASE_URL para el paso de migración
+    env: 'DATABASE_URL_FOR_MIGRATION' # Mapea el secreto de migración a una variable única
 
 # Opciones de Build - NUEVA SECCIÓN
 options:
