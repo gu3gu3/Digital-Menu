@@ -44,7 +44,8 @@ steps:
     
     # EXPORTAR LA VARIABLE DE BD PARA ESTE PASO
     # Se usa un nombre de variable temporal para evitar conflictos con el paso de despliegue.
-    export DATABASE_URL="$DATABASE_URL_FOR_MIGRATION"
+    # Se usa $$ para escapar el signo de dólar y que Cloud Build lo ignore.
+    export DATABASE_URL="$$DATABASE_URL_FOR_MIGRATION"
     
     # Generar el cliente de Prisma para este entorno específico ANTES de usarlo.
     echo "Generando Prisma Client para el entorno de migración..."
