@@ -9,16 +9,12 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
-
-// Load .env file only in development environments
-if (process.env.NODE_ENV !== 'production') {
-  require('dotenv').config();
-}
+require('dotenv').config();
 
 const { errorHandler, notFound } = require('./middleware/errorMiddleware');
 const { connectDB } = require('./config/database');
 
-// Llama a la función de verificación de conexión de la base de datos.
+// Conectar a la base de datos INMEDIATAMENTE para forzar cualquier error.
 connectDB();
 
 // Import routes
