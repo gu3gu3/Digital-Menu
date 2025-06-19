@@ -45,6 +45,12 @@ const PORT = process.env.NODE_ENV === 'production' ? 3001 : (process.env.PORT ||
 //  Middleware Setup
 // =================================================================
 
+// 0. Log inicial para cada petición
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] Petición recibida: ${req.method} ${req.originalUrl}`);
+  next();
+});
+
 // 1. CORS Configuration (Apply First!)
 const allowedOrigins = [
   'http://localhost:3000',
@@ -59,6 +65,7 @@ if (process.env.FRONTEND_URL && !allowedOrigins.includes(process.env.FRONTEND_UR
   allowedOrigins.push(process.env.FRONTEND_URL);
 }
 
+console.log('Checkpoint 1: Configurando CORS...');
 app.use(cors({
   origin: (origin, callback) => {
     // Allow requests with no origin (like mobile apps or curl requests)
@@ -73,10 +80,12 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
+console.log('Checkpoint 2: CORS aplicado.');
 
 // 2. Connect to database
 
 // 3. Security Middleware
+console.log('Checkpoint 3: Configurando Helmet y Compresión...');
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" },
   contentSecurityPolicy: {
@@ -88,9 +97,11 @@ app.use(helmet({
   }
 }));
 app.use(compression());
+console.log('Checkpoint 4: Helmet y Compresión aplicados.');
 
 // 4. Rate limiting
 if (process.env.NODE_ENV !== 'development') {
+  console.log('Checkpoint 5: Configurando Rate Limiter...');
   const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutos
     max: 200, // Límite de 200 solicitudes por IP por ventana
@@ -99,11 +110,14 @@ if (process.env.NODE_ENV !== 'development') {
     message: 'Demasiadas solicitudes desde esta IP, intenta de nuevo más tarde.'
   });
   app.use(limiter);
+  console.log('Checkpoint 6: Rate Limiter aplicado.');
 }
 
 // 5. Body parsing middleware
+console.log('Checkpoint 7: Configurando Body Parser...');
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+console.log('Checkpoint 8: Body Parser aplicado.');
 
 // 6. Logging middleware
 if (process.env.NODE_ENV === 'development') {
