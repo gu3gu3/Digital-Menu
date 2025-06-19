@@ -118,6 +118,8 @@ const AdminRestaurantPage = () => {
     if (bgImageInput) bgImageInput.value = ''
   }
 
+  const menuUrl = `${import.meta.env.VITE_FRONTEND_URL || 'http://localhost:5173'}/menu/${restaurantData?.slug}`;
+
   const copyToClipboard = async (text) => {
     try {
       await navigator.clipboard.writeText(text)
@@ -231,12 +233,12 @@ const AdminRestaurantPage = () => {
                 <div className="flex-1 bg-white border border-gray-300 rounded-lg p-3">
                   <div className="text-sm text-gray-500 mb-1">URL del restaurante:</div>
                   <div className="font-mono text-primary-700 font-medium">
-                    {`http://localhost:5173/menu/${restaurantData.slug}`}
+                    {menuUrl}
                   </div>
                 </div>
                 
                 <button
-                  onClick={() => copyToClipboard(`http://localhost:5173/menu/${restaurantData.slug}`)}
+                  onClick={() => copyToClipboard(menuUrl)}
                   className="inline-flex items-center px-4 py-3 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
                 >
                   <ClipboardDocumentIcon className="h-4 w-4 mr-2" />
@@ -244,7 +246,7 @@ const AdminRestaurantPage = () => {
                 </button>
                 
                 <a
-                  href={`http://localhost:5173/menu/${restaurantData.slug}`}
+                  href={menuUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center px-4 py-3 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors"

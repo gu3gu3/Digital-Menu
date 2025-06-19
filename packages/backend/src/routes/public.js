@@ -4,6 +4,17 @@ const { PrismaClient } = require('@prisma/client');
 const router = express.Router();
 const prisma = new PrismaClient();
 
+// Función auxiliar para construir URLs absolutas
+const buildAbsoluteUrl = (path) => {
+  if (!path || path.startsWith('http')) {
+    return path;
+  }
+  // Asegurarse de que la URL base termina sin / y la ruta empieza con /
+  const baseUrl = (process.env.BACKEND_URL || 'http://localhost:3001').replace(/\/$/, '');
+  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  return `${baseUrl}${cleanPath}`;
+};
+
 // @desc    Get restaurant by slug (public)
 // @route   GET /api/public/restaurant/:slug
 // @access  Public
@@ -40,6 +51,21 @@ const getRestaurantBySlug = async (req, res) => {
         error: 'Restaurante no encontrado'
       });
     }
+
+    // Construir URLs absolutas para el restaurante y productos
+    restaurante.logoUrl = buildAbsoluteUrl(restaurante.logoUrl);
+    restaurante.bannerUrl = buildAbsoluteUrl(restaurante.bannerUrl);
+    restaurante.backgroundImage = buildAbsoluteUrl(restaurante.backgroundImage);
+    
+    restaurante.categorias.forEach(categoria => {
+      categoria.productos.forEach(producto => {
+        producto.imagenUrl = buildAbsoluteUrl(producto.imagenUrl);
+      });
+    });
+
+    restaurante.mesas.forEach(mesa => {
+      mesa.qrCode = buildAbsoluteUrl(mesa.qrCode);
+    });
 
     res.json({
       success: true,
@@ -114,6 +140,18 @@ const getMenuBySlug = async (req, res) => {
         error: 'Menú no encontrado'
       });
     }
+    
+    // Construir URLs absolutas para el restaurante y productos
+    restaurante.logoUrl = buildAbsoluteUrl(restaurante.logoUrl);
+    restaurante.bannerUrl = buildAbsoluteUrl(restaurante.bannerUrl);
+    restaurante.backgroundImage = buildAbsoluteUrl(restaurante.backgroundImage);
+    
+    restaurante.categorias.forEach(categoria => {
+      categoria.productos.forEach(producto => {
+        producto.imagenUrl = buildAbsoluteUrl(producto.imagenUrl);
+      });
+    });
+
 
     res.json({
       success: true,
