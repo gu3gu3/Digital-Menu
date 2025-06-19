@@ -32,9 +32,9 @@ RUN npm run build --workspace=frontend
 # Etapa 3: Servidor de producción final
 FROM node:20-slim
 
-# Instalar Nginx en la imagen de Debian
+# Instalar Nginx y Netcat en la imagen de Debian
 USER root
-RUN apt-get update && apt-get install -y --no-install-recommends nginx netcat && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends nginx netcat-openbsd && rm -rf /var/lib/apt/lists/*
 
 # 1. Establecer el directorio de trabajo para el backend.
 # Esta será la ubicación principal desde donde se ejecutará Node.
