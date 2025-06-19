@@ -49,6 +49,9 @@ const updateProfileSchema = Joi.object({
  */
 router.post('/login', async (req, res) => {
   console.log('--- Super Admin Login: Intento recibido ---');
+  console.log('Request Body:', JSON.stringify(req.body, null, 2));
+  console.log('JWT_SECRET:', process.env.JWT_SECRET ? 'Definido' : '!!! NO DEFINIDO !!!');
+
   try {
     // Validar entrada
     const { error, value } = loginSchema.validate(req.body);

@@ -86,6 +86,10 @@ const generateEmailVerificationToken = (userId, email) => {
 // @route   POST /api/auth/login
 // @access  Public
 const login = async (req, res) => {
+  console.log('--- Admin/Mesero Login: Intento recibido ---');
+  console.log('Request Body:', JSON.stringify(req.body, null, 2));
+  console.log('JWT_SECRET:', process.env.JWT_SECRET ? 'Definido' : '!!! NO DEFINIDO !!!');
+
   try {
     // Validate input
     const { error, value } = loginSchema.validate(req.body);
