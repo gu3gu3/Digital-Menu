@@ -132,23 +132,22 @@ const getStats = async (req, res) => {
     
     if (notificacionesACrear.length > 0) {
       for (const notificacion of notificacionesACrear) {
-        await prisma.notificacionUsuario.upsert({
-          where: {
-            notificationKey: notificacion.notificationKey,
-          },
-          update: {
-            mensaje: notificacion.mensaje,
-            leida: false, // Marcar como no leída si se actualiza
-            createdAt: new Date(), // Actualizar la fecha para que aparezca como nueva
-          },
-          create: {
-            titulo: notificacion.titulo,
-            mensaje: notificacion.mensaje,
-            tipo: notificacion.tipo,
-            restauranteId: notificacion.restauranteId,
-            notificationKey: notificacion.notificationKey,
-          }
+        // FIXED: Create notification only if it doesn't already exist
+        const existingNotification = await prisma.notificacionUsuario.findUnique({
+          where: { notificationKey: notificacion.notificationKey },
         });
+
+        if (!existingNotification) {
+          await prisma.notificacionUsuario.create({
+            data: {
+              titulo: notificacion.titulo,
+              mensaje: notificacion.mensaje,
+              tipo: notificacion.tipo,
+              restauranteId: notificacion.restauranteId,
+              notificationKey: notificacion.notificationKey,
+            }
+          });
+        }
       }
     }
 
@@ -162,7 +161,7 @@ const getStats = async (req, res) => {
         ordenes,
         ordenesHoy,
         plan: {
-          nombre: admin.restaurante.plan.nombre,
+          nombre: formatPlanName(admin.restaurante.plan.nombre),
           limiteProductos: admin.restaurante.plan.limiteProductos,
           limiteMesas: admin.restaurante.plan.limiteMesas,
           limiteMeseros: admin.restaurante.plan.limiteMeseros,
@@ -178,6 +177,16 @@ const getStats = async (req, res) => {
       error: 'Error interno del servidor'
     });
   }
+};
+
+const formatPlanName = (name) => {
+  const lowerCaseName = name.toLowerCase();
+  if (lowerCaseName.includes('gratuito')) return 'Plan Gratuito';
+  if (lowerCaseName.includes('basico')) return 'Plan Básico';
+  if (lowerCaseName.includes('platinium')) return 'Plan Platinium';
+  if (lowerCaseName.includes('gold')) return 'Plan Gold';
+  // Capitalize first letter for any other plan
+  return name.charAt(0).toUpperCase() + name.slice(1);
 };
 
 // @desc    Get admin dashboard data
