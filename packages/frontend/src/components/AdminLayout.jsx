@@ -195,7 +195,7 @@ const AdminLayout = () => {
                 
                 {restaurant?.slug && (
                   <a 
-                    href={`http://localhost:5173/menu/${restaurant.slug}`}
+                    href={`${import.meta.env.VITE_FRONTEND_URL || 'http://localhost:5173'}/menu/${restaurant.slug}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center px-3 py-1.5 bg-primary-50 text-primary-700 border border-primary-200 rounded-lg hover:bg-primary-100 transition-colors text-sm font-medium"
