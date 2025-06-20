@@ -21,11 +21,7 @@ const Header = () => {
         <div className="flex justify-between items-center py-4">
           {/* Logo */}
           <div className="flex items-center space-x-3">
-            <img src={logo} alt="Menu View" className="h-10 w-auto" />
-            <div className="flex flex-col">
-              <span className="text-xl font-bold text-primary-600">menu</span>
-              <span className="text-xl font-bold text-secondary-600 -mt-1">view.app</span>
-            </div>
+            <img src={logo} alt="Menu View" className="h-12 w-auto" />
           </div>
 
           {/* Desktop Navigation */}

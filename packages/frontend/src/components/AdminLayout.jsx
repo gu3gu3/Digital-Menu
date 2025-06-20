@@ -114,20 +114,8 @@ const AdminLayout = () => {
       } md:translate-x-0 transition-transform duration-300 ease-in-out md:static md:inset-0 z-40 flex`}>
         
         {/* Logo */}
-        <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200">
-          <div className="flex items-center space-x-3">
-            <img src={logo} alt="Menu View" className="h-8 w-auto" />
-            <div className="flex flex-col">
-              <span className="text-sm font-bold text-primary-600">menu</span>
-              <span className="text-sm font-bold text-secondary-600 -mt-1">view.app</span>
-            </div>
-          </div>
-          <button
-            className="md:hidden"
-            onClick={() => setSidebarOpen(false)}
-          >
-            <XMarkIcon className="h-6 w-6 text-gray-400" />
-          </button>
+        <div className="flex items-center justify-center h-16 px-4 border-b border-gray-200">
+            <img src={logo} alt="Menu View" className="h-10 w-auto" />
         </div>
 
         {/* Navigation */}
