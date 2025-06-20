@@ -118,7 +118,7 @@ const AdminRestaurantPage = () => {
     if (bgImageInput) bgImageInput.value = ''
   }
 
-  const menuUrl = `${import.meta.env.VITE_FRONTEND_URL || 'http://localhost:5173'}/menu/${restaurantData?.slug}`;
+  const menuUrl = `${window.location.origin}/menu/${restaurantData?.slug}`;
 
   const copyToClipboard = async (text) => {
     try {

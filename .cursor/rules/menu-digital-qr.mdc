@@ -1,0 +1,28 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+Principios y Reglas Fundamentales del Proyecto
+1. La Infraestructura es Inmutable y Automatizada
+El sistema de despliegue (Dockerfile, cloudbuild.yaml, start.sh) es estable y no debe tocarse a menos que sea estrictamente necesario y se haya probado.
+Regla 1.1: El Despliegue es Sagrado. La única forma de actualizar producción es con git push a la rama main.
+Regla 1.2: El Dockerfile es el Plano. Cualquier dependencia del sistema (como netcat-openbsd) debe estar en el Dockerfile.
+Regla 1.3: La Versión de Node.js es Única. La versión de Node.js debe ser la misma en el Dockerfile y en cloudbuild.yaml para evitar fallos de build.
+2. El Código es Agnóstico al Entorno (Cero "Hardcoding")
+El código no debe contener valores fijos que cambien entre tu máquina y la nube.
+Regla 2.1: Toda Configuración es Externa. URLs, puertos y claves secretas se leen siempre desde variables de entorno.
+Regla 2.2: .env es para Desarrollo Local. Contiene las variables para que todo funcione en tu computadora y está en .gitignore.
+Regla 2.3: Las Variables de Cloud Run son para Producción. Son el panel de control para la nube. Las variables clave son:
+DATABASE_URL
+JWT_SECRET (el único secreto para todos los tokens)
+BACKEND_URL (la URL pública del backend, ej: https://...run.app)
+VITE_FRONTEND_URL (la URL pública del frontend, ej: https://menuview.app)
+3. Fronteras Claras entre Frontend y Backend
+Cada parte tiene una única responsabilidad.
+Regla 3.1: El Backend Construye URLs de sus Recursos. Para las imágenes, el backend usa su BACKEND_URL para crear la ruta completa: ${process.env.BACKEND_URL}/uploads/imagen.jpg.
+Regla 3.2: El Frontend Construye URLs de Navegación. Para compartir un menú, el frontend usa su VITE_FRONTEND_URL para crear el enlace: ${import.meta.env.VITE_FRONTEND_URL}/menu/nombre-restaurant.
+4. Configuración Limpia y Consistente
+Regla 4.1: Eliminar Variables Obsoletas. Si una variable en el archivo .env no se usa en el código (como JWT_SECRET_SUPERADMIN), debe ser eliminada para evitar confusiones.
+5. Diagnóstico Primero, Acción Después
+Regla 5.1: Los Logs son la Verdad. Ante un error 500 en producción, el primer paso es siempre revisar los logs de Cloud Run. No se deben hacer cambios en el código sin saber qué está fallando.

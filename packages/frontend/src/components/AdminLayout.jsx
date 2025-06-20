@@ -195,7 +195,7 @@ const AdminLayout = () => {
                 
                 {restaurant?.slug && (
                   <a 
-                    href={`${import.meta.env.VITE_FRONTEND_URL || 'http://localhost:5173'}/menu/${restaurant.slug}`}
+                    href={`${window.location.origin}/menu/${restaurant.slug}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center px-3 py-1.5 bg-primary-50 text-primary-700 border border-primary-200 rounded-lg hover:bg-primary-100 transition-colors text-sm font-medium"
@@ -217,11 +217,9 @@ const AdminLayout = () => {
                 <p className="text-sm font-medium text-gray-900">
                   {user.nombre || 'Administrador'}
                 </p>
-                <p className="text-xs text-gray-500">
-                  {planInfo.nombre}
-                </p>
+                <PlanBadge planName={planInfo.nombre} />
                 {restaurant?.nombre && (
-                  <p className="text-xs text-gray-600 mt-1">
+                  <p className="text-sm font-medium text-gray-800 mt-1 truncate">
                     {restaurant.nombre}
                   </p>
                 )}
@@ -243,5 +241,23 @@ const AdminLayout = () => {
     </div>
   )
 }
+
+const PlanBadge = ({ planName }) => {
+  const planStyles = {
+    'Plan Gratuito': 'bg-yellow-100 text-yellow-800 border-yellow-200',
+    'Plan Básico': 'bg-blue-100 text-blue-800 border-blue-200',
+    'Plan Platinium': 'bg-slate-100 text-slate-800 border-slate-200',
+    'Plan Gold': 'bg-amber-100 text-amber-800 border-amber-200',
+    default: 'bg-gray-100 text-gray-800 border-gray-200'
+  };
+
+  const style = planStyles[planName] || planStyles.default;
+
+  return (
+    <span className={`inline-block text-xs font-semibold px-2.5 py-1 rounded-full shadow-sm border ${style}`}>
+      {planName}
+    </span>
+  );
+};
 
 export default AdminLayout 
