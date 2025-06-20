@@ -48,37 +48,41 @@ router.get('/currencies', async (req, res) => {
  */
 router.get('/me', authenticate, requireAdmin, async (req, res) => {
   try {
-    const restauranteId = req.user.restauranteId;
+    const { userId, restauranteId } = req.user;
 
-    const restaurante = await prisma.restaurante.findUnique({
-      where: { id: restauranteId },
+    // Obtener restaurante y usuario admin en una sola consulta
+    const adminUser = await prisma.usuarioAdmin.findUnique({
+      where: { id: userId },
       include: {
-        plan: {
-          select: {
-            nombre: true,
-            limiteProductos: true,
-            limiteCategorias: true,
-            limiteMeseros: true,
-            limiteMesas: true,
-            limiteOrdenes: true,
-            soporteEmail: true,
-            soporteChat: true,
-            analiticas: true
-          }
-        }
-      }
+        restaurante: {
+          include: {
+            plan: true,
+          },
+        },
+      },
     });
 
-    if (!restaurante) {
+    if (!adminUser || !adminUser.restaurante) {
       return res.status(404).json({
         success: false,
-        error: 'Restaurante no encontrado'
+        error: 'Restaurante o usuario no encontrado'
       });
     }
+    
+    // Preparar el objeto de respuesta
+    const responseData = {
+      ...adminUser.restaurante,
+      admin: {
+        nombre: adminUser.nombre,
+        apellido: adminUser.apellido,
+        email: adminUser.email,
+        telefono: adminUser.telefono,
+      }
+    };
 
     res.json({
       success: true,
-      data: restaurante
+      data: responseData,
     });
 
   } catch (error) {

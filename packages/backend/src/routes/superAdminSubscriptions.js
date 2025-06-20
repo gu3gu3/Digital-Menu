@@ -371,7 +371,7 @@ router.get('/:id', authenticateSuperAdmin, async (req, res) => {
               select: {
                 id: true,
                 numero: true,
-                activa: true
+                activo: true
               }
             },
             productos: {
@@ -380,10 +380,10 @@ router.get('/:id', authenticateSuperAdmin, async (req, res) => {
                 nombre: true,
                 disponible: true
               }
-            }
+            },
+            plan: true
           }
         },
-        plan: true,
         historialPagos: {
           orderBy: { fechaPago: 'desc' }
         }
@@ -397,30 +397,40 @@ router.get('/:id', authenticateSuperAdmin, async (req, res) => {
       });
     }
 
-    // Calcular estadísticas del restaurante
-    const hoy = new Date();
-    const vencimiento = new Date(suscripcion.fechaVencimiento);
-    const diasHastaVencimiento = Math.ceil((vencimiento - hoy) / (1000 * 60 * 60 * 24));
+    const { restaurante } = suscripcion;
 
-    const estadisticas = {
-      diasHastaVencimiento,
-      vencida: diasHastaVencimiento < 0,
-      proximaAVencer: diasHastaVencimiento <= 7 && diasHastaVencimiento >= 0,
-      totalProductos: suscripcion.restaurante.productos.length,
-      productosActivos: suscripcion.restaurante.productos.filter(p => p.disponible).length,
-      totalMesas: suscripcion.restaurante.mesas.length,
-      mesasActivas: suscripcion.restaurante.mesas.filter(m => m.activa).length,
-      totalPagos: suscripcion.historialPagos.length,
-      montoTotalPagado: suscripcion.historialPagos.reduce((sum, pago) => sum + Number(pago.monto), 0)
+    // Aplanar la estructura para un acceso más fácil en el frontend
+    const dataAplanada = {
+      id: suscripcion.id,
+      estado: suscripcion.estado,
+      fechaInicio: suscripcion.fechaInicio,
+      fechaVencimiento: suscripcion.fechaVencimiento,
+      renovacionAutomatica: suscripcion.renovacionAutomatica,
+      createdAt: suscripcion.createdAt,
+      updatedAt: suscripcion.updatedAt,
+      notasAdmin: suscripcion.notasAdmin,
+      restaurante: {
+        id: restaurante.id,
+        nombre: restaurante.nombre,
+        slug: restaurante.slug,
+        email: restaurante.email,
+        activo: restaurante.activo,
+        usuariosAdmin: restaurante.usuariosAdmin,
+        plan: restaurante.plan
+      },
+      stats: {
+        totalUsuariosAdmin: restaurante.usuariosAdmin.length,
+        totalProductos: restaurante.productos.length,
+        totalMesas: restaurante.mesas.length,
+        totalPagos: suscripcion.historialPagos.length,
+        montoTotalPagado: suscripcion.historialPagos.reduce((sum, pago) => sum + Number(pago.monto), 0)
+      },
+      historialPagos: suscripcion.historialPagos
     };
 
     res.json({
       success: true,
-      data: {
-        ...suscripcion,
-        diasHastaVencimiento,
-        estadisticas
-      }
+      data: dataAplanada
     });
 
   } catch (error) {

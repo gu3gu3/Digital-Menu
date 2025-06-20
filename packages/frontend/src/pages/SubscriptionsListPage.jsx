@@ -34,12 +34,8 @@ const SubscriptionsListPage = () => {
       setPlans(response.data);
     } catch (err) {
       console.error('Error fetching plans:', err);
-      // Fallback a valores por defecto basados en el schema de Prisma
-      setPlans([
-        { id: 'GRATUITO', nombre: 'Plan Gratuito' },
-        { id: 'BASICO', nombre: 'Plan Básico' },
-        { id: 'PREMIUM', nombre: 'Plan Premium' }
-      ]);
+      setError('No se pudieron cargar los planes. Intente de nuevo.');
+      setPlans([]);
     }
   };
 
@@ -292,7 +288,7 @@ const SubscriptionsListPage = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <Link
-                        to={`/super-admin/subscriptions/${suscripcion.id}`}
+                        to={`/super-admin/subscriptions/${suscripcion.id}/renew`}
                         className="text-indigo-600 hover:text-indigo-900"
                       >
                         Ver Detalles

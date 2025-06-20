@@ -156,7 +156,7 @@ const AdminLayout = () => {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-gray-900 truncate">
-                {user.nombre || 'Administrador'}
+                {user.nombre} {user.apellido}
               </p>
               <p className="text-xs text-gray-500 truncate">
                 {user.email}
@@ -215,7 +215,7 @@ const AdminLayout = () => {
               <NotificationBell />
               <div className="hidden sm:block text-right">
                 <p className="text-sm font-medium text-gray-900">
-                  {user.nombre || 'Administrador'}
+                  {user.nombre} {user.apellido}
                 </p>
                 <PlanBadge planName={planInfo.nombre} />
                 {restaurant?.nombre && (

@@ -58,11 +58,13 @@ export const superAdminAuth = {
 
 // ==================== GESTIÓN DE SUSCRIPCIONES ====================
 
+const API_URL = '/super-admin/subscriptions';
+
 export const subscriptionsService = {
   // Obtener todas las suscripciones con filtros
   async getSubscriptions(params = {}) {
     try {
-      const response = await adminApi.get('/super-admin/subscriptions', { params });
+      const response = await adminApi.get(API_URL, { params });
       return response.data;
     } catch (error) {
       throw error.response?.data || { message: 'Error de conexión' };
@@ -82,7 +84,7 @@ export const subscriptionsService = {
   // Obtener detalles de una suscripción específica
   async getSubscription(id) {
     try {
-      const response = await adminApi.get(`/super-admin/subscriptions/${id}`);
+      const response = await adminApi.get(`${API_URL}/${id}`);
       return response.data;
     } catch (error) {
       throw error.response?.data || { message: 'Error de conexión' };
@@ -92,7 +94,7 @@ export const subscriptionsService = {
   // Actualizar suscripción
   async updateSubscription(id, data) {
     try {
-      const response = await adminApi.put(`/super-admin/subscriptions/${id}`, data);
+      const response = await adminApi.put(`${API_URL}/${id}`, data);
       return response.data;
     } catch (error) {
       throw error.response?.data || { message: 'Error de conexión' };
@@ -102,7 +104,7 @@ export const subscriptionsService = {
   // Procesar pago manual
   async processPayment(id, paymentData) {
     try {
-      const response = await adminApi.post(`/super-admin/subscriptions/${id}/process-payment`, paymentData);
+      const response = await adminApi.post(`${API_URL}/${id}/process-payment`, paymentData);
       return response.data;
     } catch (error) {
       throw error.response?.data || { message: 'Error de conexión' };
@@ -122,7 +124,7 @@ export const subscriptionsService = {
   // Obtener suscripciones próximas a vencer
   async getExpiringSubscriptions(days = 7) {
     try {
-      const response = await adminApi.get('/super-admin/subscriptions', {
+      const response = await adminApi.get(API_URL, {
         params: { vencenEn: days }
       });
       return response.data;
@@ -138,7 +140,7 @@ export const subscriptionsService = {
         search: searchTerm,
         ...filters
       };
-      const response = await adminApi.get('/super-admin/subscriptions', { params });
+      const response = await adminApi.get(API_URL, { params });
       return response.data;
     } catch (error) {
       throw error.response?.data || { message: 'Error de conexión' };
@@ -148,7 +150,7 @@ export const subscriptionsService = {
   // Obtener planes disponibles
   async getPlans() {
     try {
-      const response = await adminApi.get('/super-admin/subscriptions/plans');
+      const response = await adminApi.get(`${API_URL}/plans`);
       return response.data;
     } catch (error) {
       throw error.response?.data || { message: 'Error de conexión' };
@@ -158,7 +160,7 @@ export const subscriptionsService = {
   // Renovar suscripción por X meses
   async renewSubscription(id, renewalData) {
     try {
-      const response = await adminApi.post(`/super-admin/subscriptions/${id}/renew`, renewalData);
+      const response = await adminApi.post(`${API_URL}/${id}/renew`, renewalData);
       return response.data;
     } catch (error) {
       throw error.response?.data || { message: 'Error de conexión' };

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { PhotoIcon, BuildingStorefrontIcon, LinkIcon, ClipboardDocumentIcon, CurrencyDollarIcon, PaintBrushIcon } from '@heroicons/react/24/outline'
+import { PhotoIcon, BuildingStorefrontIcon, LinkIcon, ClipboardDocumentIcon, CurrencyDollarIcon, PaintBrushIcon, UserCircleIcon } from '@heroicons/react/24/outline'
 import restaurantService from '../services/restaurantService'
 import { getCurrenciesByRegion, getCurrencyDisplayInfo } from '../utils/currencyUtils'
 
@@ -290,6 +290,23 @@ const AdminRestaurantPage = () => {
                   {getCurrencyDisplayInfo(restaurantData.moneda)?.displayName || 'USD - Dólar'}
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Información del Administrador */}
+      {restaurantData?.admin && (
+        <div className="bg-white shadow rounded-lg">
+          <div className="p-6">
+            <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+              <UserCircleIcon className="h-5 w-5 mr-2 text-gray-600" />
+              Información del Administrador
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 text-sm">
+              <div className="font-medium text-gray-700">Nombre: <span className="font-normal text-gray-900">{restaurantData.admin.nombre} {restaurantData.admin.apellido}</span></div>
+              <div className="font-medium text-gray-700">Email: <span className="font-normal text-gray-900">{restaurantData.admin.email}</span></div>
+              <div className="font-medium text-gray-700">Teléfono: <span className="font-normal text-gray-900">{restaurantData.admin.telefono || 'No especificado'}</span></div>
             </div>
           </div>
         </div>

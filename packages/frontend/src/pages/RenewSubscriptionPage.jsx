@@ -55,7 +55,7 @@ const RenewSubscriptionPage = () => {
         setSubscription(sub);
         setRenewalData(prev => ({
           ...prev,
-          planId: sub.planId // Set current plan as default
+          planId: sub.restaurante.plan.id // Corregido: el plan está en el restaurante
         }));
       }
 
@@ -72,9 +72,11 @@ const RenewSubscriptionPage = () => {
   };
 
   const calculateAmount = () => {
-    if (!subscription || !plans.length) return;
+    if (!subscription || !plans.length || !renewalData.planId) return;
 
-    const selectedPlan = plans.find(p => p.id === renewalData.planId) || subscription.plan;
+    const selectedPlan = plans.find(p => p.id === renewalData.planId);
+    if (!selectedPlan) return;
+
     const monthOption = monthOptions.find(m => m.value === renewalData.meses);
     
     let baseAmount = selectedPlan.precio * renewalData.meses;
@@ -106,7 +108,7 @@ const RenewSubscriptionPage = () => {
 
       const response = await superAdminService.renewSubscription(id, {
         meses: parseInt(renewalData.meses),
-        planId: renewalData.planId !== subscription.planId ? renewalData.planId : undefined,
+        planId: renewalData.planId !== subscription.restaurante.plan.id ? renewalData.planId : undefined,
         monto: parseFloat(renewalData.monto),
         metodoPago: renewalData.metodoPago || 'Renovación Manual',
         referenciaPago: renewalData.referenciaPago,
@@ -198,8 +200,8 @@ const RenewSubscriptionPage = () => {
             </div>
             <div>
               <h3 className="text-sm font-medium text-gray-700 mb-2">Plan Actual</h3>
-              <p className="text-lg font-semibold text-gray-900">{subscription.plan.nombre}</p>
-              <p className="text-sm text-gray-500">${subscription.plan.precio}/mes</p>
+              <p className="text-lg font-semibold text-gray-900">{subscription.restaurante.plan.nombre}</p>
+              <p className="text-sm text-gray-500">${subscription.restaurante.plan.precio}/mes</p>
             </div>
             <div>
               <h3 className="text-sm font-medium text-gray-700 mb-2">Estado</h3>
@@ -209,13 +211,13 @@ const RenewSubscriptionPage = () => {
             </div>
             <div>
               <h3 className="text-sm font-medium text-gray-700 mb-2">Vencimiento</h3>
-              <p className={`font-medium ${getDaysUntilExpiryColor(subscription.diasHastaVencimiento)}`}>
-                {superAdminService.formatDate(subscription.fechaVencimiento)}
+              <p className={`font-medium ${getDaysUntilExpiryColor(subscription.stats.diasHastaVencimiento)}`}>
+                {new Date(subscription.fechaVencimiento).toLocaleDateString()}
               </p>
-              <p className={`text-xs ${getDaysUntilExpiryColor(subscription.diasHastaVencimiento)}`}>
-                {subscription.diasHastaVencimiento < 0 
-                  ? `Vencida hace ${Math.abs(subscription.diasHastaVencimiento)} días`
-                  : `${subscription.diasHastaVencimiento} días restantes`
+              <p className={`text-xs ${getDaysUntilExpiryColor(subscription.stats.diasHastaVencimiento)}`}>
+                {subscription.stats.diasHastaVencimiento < 0 
+                  ? `Vencida hace ${Math.abs(subscription.stats.diasHastaVencimiento)} días`
+                  : `${subscription.stats.diasHastaVencimiento} días restantes`
                 }
               </p>
             </div>
@@ -278,7 +280,7 @@ const RenewSubscriptionPage = () => {
                 {plans.map(plan => (
                   <option key={plan.id} value={plan.id}>
                     {plan.nombre} - ${plan.precio}/mes
-                    {plan.id === subscription.planId && ' (Plan actual)'}
+                    {plan.id === subscription.restaurante.plan.id && ' (Plan actual)'}
                   </option>
                 ))}
               </select>

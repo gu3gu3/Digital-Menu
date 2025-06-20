@@ -45,14 +45,17 @@ const PublicMenuPage = () => {
   useEffect(() => {
     if (slug) {
       loadMenu()
-      const savedName = localStorage.getItem(`customerName_${slug}_${mesaNumero}`)
-      if (savedName) {
-        setCustomerName(savedName)
-      } else {
-        setTimeout(() => setIsNameModalOpen(true), 500)
+      // Only prompt for name if a table number is present in the URL
+      if (mesaNumero) {
+        const savedName = localStorage.getItem(`customerName_${slug}_${mesaNumero}`)
+        if (savedName) {
+          setCustomerName(savedName)
+        } else {
+          setTimeout(() => setIsNameModalOpen(true), 500)
+        }
       }
     }
-  }, [slug])
+  }, [slug, mesaNumero])
 
   useEffect(() => {
     if (restaurante && mesaNumero) {
