@@ -55,13 +55,13 @@ const PublicMenuPage = () => {
       loadMenu()
       // Only prompt for name if a table number is present in the URL
       if (mesaNumero) {
-        const savedName = localStorage.getItem(`customerName_${slug}_${mesaNumero}`)
-        if (savedName) {
-          setCustomerName(savedName)
-        } else {
-          setTimeout(() => setIsNameModalOpen(true), 500)
-        }
+      const savedName = localStorage.getItem(`customerName_${slug}_${mesaNumero}`)
+      if (savedName) {
+        setCustomerName(savedName)
+      } else {
+        setTimeout(() => setIsNameModalOpen(true), 500)
       }
+    }
     }
   }, [slug, mesaNumero])
 
@@ -306,7 +306,7 @@ const PublicMenuPage = () => {
             {/* Logo a la izquierda */}
             {restaurante?.logoUrl && isValidImageUrl(restaurante.logoUrl) && (
               <div className="flex-shrink-0">
-                <img 
+                <img
                   src={restaurante.logoUrl} 
                   alt={`${restaurante.nombre} logo`} 
                   className="w-28 h-28 md:w-32 md:h-32 rounded-full border-4 border-white object-cover shadow-2xl"
@@ -331,150 +331,150 @@ const PublicMenuPage = () => {
 
       {/* Contenido del menú (resto del JSX) */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex flex-col lg:flex-row gap-6">
-          {/* Sidebar de categorías */}
-          <div className="lg:w-1/4">
-            <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-sm p-4 sticky top-4">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Categorías</h2>
-              <div className="space-y-2">
-                {categorias.map((categoria) => (
-                  <button
-                    key={categoria.id}
-                    onClick={() => setSelectedCategory(categoria.id)}
-                    className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${
-                      selectedCategory === categoria.id
-                        ? 'bg-primary-600 text-white'
-                        : 'text-gray-700 hover:bg-gray-100'
-                    }`}
-                  >
-                    <div>
-                      <div className="font-medium">{categoria.nombre}</div>
-                      <div className="text-sm opacity-75">{categoria.descripcion}</div>
-                      <div className="text-xs mt-1">
-                        {categoria.productos?.length || 0} productos
+          <div className="flex flex-col lg:flex-row gap-6">
+            {/* Sidebar de categorías */}
+            <div className="lg:w-1/4">
+              <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-sm p-4 sticky top-4">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">Categorías</h2>
+                <div className="space-y-2">
+                  {categorias.map((categoria) => (
+                    <button
+                      key={categoria.id}
+                      onClick={() => setSelectedCategory(categoria.id)}
+                      className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${
+                        selectedCategory === categoria.id
+                          ? 'bg-primary-600 text-white'
+                          : 'text-gray-700 hover:bg-gray-100'
+                      }`}
+                    >
+                      <div>
+                        <div className="font-medium">{categoria.nombre}</div>
+                        <div className="text-sm opacity-75">{categoria.descripcion}</div>
+                        <div className="text-xs mt-1">
+                          {categoria.productos?.length || 0} productos
+                        </div>
                       </div>
-                    </div>
-                  </button>
-                ))}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Contenido principal */}
-          <div className="lg:w-1/2">
-            {selectedCategoryData && (
-              <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-sm">
-                <div className="p-6 border-b border-gray-200">
-                  <h2 className="text-2xl font-bold text-gray-900">{selectedCategoryData.nombre}</h2>
-                  <p className="text-gray-600 mt-1">{selectedCategoryData.descripcion}</p>
-                </div>
+            {/* Contenido principal */}
+            <div className="lg:w-1/2">
+              {selectedCategoryData && (
+                <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-sm">
+                  <div className="p-6 border-b border-gray-200">
+                    <h2 className="text-2xl font-bold text-gray-900">{selectedCategoryData.nombre}</h2>
+                    <p className="text-gray-600 mt-1">{selectedCategoryData.descripcion}</p>
+                  </div>
 
-                <div className="p-6 space-y-6">
-                  {selectedCategoryData.productos
-                    ?.filter(producto => producto.disponible)
-                    ?.map((producto) => (
-                    <div key={producto.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-white/80">
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <h3 className="text-lg font-semibold text-gray-900">{producto.nombre}</h3>
-                          <p className="text-gray-600 mt-1">{producto.descripcion}</p>
-                          <p className="text-xl font-bold text-primary-600 mt-2">
-                            {formatCurrency(producto.precio)}
-                          </p>
+                  <div className="p-6 space-y-6">
+                    {selectedCategoryData.productos
+                      ?.filter(producto => producto.disponible)
+                      ?.map((producto) => (
+                      <div key={producto.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-white/80">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <h3 className="text-lg font-semibold text-gray-900">{producto.nombre}</h3>
+                            <p className="text-gray-600 mt-1">{producto.descripcion}</p>
+                            <p className="text-xl font-bold text-primary-600 mt-2">
+                              {formatCurrency(producto.precio)}
+                            </p>
+                          </div>
+                          
+                          {producto.imagenUrl && (
+                            <img
+                              src={getImageUrl(producto.imagenUrl)}
+                              alt={producto.nombre}
+                              className="w-20 h-20 object-cover rounded-lg ml-4"
+                            />
+                          )}
                         </div>
                         
-                        {producto.imagenUrl && (
-                          <img
-                            src={getImageUrl(producto.imagenUrl)}
-                            alt={producto.nombre}
-                            className="w-20 h-20 object-cover rounded-lg ml-4"
-                          />
-                        )}
+                        <div className="mt-4 flex justify-end">
+                          <button
+                            onClick={() => addToCart(producto)}
+                            className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors"
+                          >
+                            Agregar
+                          </button>
+                        </div>
                       </div>
-                      
-                      <div className="mt-4 flex justify-end">
-                        <button
-                          onClick={() => addToCart(producto)}
-                          className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors"
-                        >
-                          Agregar
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Carrito */}
-          <div className="lg:w-1/4">
-            <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-sm p-4 sticky top-4">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-gray-900">Tu Pedido</h2>
-                <div className="bg-primary-600 text-white text-xs px-2 py-1 rounded-full">
-                  {getTotalItems()} items
-                </div>
-              </div>
-
-              {!cart || cart.items.length === 0 ? (
-                <div className="text-center py-8">
-                  <ShoppingCartIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500">Tu carrito está vacío</p>
-                  <p className="text-sm text-gray-400 mt-1">Agrega productos para hacer tu pedido</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {cart.items.map((item) => (
-                    <div key={item.id} className="flex items-center justify-between py-2 border-b border-gray-200">
-                      <div className="flex-1">
-                        <h4 className="font-medium text-gray-900">{item.producto.nombre}</h4>
-                        <p className="text-sm text-gray-600">{formatCurrency(item.producto.precio)}</p>
-                      </div>
-                      
-                      <div className="flex items-center space-x-2">
-                        <button
-                          onClick={() => updateQuantity(item.id, item.cantidad - 1)}
-                          className="p-1 rounded-full hover:bg-gray-100"
-                        >
-                          <MinusIcon className="h-4 w-4 text-gray-600" />
-                        </button>
-                        
-                        <span className="font-medium text-gray-900 min-w-[2rem] text-center">
-                          {item.cantidad}
-                        </span>
-                        
-                        <button
-                          onClick={() => updateQuantity(item.id, item.cantidad + 1)}
-                          className="p-1 rounded-full hover:bg-gray-100"
-                        >
-                          <PlusIcon className="h-4 w-4 text-gray-600" />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-
-                  <div className="pt-4 border-t border-gray-200">
-                    <div className="flex justify-between items-center mb-4">
-                      <span className="text-lg font-semibold text-gray-900">Total:</span>
-                      <span className="text-xl font-bold text-primary-600">
-                        {formatCurrency(getTotalPrice())}
-                      </span>
-                    </div>
-
-                    <button
-                      onClick={showOrderConfirmation}
-                      disabled={submittingOrder || !cart || cart.items.length === 0}
-                      className="w-full bg-primary-600 text-white py-3 rounded-lg hover:bg-primary-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium"
-                    >
-                      {submittingOrder ? 'Enviando...' : 'Confirmar Pedido'}
-                    </button>
+                    ))}
                   </div>
                 </div>
               )}
             </div>
+
+            {/* Carrito */}
+            <div className="lg:w-1/4">
+              <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-sm p-4 sticky top-4">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-semibold text-gray-900">Tu Pedido</h2>
+                  <div className="bg-primary-600 text-white text-xs px-2 py-1 rounded-full">
+                    {getTotalItems()} items
+                  </div>
+                </div>
+
+                {!cart || cart.items.length === 0 ? (
+                  <div className="text-center py-8">
+                    <ShoppingCartIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-500">Tu carrito está vacío</p>
+                    <p className="text-sm text-gray-400 mt-1">Agrega productos para hacer tu pedido</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {cart.items.map((item) => (
+                      <div key={item.id} className="flex items-center justify-between py-2 border-b border-gray-200">
+                        <div className="flex-1">
+                          <h4 className="font-medium text-gray-900">{item.producto.nombre}</h4>
+                          <p className="text-sm text-gray-600">{formatCurrency(item.producto.precio)}</p>
+                        </div>
+                        
+                        <div className="flex items-center space-x-2">
+                          <button
+                            onClick={() => updateQuantity(item.id, item.cantidad - 1)}
+                            className="p-1 rounded-full hover:bg-gray-100"
+                          >
+                            <MinusIcon className="h-4 w-4 text-gray-600" />
+                          </button>
+                          
+                          <span className="font-medium text-gray-900 min-w-[2rem] text-center">
+                            {item.cantidad}
+                          </span>
+                          
+                          <button
+                            onClick={() => updateQuantity(item.id, item.cantidad + 1)}
+                            className="p-1 rounded-full hover:bg-gray-100"
+                          >
+                            <PlusIcon className="h-4 w-4 text-gray-600" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+
+                    <div className="pt-4 border-t border-gray-200">
+                      <div className="flex justify-between items-center mb-4">
+                        <span className="text-lg font-semibold text-gray-900">Total:</span>
+                        <span className="text-xl font-bold text-primary-600">
+                          {formatCurrency(getTotalPrice())}
+                        </span>
+                      </div>
+
+                      <button
+                        onClick={showOrderConfirmation}
+                        disabled={submittingOrder || !cart || cart.items.length === 0}
+                        className="w-full bg-primary-600 text-white py-3 rounded-lg hover:bg-primary-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium"
+                      >
+                        {submittingOrder ? 'Enviando...' : 'Confirmar Pedido'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
-        </div>
       </main>
 
       {/* Banner de seguimiento de orden */}

@@ -64,4 +64,4 @@ RUN chmod +x /start.sh
 EXPOSE 8080
 
 # Iniciar el script.
-CMD ["/start.sh"] 
+CMD ["/start.sh"]

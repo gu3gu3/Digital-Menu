@@ -140,13 +140,13 @@ const getStats = async (req, res) => {
         if (!existingNotification) {
           await prisma.notificacionUsuario.create({
             data: {
-              titulo: notificacion.titulo,
-              mensaje: notificacion.mensaje,
-              tipo: notificacion.tipo,
-              restauranteId: notificacion.restauranteId,
-              notificationKey: notificacion.notificationKey,
-            }
-          });
+            titulo: notificacion.titulo,
+            mensaje: notificacion.mensaje,
+            tipo: notificacion.tipo,
+            restauranteId: notificacion.restauranteId,
+            notificationKey: notificacion.notificationKey,
+          }
+        });
         }
       }
     }

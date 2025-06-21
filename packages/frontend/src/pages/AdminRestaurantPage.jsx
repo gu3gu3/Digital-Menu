@@ -31,7 +31,7 @@ const AdminRestaurantPage = () => {
       Object.keys(restaurante).forEach(key => {
         if (key in restaurante && restaurante[key] !== null) {
           setValue(key, restaurante[key]);
-        }
+    }
       });
       setMenuUrl(`${window.location.origin}/menu/${restaurante.slug}`);
     } catch (error) {
@@ -73,7 +73,11 @@ const AdminRestaurantPage = () => {
     if (!file) return;
     toast.info(`Subiendo imagen de ${imageType}...`);
     try {
-      await restaurantService.uploadImage(imageType, file);
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('type', imageType);
+
+      await restaurantService.uploadRestaurantFiles(formData);
       toast.success(`Imagen de ${imageType} actualizada.`);
       await fetchRestaurantData();
     } catch (error) {
@@ -178,60 +182,60 @@ const AdminRestaurantPage = () => {
         <div className="p-6 bg-white shadow rounded-lg">
            <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center"><UserCircle className="h-5 w-5 mr-2 text-gray-600" />Información del Administrador</h3>
            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 text-sm"><div className="font-medium text-gray-700">Nombre: <span className="font-normal text-gray-900">{restaurantData.admin.nombre} {restaurantData.admin.apellido}</span></div><div className="font-medium text-gray-700">Email: <span className="font-normal text-gray-900">{restaurantData.admin.email}</span></div><div className="font-medium text-gray-700">Teléfono: <span className="font-normal text-gray-900">{restaurantData.admin.telefono || 'No especificado'}</span></div></div>
-        </div>
-      )}
-
+            </div>
+          )}
+          
       <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
         <div className="p-6 bg-white shadow rounded-lg">
           <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center"><BuildingStorefrontIcon className="h-5 w-5 mr-2 text-gray-600" />Información Básica</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div><label htmlFor="nombre" className="block text-sm font-medium text-gray-700">Nombre del Restaurante *</label><input type="text" id="nombre" {...register("nombre", { required: "El nombre es requerido" })} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm" />{errors.nombre && <p className="mt-1 text-xs text-red-500">{errors.nombre.message}</p>}</div>
             <div><label htmlFor="telefono" className="block text-sm font-medium text-gray-700">Teléfono *</label><input type="tel" id="telefono" {...register("telefono", { required: "El teléfono es requerido" })} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm" />{errors.telefono && <p className="mt-1 text-xs text-red-500">{errors.telefono.message}</p>}</div>
             <div className="md:col-span-2"><label htmlFor="descripcion" className="block text-sm font-medium text-gray-700">Descripción</label><textarea id="descripcion" rows={3} {...register("descripcion")} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm" /></div>
             <div className="md:col-span-2"><label htmlFor="direccion" className="block text-sm font-medium text-gray-700">Dirección *</label><input type="text" id="direccion" {...register("direccion", { required: "La dirección es requerida" })} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm" />{errors.direccion && <p className="mt-1 text-xs text-red-500">{errors.direccion.message}</p>}</div>
             <div><label htmlFor="email" className="block text-sm font-medium text-gray-700">Email del Restaurante</label><input type="email" id="email" {...register("email", { pattern: { value: /^\S+@\S+$/i, message: "Email no válido" } })} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm" />{errors.email && <p className="mt-1 text-xs text-red-500">{errors.email.message}</p>}</div>
+            </div>
           </div>
-        </div>
-        
+
         <div className="p-6 bg-white shadow rounded-lg">
           <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center"><CurrencyDollarIcon className="h-5 w-5 mr-2 text-gray-600" />Configuración de Moneda</h3>
           <div className="max-w-md"><label htmlFor="moneda" className="block text-sm font-medium text-gray-700 mb-2">Moneda de tu Restaurante *</label><select id="moneda" {...register("moneda", { required: true })} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">{Object.entries(currenciesByRegion).map(([region, currencies]) => (<optgroup key={region} label={region}>{currencies.map((currency) => (<option key={currency.code} value={currency.code}>{currency.symbol} {currency.name} ({currency.country})</option>))}</optgroup>))}</select><p className="mt-2 text-sm text-gray-500">Los precios de tu menú se mostrarán en esta moneda.</p></div>
         </div>
-
+            
         <div className="bg-white shadow-lg rounded-xl overflow-hidden">
           <div className="p-6"><h3 className="text-xl font-bold text-gray-900">Apariencia del Menú Público</h3><p className="mt-1 text-sm text-gray-500">Personaliza los colores e imágenes que verán tus clientes.</p></div>
           <div className="px-6 pb-6 border-b border-gray-200">
              <div><label className="block text-sm font-medium text-gray-700 mb-3">Color de Fondo</label><div className='flex items-center gap-2'>
               {['#FFFFFF', '#111827', '#FEE2E2', '#DBEAFE', '#F3F4F6', '#F5F5F4', '#D1FAE5', '#FEF3C7'].map((color) => (
-                <button
+                    <button
                   key={color}
                   type='button'
                   onClick={() => setValue('backgroundColor', color)}
                   className={`w-12 h-12 rounded-lg border-2 transition-all duration-200 hover:scale-110 ${backgroundColor === color ? 'border-primary-600 ring-2 ring-primary-200' : 'border-gray-300 hover:border-gray-400'}`}
                   style={{ backgroundColor: color }}
                   title={color}
-                >
+                    >
                   {backgroundColor === color && (
-                    <div className="flex items-center justify-center h-full">
-                      <svg className="w-6 h-6 text-white drop-shadow-lg" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                  )}
-                </button>
-              ))}
+                        <div className="flex items-center justify-center h-full">
+                          <svg className="w-6 h-6 text-white drop-shadow-lg" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                      )}
+                    </button>
+                  ))}
             </div></div>
           </div>
           <div className="p-6 border-b border-gray-200"><h4 className="text-lg font-semibold text-gray-800 mb-4">Identidad Visual</h4><div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6"><ImageUploadField label="Logo del Restaurante" description="Formato cuadrado recomendado (ej. 512x512)." imageType="logo" currentImageUrl={restaurantData?.logoUrl} /><ImageUploadField label="Banner del Restaurante" description="Se mostrará en la cabecera del menú. Recomendado: 1600x400." imageType="banner" currentImageUrl={restaurantData?.bannerUrl} /></div></div>
           <div className="p-6"><h4 className="text-lg font-semibold text-gray-800 mb-1">Imagen de Fondo</h4><p className="text-sm text-gray-500 mb-4">Alternativa al color de fondo. Si subes una imagen, esta tendrá prioridad.</p><ImageUploadField label="" description="Recomendado: 1920x1080. Intenta que no sea muy pesada." imageType="background" currentImageUrl={restaurantData?.backgroundImage} /></div>
-        </div>
+              </div>
 
         <div className="flex justify-end pt-4">
           <button type="submit" disabled={isSubmitting} className="inline-flex justify-center py-2 px-6 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50">
             {isSubmitting ? 'Guardando...' : 'Guardar Cambios'}
-          </button>
-        </div>
-      </form>
+              </button>
+          </div>
+        </form>
     </div>
   );
 };

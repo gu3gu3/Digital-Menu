@@ -18,6 +18,12 @@ DATABASE_URL
 JWT_SECRET (el único secreto para todos los tokens)
 BACKEND_URL (la URL pública del backend, ej: https://...run.app)
 VITE_FRONTEND_URL (la URL pública del frontend, ej: https://menuview.app)
+EMAIL_USER
+EMAIL_PASSWORD
+EMAIL_HOST
+EMAIL_PORT
+NODE_ENV
+GCP_STORAGE_BUCKET
 3. Fronteras Claras entre Frontend y Backend
 Cada parte tiene una única responsabilidad.
 Regla 3.1: El Backend Construye URLs de sus Recursos. Para las imágenes, el backend usa su BACKEND_URL para crear la ruta completa: ${process.env.BACKEND_URL}/uploads/imagen.jpg.
@@ -26,3 +32,42 @@ Regla 3.2: El Frontend Construye URLs de Navegación. Para compartir un menú, e
 Regla 4.1: Eliminar Variables Obsoletas. Si una variable en el archivo .env no se usa en el código (como JWT_SECRET_SUPERADMIN), debe ser eliminada para evitar confusiones.
 5. Diagnóstico Primero, Acción Después
 Regla 5.1: Los Logs son la Verdad. Ante un error 500 en producción, el primer paso es siempre revisar los logs de Cloud Run. No se deben hacer cambios en el código sin saber qué está fallando.
+
+Las siguientes notas son el resultado del analisis del Gemini para poder de manera rapida actualizar la memoria de el fronted, backend y conexiones importante del proyecto:
+
+Análisis Detallado de Rutas y Lógica Clave
+1. Backend: Rutas de la API (packages/backend/src/routes/)
+Este directorio contiene la lógica de negocio para cada endpoint de la API. Los archivos más importantes son:
+Autenticación:
+auth.js: Gestiona el login/registro de administradores de restaurantes (/api/auth/login).
+superAdminAuth.js: Gestiona el login del superadministrador (/api/superadmin/auth/login). Es un flujo separado y más privilegiado.
+staff.js: Gestiona el personal (camareros, etc.) y probablemente su autenticación.
+Gestión del Restaurante (Panel de Administrador):
+restaurants.js: CRUD para la información del restaurante.
+products.js: CRUD para los productos del menú.
+categories.js: CRUD para las categorías del menú.
+tables.js: CRUD para las mesas del restaurante y sus QR.
+orders.js: Lógica para recibir y gestionar pedidos.
+Gestión Global (Panel de Superadministrador):
+superAdminSubscriptions.js: Lógica para manejar las suscripciones de los restaurantes.
+admin.js: Probablemente para que el superadmin gestione a los administradores de restaurantes.
+Rutas Públicas:
+public.js: Endpoints para las vistas públicas, como la visualización del menú sin necesidad de login.
+cart.js: Lógica del carrito de compras para los clientes.
+2. Frontend: Vistas y Flujo del Usuario (packages/frontend/src/pages/)
+Este directorio contiene las páginas o vistas principales que el usuario final ve en su navegador. Las más relevantes para entender el flujo son:
+Paneles de Control (Dashboards):
+AdminDashboard.jsx: El panel principal para el dueño del restaurante después de iniciar sesión.
+SuperAdminDashboard.jsx: El panel principal para el superadministrador.
+StaffDashboard.jsx: El panel para el personal del restaurante.
+Páginas de Login (Puntos de Entrada):
+AdminLoginPage.jsx: Formulario de login para los administradores de restaurantes.
+SuperAdminLoginPage.jsx: Formulario de login para el superadministrador.
+StaffLoginPage.jsx: Formulario de login para el personal.
+Gestión del Menú (Administrador):
+AdminMenuPage.jsx: Página donde el administrador puede añadir, editar y eliminar productos y categorías.
+Vista Pública del Menú:
+PublicMenuPage.jsx: La página que ve un cliente cuando escanea un código QR. Es la cara pública del menú digital.
+Gestión de Superadministrador:
+SubscriptionsListPage.jsx: Página para ver y gestionar todas las suscripciones activas.
+PlansManagementPage.jsx: Página para crear o editar los planes de suscripción.

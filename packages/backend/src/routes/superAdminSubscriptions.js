@@ -422,8 +422,8 @@ router.get('/:id', authenticateSuperAdmin, async (req, res) => {
         totalUsuariosAdmin: restaurante.usuariosAdmin.length,
         totalProductos: restaurante.productos.length,
         totalMesas: restaurante.mesas.length,
-        totalPagos: suscripcion.historialPagos.length,
-        montoTotalPagado: suscripcion.historialPagos.reduce((sum, pago) => sum + Number(pago.monto), 0)
+      totalPagos: suscripcion.historialPagos.length,
+      montoTotalPagado: suscripcion.historialPagos.reduce((sum, pago) => sum + Number(pago.monto), 0)
       },
       historialPagos: suscripcion.historialPagos
     };

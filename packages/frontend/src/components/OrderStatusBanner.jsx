@@ -111,12 +111,12 @@ const OrderStatusBanner = ({ ordenId, restauranteSlug, onClearOrder, tableNumber
     if (!ordenId || !restauranteSlug) return;
 
     const fetchOrder = async () => {
-      try {
+    try {
         const response = await fetch(`${API_BASE_URL}/public/orders/${ordenId}?restaurantSlug=${restauranteSlug}`);
         if (!response.ok) {
           throw new Error('No se pudo obtener el estado de la orden');
         }
-        const data = await response.json();
+      const data = await response.json();
         setOrden(data);
       } catch (err) {
         setError(err.message);

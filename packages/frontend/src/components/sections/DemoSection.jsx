@@ -13,19 +13,19 @@ const DemoSection = () => {
 
   useEffect(() => {
     const fetchDemoMenu = async () => {
-      try {
+    try {
         const response = await fetch(`${API_BASE_URL}/menu/demo`)
-        const data = await response.json()
-        
-        if (data.success) {
-          setMenuData(data.data)
-        }
-      } catch (error) {
-        console.error('Error fetching demo menu:', error)
-      } finally {
-        setLoading(false)
+      const data = await response.json()
+      
+      if (data.success) {
+        setMenuData(data.data)
       }
+    } catch (error) {
+        console.error('Error fetching demo menu:', error)
+    } finally {
+      setLoading(false)
     }
+  }
     fetchDemoMenu()
   }, [])
 

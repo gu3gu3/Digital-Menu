@@ -34,39 +34,39 @@ const AdminDashboard = () => {
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true)
-      try {
-        const token = localStorage.getItem('adminToken')
-        
-        // Cargar estadísticas generales
+    try {
+      const token = localStorage.getItem('adminToken')
+      
+      // Cargar estadísticas generales
         const statsResponse = await fetch(`${API_BASE_URL}/admin/stats`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        })
-        
-        if (statsResponse.ok) {
-          const statsData = await statsResponse.json()
-          setStats(statsData.data)
+        headers: {
+          'Authorization': `Bearer ${token}`
         }
-
-        // Cargar órdenes recientes
-        const ordersResponse = await fetch(`${API_BASE_URL}/orders?limit=5`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        })
-        
-        if (ordersResponse.ok) {
-          const ordersData = await ordersResponse.json()
-          setRecentOrders(ordersData.data || [])
-        }
-
-      } catch (error) {
-        console.error('Error fetching dashboard data:', error)
-      } finally {
-        setLoading(false)
+      })
+      
+      if (statsResponse.ok) {
+        const statsData = await statsResponse.json()
+        setStats(statsData.data)
       }
+
+      // Cargar órdenes recientes
+        const ordersResponse = await fetch(`${API_BASE_URL}/orders?limit=5`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      
+      if (ordersResponse.ok) {
+        const ordersData = await ordersResponse.json()
+        setRecentOrders(ordersData.data || [])
+      }
+
+    } catch (error) {
+        console.error('Error fetching dashboard data:', error)
+    } finally {
+      setLoading(false)
     }
+  }
 
     fetchData()
   }, [])

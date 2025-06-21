@@ -105,15 +105,14 @@ class CloudStorage {
       return new Promise((resolve, reject) => {
         stream.on('error', reject);
         stream.on('finish', () => {
-          // Make file publicly accessible
-          cloudFile.makePublic().then(() => {
-            const publicUrl = `https://storage.googleapis.com/${process.env.GCP_STORAGE_BUCKET}/${cloudPath}`;
-            resolve({
-              url: publicUrl,
-              path: cloudPath,
-              filename: filename
-            });
-          }).catch(reject);
+          // El archivo ya es público debido a la configuración de "uniform bucket-level access".
+          // No es necesario llamar a .makePublic()
+          const publicUrl = `https://storage.googleapis.com/${process.env.GCP_STORAGE_BUCKET}/${cloudPath}`;
+          resolve({
+            url: publicUrl,
+            path: cloudPath,
+            filename: filename
+          });
         });
         stream.end(file.buffer);
       });
