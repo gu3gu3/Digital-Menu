@@ -2,7 +2,7 @@ const express = require('express');
 const Joi = require('joi');
 const { authenticate, requireAdmin } = require('../middleware/authMiddleware');
 const { PrismaClient } = require('@prisma/client');
-const { upload } = require('../config/storage');
+const { upload, handleFileUpload } = require('../config/storage');
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -79,6 +79,43 @@ const getProducts = async (req, res) => {
   }
 };
 
+// @desc    Get product by ID
+// @route   GET /api/products/:id
+// @access  Private (Admin only)
+const getProductById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const restauranteId = req.user.restauranteId;
+
+    const producto = await prisma.producto.findFirst({
+      where: {
+        id,
+        restauranteId
+      },
+      include: {
+        categoria: {
+          select: { id: true, nombre: true }
+        }
+      }
+    });
+
+    if (!producto) {
+      return res.status(404).json({ success: false, error: 'Producto no encontrado' });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        producto
+      }
+    });
+
+  } catch (error) {
+    console.error(`Error obteniendo producto ${req.params.id}:`, error);
+    res.status(500).json({ success: false, error: 'Error interno del servidor' });
+  }
+};
+
 // @desc    Create new product
 // @route   POST /api/products
 // @access  Private (Admin only)
@@ -137,10 +174,20 @@ const createProduct = async (req, res) => {
       finalOrder = lastProduct ? lastProduct.orden + 1 : 0;
     }
 
-    // Handle image upload
+    // Handle image upload using the helper
     let imagenUrl = null;
     if (req.file) {
-      imagenUrl = `/uploads/products/${req.file.filename}`;
+      const restaurante = await prisma.restaurante.findUnique({
+        where: { id: restauranteId },
+        select: { nombre: true }
+      });
+
+      if (!restaurante) {
+        return res.status(404).json({ success: false, error: 'Restaurante no encontrado para la subida de imagen' });
+      }
+
+      const uploadResult = await handleFileUpload(req.file, restaurante.nombre, 'product');
+      imagenUrl = uploadResult.url;
     }
 
     const newProduct = await prisma.producto.create({
@@ -252,11 +299,22 @@ const updateProduct = async (req, res) => {
       }
     }
 
+    const restaurante = await prisma.restaurante.findUnique({
+      where: { id: restauranteId },
+      select: { nombre: true }
+    });
+
+    if (!restaurante) {
+      return res.status(404).json({ success: false, error: 'Restaurante no encontrado para la subida de imagen' });
+    }
+    
+    // Prepare data for update
     const updateData = { ...value };
 
-    // Handle image upload
+    // Handle image upload if a new file is provided
     if (req.file) {
-      updateData.imagenUrl = `/uploads/products/${req.file.filename}`;
+      const uploadResult = await handleFileUpload(req.file, restaurante.nombre, 'product');
+      updateData.imagenUrl = uploadResult.url;
     }
 
     const updatedProduct = await prisma.producto.update({
@@ -405,10 +463,16 @@ const toggleProductAvailability = async (req, res) => {
 };
 
 // Routes
-router.get('/', authenticate, getProducts);
-router.post('/', authenticate, requireAdmin, upload.single('imagen'), createProduct);
-router.put('/:id', authenticate, requireAdmin, upload.single('imagen'), updateProduct);
-router.delete('/:id', authenticate, requireAdmin, deleteProduct);
-router.patch('/:id/toggle-availability', authenticate, requireAdmin, toggleProductAvailability);
+router.route('/')
+  .get(authenticate, requireAdmin, getProducts)
+  .post(authenticate, requireAdmin, upload.single('imagen'), createProduct);
+
+router.route('/:id')
+  .get(authenticate, requireAdmin, getProductById)
+  .put(authenticate, requireAdmin, upload.single('imagen'), updateProduct)
+  .delete(authenticate, requireAdmin, deleteProduct);
+
+router.route('/:id/toggle-availability')
+  .patch(authenticate, requireAdmin, toggleProductAvailability);
 
 module.exports = router; 

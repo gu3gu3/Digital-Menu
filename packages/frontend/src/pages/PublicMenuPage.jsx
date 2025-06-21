@@ -15,6 +15,14 @@ import OrderStatusBanner from '../components/OrderStatusBanner'
 import { formatMenuPrice, formatOrderTotal } from '../utils/currencyUtils'
 import NamePromptModal from '../components/NamePromptModal'
 
+const isValidImageUrl = (url) => {
+  if (!url || typeof url !== 'string') return false;
+  // Comprueba que no sea una URL relativa que empiece con "undefined"
+  if (url.startsWith('undefined')) return false;
+  // Comprueba que sea una URL http o https
+  return url.startsWith('http://') || url.startsWith('https://');
+};
+
 const PublicMenuPage = () => {
   const { slug } = useParams()
   const [searchParams] = useSearchParams()
@@ -264,238 +272,210 @@ const PublicMenuPage = () => {
     )
   }
 
+  // Estilo para el contenedor principal de la página
+  const pageStyle = restaurante?.backgroundImage && isValidImageUrl(restaurante.backgroundImage) ? {
+    backgroundImage: `linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8)), url(${restaurante.backgroundImage})`,
+    backgroundAttachment: 'fixed',
+    backgroundSize: 'cover'
+  } : {
+    backgroundColor: restaurante?.backgroundColor || '#F9FAFB' // Un gris muy claro por defecto
+  };
+  
+  // Estilo para el banner (encabezado)
+  const bannerStyle = restaurante?.bannerUrl && isValidImageUrl(restaurante.bannerUrl) ? {
+    backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url(${restaurante.bannerUrl})`,
+  } : {
+    backgroundColor: '#374151' // Un gris oscuro si no hay banner
+  };
+
   return (
-    <div 
-      className="min-h-screen"
-      style={{
-        backgroundColor: restaurante?.backgroundColor || '#f3f4f6',
-        backgroundImage: restaurante?.backgroundImage 
-          ? `url(${getImageUrl(restaurante.backgroundImage)})` 
-          : 'none',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundAttachment: 'fixed'
-      }}
-    >
+    <div className="min-h-screen" style={pageStyle}>
       <NamePromptModal 
         isOpen={isNameModalOpen}
         onSubmit={handleNameSubmit}
         restaurantName={restaurante?.nombre || 'este restaurante'}
       />
 
-      {/* Header del restaurante */}
-      <div 
-        className="bg-white/90 backdrop-blur-sm shadow-sm relative"
-        style={{
-          backgroundImage: restaurante?.bannerUrl 
-            ? `linear-gradient(rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.85)), url(${getImageUrl(restaurante.bannerUrl)})` 
-            : 'none',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center'
-        }}
+      {/* Banner Section */}
+      <header 
+        className="bg-cover bg-center py-8 md:py-12 text-white shadow-lg"
+        style={bannerStyle}
       >
-        <div className="max-w-4xl mx-auto px-4 py-6">
-          {/* Layout mejorado del header con logo a la izquierda */}
-          <div className="flex items-start space-x-6">
-            {/* Logo del restaurante */}
-            {restaurante.logoUrl && (
+        <div className="max-w-4xl mx-auto px-4">
+          <div className="flex flex-col md:flex-row items-center gap-6 text-center md:text-left">
+            {/* Logo a la izquierda */}
+            {restaurante?.logoUrl && isValidImageUrl(restaurante.logoUrl) && (
               <div className="flex-shrink-0">
-                <img
-                  src={getImageUrl(restaurante.logoUrl)}
-                  alt={restaurante.nombre}
-                  className="w-20 h-20 md:w-24 md:h-24 rounded-full object-cover border-4 border-white shadow-lg"
+                <img 
+                  src={restaurante.logoUrl} 
+                  alt={`${restaurante.nombre} logo`} 
+                  className="w-28 h-28 md:w-32 md:h-32 rounded-full border-4 border-white object-cover shadow-2xl"
                 />
               </div>
             )}
             
-            {/* Información del restaurante */}
-            <div className="flex-1 min-w-0">
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">{restaurante.nombre}</h1>
-              {restaurante.descripcion && (
-                <p className="text-gray-600 mb-3">{restaurante.descripcion}</p>
-              )}
-              
-              {/* Info de contacto */}
-              <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 mb-3">
-                {restaurante.telefono && (
-                  <div className="flex items-center">
-                    <PhoneIcon className="h-4 w-4 mr-1 text-primary-600" />
-                    <span>{restaurante.telefono}</span>
-                  </div>
-                )}
-                {restaurante.direccion && (
-                  <div className="flex items-center">
-                    <MapPinIcon className="h-4 w-4 mr-1 text-primary-600" />
-                    <span>{restaurante.direccion}</span>
-                  </div>
-                )}
-              </div>
-              
-              {/* Indicador de mesa */}
-              {mesaNumero && (
-                <div className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-primary-100 text-primary-800">
-                  Mesa {mesaNumero}
-                </div>
+            {/* Info a la derecha */}
+            <div className="flex-1">
+              <h1 className="text-4xl md:text-5xl font-bold" style={{ textShadow: '1px 1px 3px rgba(0,0,0,0.8)' }}>
+                {restaurante?.nombre}
+              </h1>
+              {restaurante?.descripcion && (
+                <p className="mt-2 text-lg opacity-90" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.7)' }}>
+                  {restaurante.descripcion}
+                </p>
               )}
             </div>
           </div>
         </div>
-      </div>
+      </header>
 
-      {/* Contenido principal con overlay semitransparente */}
-      <div className="relative">
-        {/* Overlay para mejorar legibilidad cuando hay imagen de fondo */}
-        {restaurante?.backgroundImage && (
-          <div className="absolute inset-0 bg-white/60 backdrop-blur-sm"></div>
-        )}
-        
-        <div className="relative max-w-6xl mx-auto px-4 py-6">
-          <div className="flex flex-col lg:flex-row gap-6">
-            {/* Sidebar de categorías */}
-            <div className="lg:w-1/4">
-              <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-sm p-4 sticky top-4">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">Categorías</h2>
-                <div className="space-y-2">
-                  {categorias.map((categoria) => (
-                    <button
-                      key={categoria.id}
-                      onClick={() => setSelectedCategory(categoria.id)}
-                      className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${
-                        selectedCategory === categoria.id
-                          ? 'bg-primary-600 text-white'
-                          : 'text-gray-700 hover:bg-gray-100'
-                      }`}
-                    >
-                      <div>
-                        <div className="font-medium">{categoria.nombre}</div>
-                        <div className="text-sm opacity-75">{categoria.descripcion}</div>
-                        <div className="text-xs mt-1">
-                          {categoria.productos?.length || 0} productos
-                        </div>
+      {/* Contenido del menú (resto del JSX) */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex flex-col lg:flex-row gap-6">
+          {/* Sidebar de categorías */}
+          <div className="lg:w-1/4">
+            <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-sm p-4 sticky top-4">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Categorías</h2>
+              <div className="space-y-2">
+                {categorias.map((categoria) => (
+                  <button
+                    key={categoria.id}
+                    onClick={() => setSelectedCategory(categoria.id)}
+                    className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${
+                      selectedCategory === categoria.id
+                        ? 'bg-primary-600 text-white'
+                        : 'text-gray-700 hover:bg-gray-100'
+                    }`}
+                  >
+                    <div>
+                      <div className="font-medium">{categoria.nombre}</div>
+                      <div className="text-sm opacity-75">{categoria.descripcion}</div>
+                      <div className="text-xs mt-1">
+                        {categoria.productos?.length || 0} productos
                       </div>
-                    </button>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Contenido principal */}
+          <div className="lg:w-1/2">
+            {selectedCategoryData && (
+              <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-sm">
+                <div className="p-6 border-b border-gray-200">
+                  <h2 className="text-2xl font-bold text-gray-900">{selectedCategoryData.nombre}</h2>
+                  <p className="text-gray-600 mt-1">{selectedCategoryData.descripcion}</p>
+                </div>
+
+                <div className="p-6 space-y-6">
+                  {selectedCategoryData.productos
+                    ?.filter(producto => producto.disponible)
+                    ?.map((producto) => (
+                    <div key={producto.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-white/80">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <h3 className="text-lg font-semibold text-gray-900">{producto.nombre}</h3>
+                          <p className="text-gray-600 mt-1">{producto.descripcion}</p>
+                          <p className="text-xl font-bold text-primary-600 mt-2">
+                            {formatCurrency(producto.precio)}
+                          </p>
+                        </div>
+                        
+                        {producto.imagenUrl && (
+                          <img
+                            src={getImageUrl(producto.imagenUrl)}
+                            alt={producto.nombre}
+                            className="w-20 h-20 object-cover rounded-lg ml-4"
+                          />
+                        )}
+                      </div>
+                      
+                      <div className="mt-4 flex justify-end">
+                        <button
+                          onClick={() => addToCart(producto)}
+                          className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors"
+                        >
+                          Agregar
+                        </button>
+                      </div>
+                    </div>
                   ))}
                 </div>
               </div>
-            </div>
+            )}
+          </div>
 
-            {/* Contenido principal */}
-            <div className="lg:w-1/2">
-              {selectedCategoryData && (
-                <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-sm">
-                  <div className="p-6 border-b border-gray-200">
-                    <h2 className="text-2xl font-bold text-gray-900">{selectedCategoryData.nombre}</h2>
-                    <p className="text-gray-600 mt-1">{selectedCategoryData.descripcion}</p>
-                  </div>
+          {/* Carrito */}
+          <div className="lg:w-1/4">
+            <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-sm p-4 sticky top-4">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-gray-900">Tu Pedido</h2>
+                <div className="bg-primary-600 text-white text-xs px-2 py-1 rounded-full">
+                  {getTotalItems()} items
+                </div>
+              </div>
 
-                  <div className="p-6 space-y-6">
-                    {selectedCategoryData.productos
-                      ?.filter(producto => producto.disponible)
-                      ?.map((producto) => (
-                      <div key={producto.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-white/80">
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <h3 className="text-lg font-semibold text-gray-900">{producto.nombre}</h3>
-                            <p className="text-gray-600 mt-1">{producto.descripcion}</p>
-                            <p className="text-xl font-bold text-primary-600 mt-2">
-                              {formatCurrency(producto.precio)}
-                            </p>
-                          </div>
-                          
-                          {producto.imagenUrl && (
-                            <img
-                              src={getImageUrl(producto.imagenUrl)}
-                              alt={producto.nombre}
-                              className="w-20 h-20 object-cover rounded-lg ml-4"
-                            />
-                          )}
-                        </div>
-                        
-                        <div className="mt-4 flex justify-end">
-                          <button
-                            onClick={() => addToCart(producto)}
-                            className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors"
-                          >
-                            Agregar
-                          </button>
-                        </div>
+              {!cart || cart.items.length === 0 ? (
+                <div className="text-center py-8">
+                  <ShoppingCartIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-500">Tu carrito está vacío</p>
+                  <p className="text-sm text-gray-400 mt-1">Agrega productos para hacer tu pedido</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {cart.items.map((item) => (
+                    <div key={item.id} className="flex items-center justify-between py-2 border-b border-gray-200">
+                      <div className="flex-1">
+                        <h4 className="font-medium text-gray-900">{item.producto.nombre}</h4>
+                        <p className="text-sm text-gray-600">{formatCurrency(item.producto.precio)}</p>
                       </div>
-                    ))}
+                      
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() => updateQuantity(item.id, item.cantidad - 1)}
+                          className="p-1 rounded-full hover:bg-gray-100"
+                        >
+                          <MinusIcon className="h-4 w-4 text-gray-600" />
+                        </button>
+                        
+                        <span className="font-medium text-gray-900 min-w-[2rem] text-center">
+                          {item.cantidad}
+                        </span>
+                        
+                        <button
+                          onClick={() => updateQuantity(item.id, item.cantidad + 1)}
+                          className="p-1 rounded-full hover:bg-gray-100"
+                        >
+                          <PlusIcon className="h-4 w-4 text-gray-600" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+
+                  <div className="pt-4 border-t border-gray-200">
+                    <div className="flex justify-between items-center mb-4">
+                      <span className="text-lg font-semibold text-gray-900">Total:</span>
+                      <span className="text-xl font-bold text-primary-600">
+                        {formatCurrency(getTotalPrice())}
+                      </span>
+                    </div>
+
+                    <button
+                      onClick={showOrderConfirmation}
+                      disabled={submittingOrder || !cart || cart.items.length === 0}
+                      className="w-full bg-primary-600 text-white py-3 rounded-lg hover:bg-primary-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium"
+                    >
+                      {submittingOrder ? 'Enviando...' : 'Confirmar Pedido'}
+                    </button>
                   </div>
                 </div>
               )}
             </div>
-
-            {/* Carrito */}
-            <div className="lg:w-1/4">
-              <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-sm p-4 sticky top-4">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold text-gray-900">Tu Pedido</h2>
-                  <div className="bg-primary-600 text-white text-xs px-2 py-1 rounded-full">
-                    {getTotalItems()} items
-                  </div>
-                </div>
-
-                {!cart || cart.items.length === 0 ? (
-                  <div className="text-center py-8">
-                    <ShoppingCartIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-500">Tu carrito está vacío</p>
-                    <p className="text-sm text-gray-400 mt-1">Agrega productos para hacer tu pedido</p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {cart.items.map((item) => (
-                      <div key={item.id} className="flex items-center justify-between py-2 border-b border-gray-200">
-                        <div className="flex-1">
-                          <h4 className="font-medium text-gray-900">{item.producto.nombre}</h4>
-                          <p className="text-sm text-gray-600">{formatCurrency(item.producto.precio)}</p>
-                        </div>
-                        
-                        <div className="flex items-center space-x-2">
-                          <button
-                            onClick={() => updateQuantity(item.id, item.cantidad - 1)}
-                            className="p-1 rounded-full hover:bg-gray-100"
-                          >
-                            <MinusIcon className="h-4 w-4 text-gray-600" />
-                          </button>
-                          
-                          <span className="font-medium text-gray-900 min-w-[2rem] text-center">
-                            {item.cantidad}
-                          </span>
-                          
-                          <button
-                            onClick={() => updateQuantity(item.id, item.cantidad + 1)}
-                            className="p-1 rounded-full hover:bg-gray-100"
-                          >
-                            <PlusIcon className="h-4 w-4 text-gray-600" />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-
-                    <div className="pt-4 border-t border-gray-200">
-                      <div className="flex justify-between items-center mb-4">
-                        <span className="text-lg font-semibold text-gray-900">Total:</span>
-                        <span className="text-xl font-bold text-primary-600">
-                          {formatCurrency(getTotalPrice())}
-                        </span>
-                      </div>
-
-                      <button
-                        onClick={showOrderConfirmation}
-                        disabled={submittingOrder || !cart || cart.items.length === 0}
-                        className="w-full bg-primary-600 text-white py-3 rounded-lg hover:bg-primary-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium"
-                      >
-                        {submittingOrder ? 'Enviando...' : 'Confirmar Pedido'}
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
           </div>
         </div>
-      </div>
+      </main>
 
       {/* Banner de seguimiento de orden */}
       <OrderStatusBanner 

@@ -9,6 +9,7 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
+const path = require('path');
 require('dotenv').config();
 
 const { errorHandler, notFound } = require('./middleware/errorMiddleware');
@@ -114,6 +115,9 @@ if (process.env.NODE_ENV === 'development') {
   app.use(morgan('combined'));
 }
 
+// Servir archivos estáticos desde la carpeta 'uploads'
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
 // =================================================================
 // Routes
 // =================================================================
@@ -127,14 +131,6 @@ app.get('/health', (req, res) => {
     environment: process.env.NODE_ENV || 'development'
   });
 });
-
-// Serve static files (for uploaded images)
-app.use('/uploads', express.static('uploads', {
-  setHeaders: (res, path) => {
-    res.set('Cross-Origin-Resource-Policy', 'cross-origin');
-    res.set('Access-Control-Allow-Origin', '*');
-  }
-}));
 
 // API routes
 app.use('/api/auth', authRoutes);

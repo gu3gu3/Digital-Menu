@@ -41,6 +41,7 @@ const AdminMenuPage = () => {
   useEffect(() => {
     loadCategories()
     loadProducts()
+    document.title = 'Gestión de Menú | menuView.app'
   }, [])
 
   const loadCategories = async () => {

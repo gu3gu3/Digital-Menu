@@ -197,17 +197,15 @@ const getPublicUrl = (filePath) => {
 const handleFileUpload = async (file, restaurantName, fileType) => {
   if (process.env.NODE_ENV === 'production') {
     // Upload to Google Cloud Storage
-    const result = await cloudStorage.uploadToCloud(file, restaurantName, fileType);
-    return {
-      url: result.url,
-      path: result.path,
-      filename: result.filename
-    };
+    return cloudStorage.uploadToCloud(file, restaurantName, fileType);
   } else {
     // Local development - file is already saved by multer
+    const localPath = `/uploads/${file.fieldname === 'logo' || file.fieldname === 'banner' || file.fieldname === 'backgroundImage' ? 'restaurants' : 'products'}/${file.filename}`;
+    const fullUrl = `${process.env.BACKEND_URL}${localPath}`;
+
     return {
-      url: `/uploads/${fileType}s/${file.filename}`,
-      path: `${fileType}s/${file.filename}`,
+      url: fullUrl,
+      path: localPath,
       filename: file.filename
     };
   }
