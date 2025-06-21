@@ -13,6 +13,7 @@ import {
 } from '@heroicons/react/24/outline';
 import OrderTracker from './OrderTracker';
 import menuService from '../services/menuService';
+import API_BASE_URL from '../config/api';
 
 const OrderStatusBanner = ({ ordenId, restauranteSlug, onClearOrder, tableNumber }) => {
   const [orden, setOrden] = useState(null);
@@ -107,32 +108,27 @@ const OrderStatusBanner = ({ ordenId, restauranteSlug, onClearOrder, tableNumber
   };
 
   useEffect(() => {
-    if (ordenId) {
-      fetchOrden();
-      
-      // Polling para actualización en tiempo real cada 15 segundos
-      const interval = setInterval(fetchOrden, 15000);
-      
-      return () => clearInterval(interval);
-    }
-  }, [ordenId]);
+    if (!ordenId || !restauranteSlug) return;
 
-  const fetchOrden = async () => {
-    try {
-      setLoading(true);
-      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-      const response = await fetch(`${API_BASE_URL}/api/public/orden/${ordenId}`);
-      const data = await response.json();
-      
-      if (response.ok) {
-        setOrden(data.data);
+    const fetchOrder = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/public/orders/${ordenId}?restaurantSlug=${restauranteSlug}`);
+        if (!response.ok) {
+          throw new Error('No se pudo obtener el estado de la orden');
+        }
+        const data = await response.json();
+        setOrden(data);
+      } catch (err) {
+        setError(err.message);
       }
-    } catch (error) {
-      console.error('Error fetching orden:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+
+    fetchOrder();
+
+    const interval = setInterval(fetchOrder, 30000); // Actualiza cada 30 segundos
+
+    return () => clearInterval(interval);
+  }, [ordenId, restauranteSlug]);
 
   const formatCurrency = (amount) => {
     return `C$ ${parseFloat(amount).toFixed(2)}`;

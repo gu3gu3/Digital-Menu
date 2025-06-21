@@ -89,6 +89,22 @@ class RestaurantService {
       throw error;
     }
   }
+
+  async deleteImage(imageType) {
+    const token = localStorage.getItem('adminToken');
+    const response = await fetch(`${API_ENDPOINTS.RESTAURANT_ME.replace('/me', '/image')}/${imageType}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.error || `Error al eliminar la imagen de ${imageType}`);
+    }
+    return data.data;
+  }
 }
 
 export default new RestaurantService(); 

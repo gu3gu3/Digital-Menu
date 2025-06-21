@@ -238,4 +238,67 @@ router.put('/update', authenticate, requireAdmin, upload.fields([
   }
 });
 
+// Ruta para eliminar una imagen específica del restaurante (logo, banner, etc.)
+router.delete('/image/:imageType', authenticate, async (req, res) => {
+  try {
+    const { imageType } = req.params;
+    const { restauranteId } = req.user;
+
+    // Validar que el tipo de imagen sea uno de los permitidos
+    const allowedImageTypes = ['logo', 'banner', 'background'];
+    if (!allowedImageTypes.includes(imageType)) {
+      return res.status(400).json({ success: false, error: 'Tipo de imagen no válido.' });
+    }
+
+    const restaurant = await prisma.restaurante.findUnique({
+      where: { id: restauranteId },
+    });
+
+    if (!restaurant) {
+      return res.status(404).json({ success: false, error: 'Restaurante no encontrado.' });
+    }
+
+    const fieldName = {
+      logo: 'logoUrl',
+      banner: 'bannerUrl',
+      background: 'backgroundImage'
+    }[imageType];
+
+    const currentUrl = restaurant[fieldName];
+
+    if (currentUrl) {
+      // 1. Borrar el archivo de Google Cloud Storage
+      try {
+        const bucketName = process.env.GCP_STORAGE_BUCKET;
+        // Extraer el nombre del archivo de la URL
+        const fileName = currentUrl.split(`https://storage.googleapis.com/${bucketName}/`)[1];
+        if (fileName) {
+          const { storage } = require('../config/storage');
+          await storage.bucket(bucketName).file(fileName).delete();
+        }
+      } catch (storageError) {
+        // No bloquear si falla el borrado, pero registrar el error
+        console.error(`Error al borrar el archivo ${currentUrl} de GCS:`, storageError);
+      }
+
+      // 2. Actualizar la base de datos poniendo el campo a null
+      const updatedRestaurant = await prisma.restaurante.update({
+        where: { id: restauranteId },
+        data: { [fieldName]: null },
+      });
+
+      res.json({
+        success: true,
+        message: `La imagen (${imageType}) ha sido eliminada.`,
+        data: updatedRestaurant,
+      });
+    } else {
+      res.status(404).json({ success: false, error: 'No hay imagen para eliminar.' });
+    }
+  } catch (error) {
+    console.error(`Error al eliminar la imagen del restaurante:`, error);
+    res.status(500).json({ success: false, error: 'Error interno del servidor.' });
+  }
+});
+
 module.exports = router; 

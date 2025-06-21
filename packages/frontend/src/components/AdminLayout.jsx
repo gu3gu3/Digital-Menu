@@ -16,6 +16,7 @@ import {
 } from '@heroicons/react/24/outline'
 import logo from '../assets/logo.png'
 import NotificationBell from './NotificationBell'
+import API_BASE_URL from '../config/api'
 
 const AdminLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -51,7 +52,7 @@ const AdminLayout = () => {
   const loadPlanInfo = async () => {
     try {
       const token = localStorage.getItem('adminToken')
-      const response = await fetch('http://localhost:3001/api/admin/stats', {
+      const response = await fetch(`${API_BASE_URL}/admin/stats`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }

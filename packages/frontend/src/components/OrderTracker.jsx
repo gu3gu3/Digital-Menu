@@ -8,6 +8,7 @@ import {
   XMarkIcon,
   CreditCardIcon
 } from '@heroicons/react/24/outline';
+import API_BASE_URL from '../config/api';
 
 const OrderTracker = ({ ordenId, restauranteSlug, onClose }) => {
   const [orden, setOrden] = useState(null);
@@ -102,33 +103,31 @@ const OrderTracker = ({ ordenId, restauranteSlug, onClose }) => {
   const estadosProgreso = ['ENVIADA', 'RECIBIDA', 'CONFIRMADA', 'EN_PREPARACION', 'LISTA', 'SERVIDA', 'COMPLETADA'];
 
   useEffect(() => {
-    fetchOrden();
-    
-    // Polling para actualización en tiempo real cada 10 segundos
-    const interval = setInterval(fetchOrden, 10000);
-    
-    return () => clearInterval(interval);
-  }, [ordenId]);
-
-  const fetchOrden = async () => {
-    try {
-      setLoading(true);
-      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-      const response = await fetch(`${API_BASE_URL}/api/public/orden/${ordenId}`);
-      const data = await response.json();
-      
-      if (response.ok) {
-        setOrden(data.data);
-      } else {
-        setError(data.error || 'Error al cargar la orden');
+    const fetchOrder = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(`${API_BASE_URL}/public/orders/${ordenId}?restaurantSlug=${restauranteSlug}`);
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'No se pudo obtener la orden.');
+        }
+        const data = await response.json();
+        setOrden(data);
+        setError('');
+      } catch (err) {
+        console.error('Error fetching order:', err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error('Error fetching orden:', error);
-      setError('Error de conexión');
-    } finally {
-      setLoading(false);
+    };
+
+    if (ordenId && restauranteSlug) {
+      fetchOrder();
+      const intervalId = setInterval(fetchOrder, 20000); // Poll every 20 seconds
+      return () => clearInterval(intervalId);
     }
-  };
+  }, [ordenId, restauranteSlug]);
 
   const getCurrentStepIndex = () => {
     if (!orden) return 0;
@@ -174,7 +173,7 @@ const OrderTracker = ({ ordenId, restauranteSlug, onClose }) => {
             <p className="text-gray-600 mb-4">{error}</p>
             <div className="flex space-x-3">
               <button
-                onClick={fetchOrden}
+                onClick={fetchOrder}
                 className="flex-1 bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700"
               >
                 Reintentar
@@ -324,7 +323,7 @@ const OrderTracker = ({ ordenId, restauranteSlug, onClose }) => {
         <div className="p-6 border-t border-gray-200">
           <div className="flex justify-between items-center">
             <div className="text-sm text-gray-500">
-              <p>Se actualiza automáticamente cada 10 segundos</p>
+              <p>Se actualiza automáticamente cada 20 segundos</p>
             </div>
             <button
               onClick={onClose}

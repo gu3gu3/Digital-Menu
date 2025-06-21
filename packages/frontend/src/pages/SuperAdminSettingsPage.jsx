@@ -11,6 +11,9 @@ import {
   ArrowLeftIcon
 } from '@heroicons/react/24/outline'
 import { superAdminAuth } from '../services/superAdminService'
+import API_BASE_URL from '../config/api'
+import { useForm } from 'react-hook-form'
+import { Toaster, toast } from 'sonner'
 
 const SuperAdminSettingsPage = () => {
   const [user, setUser] = useState(null)
@@ -38,24 +41,31 @@ const SuperAdminSettingsPage = () => {
     confirm: false
   })
 
+  const { register, handleSubmit, setValue } = useForm()
+
   useEffect(() => {
     loadUserData()
   }, [])
 
-  const loadUserData = () => {
+  const loadUserData = async () => {
     try {
-      const userData = superAdminAuth.getCurrentUser()
-      if (userData) {
-        setUser(userData)
+      const token = localStorage.getItem('superAdminToken')
+      const response = await fetch(`${API_BASE_URL}/super-admin/auth/profile`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      const data = await response.json()
+      if (response.ok) {
+        setUser(data)
         setProfileForm({
-          nombre: userData.nombre || '',
-          apellido: userData.apellido || '',
-          email: userData.email || ''
+          nombre: data.nombre || '',
+          apellido: data.apellido || '',
+          email: data.email || ''
         })
+      } else {
+        toast.error(data.error || 'Error al cargar el perfil')
       }
     } catch (error) {
-      console.error('Error loading user data:', error)
-      setError('Error al cargar los datos del usuario')
+      toast.error('Error de conexión al cargar el perfil')
     }
   }
 
@@ -67,7 +77,7 @@ const SuperAdminSettingsPage = () => {
 
     try {
       const token = localStorage.getItem('superAdminToken')
-      const response = await fetch('http://localhost:3001/api/super-admin/auth/profile', {
+      const response = await fetch(`${API_BASE_URL}/super-admin/auth/profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -122,7 +132,7 @@ const SuperAdminSettingsPage = () => {
 
     try {
       const token = localStorage.getItem('superAdminToken')
-      const response = await fetch('http://localhost:3001/api/super-admin/auth/change-password', {
+      const response = await fetch(`${API_BASE_URL}/super-admin/auth/change-password`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

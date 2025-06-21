@@ -38,6 +38,11 @@ const superAdminSubscriptionsRoutes = require('./routes/superAdminSubscriptions'
 const notificationRoutes = require('./routes/notifications');
 
 const app = express();
+
+// Confiar en el primer proxy (esencial para Cloud Run, Heroku, etc.)
+// Esto permite que express-rate-limit funcione correctamente al obtener la IP real del cliente.
+app.set('trust proxy', 1);
+
 // En producción (dentro de Docker), siempre usaremos 3001 para el backend,
 // ya que Nginx es quien expone el puerto 8080 al exterior.
 const PORT = process.env.NODE_ENV === 'production' ? 3001 : (process.env.PORT || 3001);

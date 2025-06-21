@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { PlayIcon, PhoneIcon, MapPinIcon, ArrowTopRightOnSquareIcon } from '@heroicons/react/24/solid'
 import { PlusIcon, MinusIcon, ShoppingCartIcon } from '@heroicons/react/24/outline'
 import { Link } from 'react-router-dom'
+import API_BASE_URL from '../../config/api'
 
 const DemoSection = () => {
   const [menuData, setMenuData] = useState(null)
@@ -11,23 +12,22 @@ const DemoSection = () => {
   const [showDemo, setShowDemo] = useState(false)
 
   useEffect(() => {
-    fetchDemoData()
-  }, [])
-
-  const fetchDemoData = async () => {
-    try {
-      const response = await fetch('http://localhost:3001/api/menu/demo')
-      const data = await response.json()
-      
-      if (data.success) {
-        setMenuData(data.data)
+    const fetchDemoMenu = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/menu/demo`)
+        const data = await response.json()
+        
+        if (data.success) {
+          setMenuData(data.data)
+        }
+      } catch (error) {
+        console.error('Error fetching demo menu:', error)
+      } finally {
+        setLoading(false)
       }
-    } catch (error) {
-      console.error('Error fetching demo data:', error)
-    } finally {
-      setLoading(false)
     }
-  }
+    fetchDemoMenu()
+  }, [])
 
   const addToCart = (product) => {
     const existingItem = cart.find(item => item.id === product.id)

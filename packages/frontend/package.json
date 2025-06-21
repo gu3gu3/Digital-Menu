@@ -16,7 +16,9 @@
     "lucide-react": "^0.294.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^6.20.1"
+    "react-hook-form": "^7.58.1",
+    "react-router-dom": "^6.20.1",
+    "sonner": "^2.0.5"
   },
   "devDependencies": {
     "@tailwindcss/forms": "^0.5.7",

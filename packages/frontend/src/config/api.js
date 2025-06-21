@@ -1,4 +1,7 @@
-// API Configuration
+// Define la URL base para todas las llamadas a la API.
+// En desarrollo, Vite usará el proxy configurado en `vite.config.js`.
+// En producción, las peticiones serán relativas al dominio actual (ej. /api/...)
+// y serán gestionadas por el proxy inverso (Nginx) en Cloud Run.
 const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
 export const API_ENDPOINTS = {
@@ -24,6 +27,9 @@ export const API_ENDPOINTS = {
   // Admin endpoints
   ADMIN_STATS: `${API_BASE_URL}/api/admin/stats`,
   ORDERS: `${API_BASE_URL}/api/orders`,
+  TABLES: `${API_BASE_URL}/api/tables`,
+  SESSIONS: `${API_BASE_URL}/api/sessions`,
+  STAFF: `${API_BASE_URL}/api/staff`,
 
   // Health check
   HEALTH: `${API_BASE_URL}/health`

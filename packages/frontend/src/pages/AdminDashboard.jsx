@@ -9,6 +9,7 @@ import {
   PlusIcon,
   EyeIcon
 } from '@heroicons/react/24/outline'
+import API_BASE_URL from '../config/api'
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState({
@@ -31,43 +32,44 @@ const AdminDashboard = () => {
   const navigate = useNavigate()
 
   useEffect(() => {
-    loadDashboardData()
-  }, [])
-
-  const loadDashboardData = async () => {
-    try {
-      const token = localStorage.getItem('adminToken')
-      
-      // Cargar estadísticas generales
-      const statsResponse = await fetch('http://localhost:3001/api/admin/stats', {
-        headers: {
-          'Authorization': `Bearer ${token}`
+    const fetchData = async () => {
+      setLoading(true)
+      try {
+        const token = localStorage.getItem('adminToken')
+        
+        // Cargar estadísticas generales
+        const statsResponse = await fetch(`${API_BASE_URL}/admin/stats`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        })
+        
+        if (statsResponse.ok) {
+          const statsData = await statsResponse.json()
+          setStats(statsData.data)
         }
-      })
-      
-      if (statsResponse.ok) {
-        const statsData = await statsResponse.json()
-        setStats(statsData.data)
-      }
 
-      // Cargar órdenes recientes
-      const ordersResponse = await fetch('http://localhost:3001/api/orders?limit=5', {
-        headers: {
-          'Authorization': `Bearer ${token}`
+        // Cargar órdenes recientes
+        const ordersResponse = await fetch(`${API_BASE_URL}/orders?limit=5`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        })
+        
+        if (ordersResponse.ok) {
+          const ordersData = await ordersResponse.json()
+          setRecentOrders(ordersData.data || [])
         }
-      })
-      
-      if (ordersResponse.ok) {
-        const ordersData = await ordersResponse.json()
-        setRecentOrders(ordersData.data || [])
-      }
 
-    } catch (error) {
-      console.error('Error loading dashboard data:', error)
-    } finally {
-      setLoading(false)
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error)
+      } finally {
+        setLoading(false)
+      }
     }
-  }
+
+    fetchData()
+  }, [])
 
   const getUsagePercentage = (current, limit) => {
     if (limit === 0) {
