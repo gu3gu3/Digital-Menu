@@ -9,6 +9,178 @@ const { generateUniqueSlug } = require('../utils/slugGenerator');
 
 const router = express.Router();
 
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     LoginRequest:
+ *       type: object
+ *       required:
+ *         - email
+ *         - password
+ *       properties:
+ *         email:
+ *           type: string
+ *           format: email
+ *           description: Email del usuario
+ *           example: admin@restaurant.com
+ *         password:
+ *           type: string
+ *           minLength: 6
+ *           description: Contraseña del usuario
+ *           example: password123
+ *         role:
+ *           type: string
+ *           enum: [ADMINISTRADOR, MESERO]
+ *           default: ADMINISTRADOR
+ *           description: Rol del usuario
+ *     
+ *     UserData:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *           description: ID único del usuario
+ *         email:
+ *           type: string
+ *           format: email
+ *           description: Email del usuario
+ *         nombre:
+ *           type: string
+ *           description: Nombre del usuario
+ *         apellido:
+ *           type: string
+ *           description: Apellido del usuario
+ *         telefono:
+ *           type: string
+ *           description: Teléfono del usuario
+ *         role:
+ *           type: string
+ *           enum: [ADMINISTRADOR, MESERO]
+ *           description: Rol del usuario
+ *         restaurante:
+ *           $ref: '#/components/schemas/RestauranteData'
+ *     
+ *     RestauranteData:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *           description: ID único del restaurante
+ *         nombre:
+ *           type: string
+ *           description: Nombre del restaurante
+ *         descripcion:
+ *           type: string
+ *           description: Descripción del restaurante
+ *         logoUrl:
+ *           type: string
+ *           description: URL del logo del restaurante
+ *         bannerUrl:
+ *           type: string
+ *           description: URL del banner del restaurante
+ *         plan:
+ *           $ref: '#/components/schemas/PlanData'
+ *     
+ *     PlanData:
+ *       type: object
+ *       properties:
+ *         nombre:
+ *           type: string
+ *           description: Nombre del plan de suscripción
+ *         limiteProductos:
+ *           type: integer
+ *           description: Límite de productos permitidos
+ *         limiteOrdenes:
+ *           type: integer
+ *           description: Límite de órdenes mensuales
+ *         limiteMesas:
+ *           type: integer
+ *           description: Límite de mesas
+ *         limiteMeseros:
+ *           type: integer
+ *           description: Límite de meseros
+ *     
+ *     LoginResponse:
+ *       type: object
+ *       properties:
+ *         success:
+ *           type: boolean
+ *           example: true
+ *         message:
+ *           type: string
+ *           example: Login exitoso
+ *         data:
+ *           type: object
+ *           properties:
+ *             user:
+ *               $ref: '#/components/schemas/UserData'
+ *             token:
+ *               type: string
+ *               description: JWT token para autenticación
+ *               example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+ *     
+ *     RegisterRequest:
+ *       type: object
+ *       required:
+ *         - email
+ *         - password
+ *         - nombre
+ *         - restaurante
+ *       properties:
+ *         email:
+ *           type: string
+ *           format: email
+ *           description: Email del administrador
+ *           example: admin@restaurant.com
+ *         password:
+ *           type: string
+ *           minLength: 6
+ *           description: Contraseña
+ *           example: password123
+ *         nombre:
+ *           type: string
+ *           minLength: 2
+ *           description: Nombre del administrador
+ *           example: Juan
+ *         apellido:
+ *           type: string
+ *           minLength: 2
+ *           description: Apellido del administrador
+ *           example: Pérez
+ *         telefono:
+ *           type: string
+ *           description: Teléfono del administrador
+ *           example: +1234567890
+ *         restaurante:
+ *           type: object
+ *           required:
+ *             - nombre
+ *           properties:
+ *             nombre:
+ *               type: string
+ *               minLength: 2
+ *               description: Nombre del restaurante
+ *               example: Restaurante El Buen Sabor
+ *             descripcion:
+ *               type: string
+ *               description: Descripción del restaurante
+ *               example: Cocina tradicional con ingredientes frescos
+ *             telefono:
+ *               type: string
+ *               description: Teléfono del restaurante
+ *               example: +1234567890
+ *             direccion:
+ *               type: string
+ *               description: Dirección del restaurante
+ *               example: Calle Principal 123, Ciudad
+ *             email:
+ *               type: string
+ *               format: email
+ *               description: Email del restaurante
+ *               example: contacto@restaurant.com
+ */
+
 // Validation schemas
 const loginSchema = Joi.object({
   email: Joi.string().email().required().messages({
@@ -82,9 +254,59 @@ const generateEmailVerificationToken = (userId, email) => {
   );
 };
 
-// @desc    Login user (Admin or Mesero)
-// @route   POST /api/auth/login
-// @access  Public
+/**
+ * @swagger
+ * /api/auth/login:
+ *   post:
+ *     summary: Iniciar sesión como administrador o mesero
+ *     description: Autentica a un usuario (administrador o mesero) y devuelve un token JWT junto con los datos del usuario y restaurante
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/LoginRequest'
+ *     responses:
+ *       200:
+ *         description: Login exitoso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/LoginResponse'
+ *       400:
+ *         description: Datos de entrada inválidos
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 error:
+ *                   type: string
+ *                   example: El email es requerido
+ *       401:
+ *         description: Credenciales inválidas o usuario inactivo
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 error:
+ *                   type: string
+ *                   example: Credenciales inválidas
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 const login = async (req, res) => {
   console.log('--- Admin/Mesero Login: Intento recibido ---');
   console.log('Request Body:', JSON.stringify(req.body, null, 2));
@@ -198,9 +420,74 @@ const login = async (req, res) => {
   }
 };
 
-// @desc    Register new restaurant with admin user
-// @route   POST /api/auth/register
-// @access  Public
+/**
+ * @swagger
+ * /api/auth/register:
+ *   post:
+ *     summary: Registrar nuevo restaurante con usuario administrador
+ *     description: Crea un nuevo restaurante con un usuario administrador asociado y lo asigna al plan gratuito por defecto
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/RegisterRequest'
+ *     responses:
+ *       201:
+ *         description: Registro exitoso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Registro exitoso. Se ha enviado un email de verificación.
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     user:
+ *                       $ref: '#/components/schemas/UserData'
+ *                     token:
+ *                       type: string
+ *                       description: JWT token para autenticación
+ *       400:
+ *         description: Datos de entrada inválidos
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 error:
+ *                   type: string
+ *                   example: El nombre es requerido
+ *       409:
+ *         description: El email ya está registrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 error:
+ *                   type: string
+ *                   example: El email ya está registrado
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 const register = async (req, res) => {
   try {
     // Validate input

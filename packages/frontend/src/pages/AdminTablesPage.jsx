@@ -11,7 +11,7 @@ import {
   XMarkIcon
 } from '@heroicons/react/24/outline'
 import { Toaster, toast } from 'sonner'
-import adminApi from '../lib/adminApi'
+import apiClient from '../lib/apiClient'
 
 const AdminTablesPage = () => {
   const [mesas, setMesas] = useState([])
@@ -40,7 +40,7 @@ const AdminTablesPage = () => {
   const loadTables = useCallback(async () => {
     setLoading(true)
     try {
-      const response = await adminApi.get('/tables');
+      const response = await apiClient.get('/tables');
       if (response.data.success) {
         setMesas(response.data.data.mesas);
       } else {
@@ -102,7 +102,7 @@ const AdminTablesPage = () => {
 
     const promise = () => new Promise(async (resolve, reject) => {
       try {
-        const response = await adminApi.delete(`/tables/${table.id}`);
+        const response = await apiClient.delete(`/tables/${table.id}`);
         if (response.data.success) {
           loadTables();
           resolve(response.data);
@@ -124,7 +124,7 @@ const AdminTablesPage = () => {
   const handleShowQR = async (table) => {
     const promise = () => new Promise(async (resolve, reject) => {
       try {
-        const response = await adminApi.get(`/tables/${table.id}/qr`);
+        const response = await apiClient.get(`/tables/${table.id}/qr`);
         if (response.data.success) {
           setSelectedTable(table);
           setQrCode(response.data.data);
@@ -148,7 +148,7 @@ const AdminTablesPage = () => {
   const handleDownloadAllQRs = async () => {
      const promise = () => new Promise(async (resolve, reject) => {
       try {
-        const response = await adminApi.get(`/tables/qr/all`);
+        const response = await apiClient.get(`/tables/qr/all`);
         if (response.data.success) {
           generateQRsPDF(response.data.data);
           resolve(response.data);
@@ -261,22 +261,9 @@ const AdminTablesPage = () => {
     setSuccess('') // Limpiar éxitos previos
 
     try {
-      const token = localStorage.getItem('adminToken')
-      
       // Obtener sesiones activas de esta mesa específica
-      const sessionsResponse = await fetch(`/api/sessions/restaurant/all?mesaId=${mesa.id}&estado=activa&limit=100`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
-
-      if (!sessionsResponse.ok) {
-        const errorData = await sessionsResponse.json()
-        throw new Error(errorData.error || 'Error al obtener sesiones activas')
-      }
-
-      const sessionsData = await sessionsResponse.json()
-      const sesionesActivas = sessionsData.data.sesiones
+      const sessionsResponse = await apiClient.get(`/sessions/restaurant/all?mesaId=${mesa.id}&estado=activa&limit=100`)
+      const sesionesActivas = sessionsResponse.data.data.sesiones
 
       if (sesionesActivas.length === 0) {
         setError(`La Mesa ${mesa.numero} no tiene sesiones activas para cerrar`)
@@ -289,23 +276,10 @@ const AdminTablesPage = () => {
 
       for (const sesion of sesionesActivas) {
         try {
-          const closeResponse = await fetch(`/api/sessions/${sesion.id}/close`, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ 
-              notas: `Sesión cerrada manualmente por administrador desde panel de mesas - Mesa ${mesa.numero}` 
-            })
+          await apiClient.post(`/sessions/${sesion.id}/close`, { 
+            notas: `Sesión cerrada manualmente por administrador desde panel de mesas - Mesa ${mesa.numero}` 
           })
-
-          if (closeResponse.ok) {
-            sessionsCerradas++
-          } else {
-            erroresCierre++
-            console.error(`Error cerrando sesión ${sesion.id}`)
-          }
+          sessionsCerradas++
         } catch (error) {
           erroresCierre++
           console.error(`Error cerrando sesión ${sesion.id}:`, error)

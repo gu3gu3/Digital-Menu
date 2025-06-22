@@ -1,9 +1,9 @@
-import adminApi from '../lib/adminApi';
+import apiClient from '../lib/apiClient';
 
 export const notificationService = {
   getNotifications: async (limit = 10, offset = 0) => {
     try {
-      const response = await adminApi.get('/notifications', { params: { limit, offset } });
+      const response = await apiClient.get('/notifications', { params: { limit, offset } });
       return response.data;
     } catch (error) {
       console.error('Error fetching notifications:', error);
@@ -13,7 +13,7 @@ export const notificationService = {
 
   markAsRead: async (notificationId) => {
     try {
-      const response = await adminApi.post(`/notifications/${notificationId}/read`);
+      const response = await apiClient.post(`/notifications/${notificationId}/read`);
       return response.data;
     } catch (error) {
       console.error('Error marking notification as read:', error);
@@ -23,7 +23,7 @@ export const notificationService = {
 
   markAllAsRead: async () => {
     try {
-      const response = await adminApi.post('/notifications/read-all');
+      const response = await apiClient.post('/notifications/read-all');
       return response.data;
     } catch (error) {
       console.error('Error marking all notifications as read:', error);
@@ -33,7 +33,7 @@ export const notificationService = {
 
   deleteNotification: async (notificationId) => {
     try {
-      const response = await adminApi.delete(`/notifications/${notificationId}`);
+      const response = await apiClient.delete(`/notifications/${notificationId}`);
       return response.data;
     } catch (error) {
       console.error('Error deleting notification:', error);

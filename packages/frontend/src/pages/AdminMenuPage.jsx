@@ -9,6 +9,7 @@ import {
   ArrowDownTrayIcon
 } from '@heroicons/react/24/outline'
 import MenuImportModal from '../components/MenuImportModal'
+import apiClient from '../lib/apiClient'
 
 const AdminMenuPage = () => {
   const [categorias, setCategorias] = useState([])
@@ -46,17 +47,8 @@ const AdminMenuPage = () => {
 
   const loadCategories = async () => {
     try {
-      const token = localStorage.getItem('adminToken')
-      const response = await fetch('/api/categories', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        setCategorias(data.data.categorias)
-      }
+      const response = await apiClient.get('/categories')
+      setCategorias(response.data.data.categorias)
     } catch (error) {
       console.error('Error loading categories:', error)
     }
@@ -64,21 +56,12 @@ const AdminMenuPage = () => {
 
   const loadProducts = async (categoriaId = null) => {
     try {
-      const token = localStorage.getItem('adminToken')
       const url = categoriaId 
-        ? `/api/products?categoriaId=${categoriaId}`
-        : '/api/products'
+        ? `/products?categoriaId=${categoriaId}`
+        : '/products'
       
-      const response = await fetch(url, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        setProductos(data.data.productos)
-      }
+      const response = await apiClient.get(url)
+      setProductos(response.data.data.productos)
     } catch (error) {
       console.error('Error loading products:', error)
     }
@@ -91,34 +74,21 @@ const AdminMenuPage = () => {
     setSuccess('')
 
     try {
-      const token = localStorage.getItem('adminToken')
       const url = editingCategory 
-        ? `/api/categories/${editingCategory.id}`
-        : '/api/categories'
+        ? `/categories/${editingCategory.id}`
+        : '/categories'
       
-      const method = editingCategory ? 'PUT' : 'POST'
+      const response = editingCategory 
+        ? await apiClient.put(url, categoryForm)
+        : await apiClient.post(url, categoryForm)
 
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(categoryForm)
-      })
-
-      if (response.ok) {
-        setSuccess(editingCategory ? 'Categoría actualizada' : 'Categoría creada')
-        setShowCategoryModal(false)
-        setCategoryForm({ nombre: '', descripcion: '' })
-        setEditingCategory(null)
-        loadCategories()
-      } else {
-        const errorData = await response.json()
-        setError(errorData.error || 'Error al guardar la categoría')
-      }
+      setSuccess(editingCategory ? 'Categoría actualizada' : 'Categoría creada')
+      setShowCategoryModal(false)
+      setCategoryForm({ nombre: '', descripcion: '' })
+      setEditingCategory(null)
+      loadCategories()
     } catch (error) {
-      setError('Error de conexión')
+      setError(error.response?.data?.error || 'Error al guardar la categoría')
     } finally {
       setLoading(false)
     }
@@ -131,7 +101,6 @@ const AdminMenuPage = () => {
     setSuccess('')
 
     try {
-      const token = localStorage.getItem('adminToken')
       const formData = new FormData()
       
       formData.append('nombre', productForm.nombre)
@@ -144,31 +113,20 @@ const AdminMenuPage = () => {
       }
 
       const url = editingProduct 
-        ? `/api/products/${editingProduct.id}`
-        : '/api/products'
+        ? `/products/${editingProduct.id}`
+        : '/products'
       
-      const method = editingProduct ? 'PUT' : 'POST'
+      const response = editingProduct 
+        ? await apiClient.put(url, formData)
+        : await apiClient.post(url, formData)
 
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: formData
-      })
-
-      if (response.ok) {
-        setSuccess(editingProduct ? 'Producto actualizado' : 'Producto creado')
-        setShowProductModal(false)
-        setProductForm({ nombre: '', descripcion: '', precio: '', categoriaId: '', imagen: null })
-        setEditingProduct(null)
-        loadProducts(selectedCategoria?.id)
-      } else {
-        const errorData = await response.json()
-        setError(errorData.error || 'Error al guardar el producto')
-      }
+      setSuccess(editingProduct ? 'Producto actualizado' : 'Producto creado')
+      setShowProductModal(false)
+      setProductForm({ nombre: '', descripcion: '', precio: '', categoriaId: '', imagen: null })
+      setEditingProduct(null)
+      loadProducts(selectedCategoria?.id)
     } catch (error) {
-      setError('Error de conexión')
+      setError(error.response?.data?.error || 'Error al guardar el producto')
     } finally {
       setLoading(false)
     }
@@ -178,23 +136,11 @@ const AdminMenuPage = () => {
     if (!confirm(`¿Eliminar la categoría "${category.nombre}"?`)) return
 
     try {
-      const token = localStorage.getItem('adminToken')
-      const response = await fetch(`/api/categories/${category.id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
-
-      if (response.ok) {
-        setSuccess('Categoría eliminada')
-        loadCategories()
-      } else {
-        const errorData = await response.json()
-        setError(errorData.error || 'Error al eliminar la categoría')
-      }
+      await apiClient.delete(`/categories/${category.id}`)
+      setSuccess('Categoría eliminada')
+      loadCategories()
     } catch (error) {
-      setError('Error de conexión')
+      setError(error.response?.data?.error || 'Error al eliminar la categoría')
     }
   }
 
@@ -202,46 +148,21 @@ const AdminMenuPage = () => {
     if (!confirm(`¿Eliminar el producto "${product.nombre}"?`)) return
 
     try {
-      const token = localStorage.getItem('adminToken')
-      const response = await fetch(`/api/products/${product.id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
-
-      if (response.ok) {
-        setSuccess('Producto eliminado')
-        loadProducts(selectedCategoria?.id)
-      } else {
-        const errorData = await response.json()
-        setError(errorData.error || 'Error al eliminar el producto')
-      }
+      await apiClient.delete(`/products/${product.id}`)
+      setSuccess('Producto eliminado')
+      loadProducts(selectedCategoria?.id)
     } catch (error) {
-      setError('Error de conexión')
+      setError(error.response?.data?.error || 'Error al eliminar el producto')
     }
   }
 
   const handleToggleAvailability = async (product) => {
     try {
-      const token = localStorage.getItem('adminToken')
-      const response = await fetch(`/api/products/${product.id}/toggle-availability`, {
-        method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        setSuccess(data.message)
-        loadProducts(selectedCategoria?.id)
-      } else {
-        const errorData = await response.json()
-        setError(errorData.error || 'Error al cambiar disponibilidad')
-      }
+      const response = await apiClient.patch(`/products/${product.id}/toggle-availability`)
+      setSuccess(response.data.message)
+      loadProducts(selectedCategoria?.id)
     } catch (error) {
-      setError('Error de conexión')
+      setError(error.response?.data?.error || 'Error al cambiar disponibilidad')
     }
   }
 
@@ -280,38 +201,30 @@ const AdminMenuPage = () => {
     }
 
     try {
-      const token = localStorage.getItem('adminToken')
-      const response = await fetch('/api/menu-import/export', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      const response = await apiClient.get('/menu-import/export', {
+        responseType: 'blob'
       })
       
-      if (response.ok) {
-        const blob = await response.blob()
-        
-        // Verificar que el archivo no esté vacío
-        if (blob.size < 100) { // Un CSV vacío sería muy pequeño
-          setError('El menú está vacío. Agrega productos antes de exportar.')
-          return
-        }
-        
-        const url = window.URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = `menu-export-${Date.now()}.csv`
-        document.body.appendChild(a)
-        a.click()
-        document.body.removeChild(a)
-        window.URL.revokeObjectURL(url)
-        setSuccess('Menú exportado exitosamente')
-      } else {
-        const errorData = await response.json()
-        setError(errorData.error || 'Error al exportar el menú')
+      const blob = response.data
+      
+      // Verificar que el archivo no esté vacío
+      if (blob.size < 100) { // Un CSV vacío sería muy pequeño
+        setError('El menú está vacío. Agrega productos antes de exportar.')
+        return
       }
+      
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `menu-export-${Date.now()}.csv`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      window.URL.revokeObjectURL(url)
+      setSuccess('Menú exportado exitosamente')
     } catch (error) {
       console.error('Error exporting menu:', error)
-      setError('Error al exportar el menú')
+      setError(error.response?.data?.error || 'Error al exportar el menú')
     }
   }
 

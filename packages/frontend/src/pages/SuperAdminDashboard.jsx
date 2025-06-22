@@ -267,8 +267,8 @@ const SuperAdminDashboard = () => {
                 </h3>
                 
                 <div className="space-y-3">
-                  {stats.distribucionPorPlan.map((plan) => (
-                    <div key={plan.planId} className="flex items-center justify-between">
+                  {stats.distribucionPorPlan.map((plan, index) => (
+                    <div key={plan.planId || `plan-${index}`} className="flex items-center justify-between">
                       <div className="flex items-center">
                         <div className="w-3 h-3 bg-indigo-500 rounded-full mr-3"></div>
                         <span className="text-sm font-medium text-gray-900">{plan.planNombre}</span>
@@ -287,18 +287,21 @@ const SuperAdminDashboard = () => {
           <h2 className="text-lg font-medium text-gray-900 mb-4">Acciones Rápidas</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Link
+              key="subscriptions-link"
               to="/super-admin/subscriptions"
               className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-md text-center font-medium transition-colors"
             >
               Ver Suscripciones
             </Link>
             <Link
+              key="expiring-link"
               to="/super-admin/expiring"
               className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-3 rounded-md text-center font-medium transition-colors"
             >
               Próximas a Vencer
             </Link>
             <Link
+              key="notifications-link"
               to="/super-admin/notifications"
               className="bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-md text-center font-medium transition-colors"
             >
@@ -339,21 +342,21 @@ const SuperAdminDashboard = () => {
             Crea, edita y administra los planes de suscripción disponibles para los restaurantes.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="text-center p-4 bg-gray-50 rounded-lg">
+            <div key="create-plans" className="text-center p-4 bg-gray-50 rounded-lg">
               <svg className="h-8 w-8 text-blue-600 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H9m0 0H5m0 0h4M9 7h6m-6 4h6m-2 4h2" />
               </svg>
               <p className="text-sm font-medium text-gray-900">Crear Planes</p>
               <p className="text-xs text-gray-500">Nuevos planes personalizados</p>
             </div>
-            <div className="text-center p-4 bg-gray-50 rounded-lg">
+            <div key="edit-plans" className="text-center p-4 bg-gray-50 rounded-lg">
               <svg className="h-8 w-8 text-green-600 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
               </svg>
               <p className="text-sm font-medium text-gray-900">Editar Planes</p>
               <p className="text-xs text-gray-500">Modificar configuraciones</p>
             </div>
-            <div className="text-center p-4 bg-gray-50 rounded-lg">
+            <div key="stats-plans" className="text-center p-4 bg-gray-50 rounded-lg">
               <svg className="h-8 w-8 text-purple-600 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>

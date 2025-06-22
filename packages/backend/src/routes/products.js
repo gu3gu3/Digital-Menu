@@ -7,6 +7,145 @@ const { upload, handleFileUpload } = require('../config/storage');
 const router = express.Router();
 const prisma = new PrismaClient();
 
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     Producto:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *           description: ID único del producto
+ *         nombre:
+ *           type: string
+ *           description: Nombre del producto
+ *           example: Bruschettas de Prosciutto
+ *         descripcion:
+ *           type: string
+ *           description: Descripción del producto
+ *           example: Pan tostado con tomate, albahaca y prosciutto
+ *         precio:
+ *           type: number
+ *           format: float
+ *           description: Precio del producto
+ *           example: 25.00
+ *         imagenUrl:
+ *           type: string
+ *           description: URL de la imagen del producto
+ *           example: http://localhost:3001/uploads/products/product-123.jpg
+ *         disponible:
+ *           type: boolean
+ *           description: Si el producto está disponible
+ *           example: true
+ *         orden:
+ *           type: integer
+ *           description: Orden de visualización en la categoría
+ *           example: 1
+ *         categoriaId:
+ *           type: string
+ *           description: ID de la categoría a la que pertenece
+ *         restauranteId:
+ *           type: string
+ *           description: ID del restaurante propietario
+ *         categoria:
+ *           type: object
+ *           properties:
+ *             id:
+ *               type: string
+ *             nombre:
+ *               type: string
+ *               example: Tapas y Entrantes
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *         updatedAt:
+ *           type: string
+ *           format: date-time
+ *     
+ *     CreateProductoRequest:
+ *       type: object
+ *       required:
+ *         - nombre
+ *         - precio
+ *         - categoriaId
+ *       properties:
+ *         nombre:
+ *           type: string
+ *           minLength: 2
+ *           description: Nombre del producto
+ *           example: Bruschettas de Prosciutto
+ *         descripcion:
+ *           type: string
+ *           description: Descripción del producto
+ *           example: Pan tostado con tomate, albahaca y prosciutto
+ *         precio:
+ *           type: number
+ *           format: float
+ *           minimum: 0.01
+ *           description: Precio del producto
+ *           example: 25.00
+ *         categoriaId:
+ *           type: string
+ *           description: ID de la categoría
+ *           example: cmc0n7ggg004d4t5g1lm5r3ab
+ *         orden:
+ *           type: integer
+ *           minimum: 0
+ *           description: Orden de visualización (opcional)
+ *           example: 1
+ *         disponible:
+ *           type: boolean
+ *           description: Estado de disponibilidad (opcional, por defecto true)
+ *           example: true
+ *     
+ *     UpdateProductoRequest:
+ *       type: object
+ *       properties:
+ *         nombre:
+ *           type: string
+ *           minLength: 2
+ *           description: Nuevo nombre del producto
+ *           example: Bruschettas Especiales
+ *         descripcion:
+ *           type: string
+ *           description: Nueva descripción del producto
+ *           example: Pan artesanal con tomate, albahaca fresca y prosciutto importado
+ *         precio:
+ *           type: number
+ *           format: float
+ *           minimum: 0.01
+ *           description: Nuevo precio del producto
+ *           example: 28.00
+ *         categoriaId:
+ *           type: string
+ *           description: Nueva categoría del producto
+ *           example: cmc0n7ggg004d4t5g1lm5r3ab
+ *         orden:
+ *           type: integer
+ *           minimum: 0
+ *           description: Nuevo orden de visualización
+ *           example: 2
+ *         disponible:
+ *           type: boolean
+ *           description: Nuevo estado de disponibilidad
+ *           example: false
+ *     
+ *     ProductoResponse:
+ *       type: object
+ *       properties:
+ *         success:
+ *           type: boolean
+ *           example: true
+ *         data:
+ *           type: object
+ *           properties:
+ *             productos:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Producto'
+ */
+
 // Validation schemas
 const productSchema = Joi.object({
   nombre: Joi.string().min(2).required().messages({
@@ -34,9 +173,42 @@ const updateProductSchema = Joi.object({
   disponible: Joi.boolean().optional()
 });
 
-// @desc    Get all products for restaurant
-// @route   GET /api/products
-// @access  Private
+/**
+ * @swagger
+ * /api/products:
+ *   get:
+ *     summary: Obtener todos los productos del restaurante
+ *     description: Devuelve todos los productos del restaurante del usuario autenticado, opcionalmente filtrados por categoría
+ *     tags: [Products]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: categoriaId
+ *         schema:
+ *           type: string
+ *         description: ID de la categoría para filtrar productos (opcional)
+ *         example: cmc0n7ggg004d4t5g1lm5r3ab
+ *     responses:
+ *       200:
+ *         description: Lista de productos obtenida exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ProductoResponse'
+ *       401:
+ *         description: No autorizado - Token inválido o faltante
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 const getProducts = async (req, res) => {
   try {
     const restauranteId = req.user.restauranteId;

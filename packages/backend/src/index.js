@@ -14,6 +14,7 @@ require('dotenv').config();
 
 const { errorHandler, notFound } = require('./middleware/errorMiddleware');
 const { connectDB } = require('./config/database');
+const { swaggerSetup } = require('./config/swagger');
 
 // Conectar a la base de datos INMEDIATAMENTE para forzar cualquier error.
 connectDB();
@@ -156,6 +157,9 @@ app.use('/api/super-admin/auth', superAdminAuthRoutes);
 app.use('/api/super-admin/subscriptions', superAdminSubscriptionsRoutes);
 app.use('/api/notifications', notificationRoutes);
 
+// Setup Swagger documentation
+swaggerSetup(app);
+
 // API documentation endpoint
 app.get('/api', (req, res) => {
   res.json({
@@ -179,7 +183,7 @@ app.get('/api', (req, res) => {
       superAdmin: '/api/super-admin'
     },
     health: '/health',
-    documentation: 'Próximamente con Swagger'
+    documentation: '/api/docs'
   });
 });
 

@@ -1,56 +1,40 @@
-import apiRequest from './api';
+import apiClient from '../lib/apiClient.js';
 
 const staffService = {
   // Get all meseros
   getMeseros: async (params = {}) => {
-    const token = localStorage.getItem('adminToken');
-    const queryString = new URLSearchParams(params).toString();
-    const path = queryString ? `/staff/meseros?${queryString}` : '/staff/meseros';
-    return apiRequest(path, 'GET', null, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
+    const response = await apiClient.get('/staff/meseros', { params });
+    return response.data;
   },
 
   // Get single mesero
   getMesero: async (id) => {
-    const token = localStorage.getItem('adminToken');
-    return apiRequest(`/staff/meseros/${id}`, 'GET', null, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
+    const response = await apiClient.get(`/staff/meseros/${id}`);
+    return response.data;
   },
 
   // Create new mesero
   createMesero: async (meseroData) => {
-    const token = localStorage.getItem('adminToken');
-    return apiRequest('/staff/meseros', 'POST', meseroData, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
+    const response = await apiClient.post('/staff/meseros', meseroData);
+    return response.data;
   },
 
   // Update mesero
   updateMesero: async (id, meseroData) => {
-    const token = localStorage.getItem('adminToken');
-    return apiRequest(`/staff/meseros/${id}`, 'PUT', meseroData, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
+    const response = await apiClient.put(`/staff/meseros/${id}`, meseroData);
+    return response.data;
   },
 
   // Delete mesero
   deleteMesero: async (id) => {
-    const token = localStorage.getItem('adminToken');
-    return apiRequest(`/staff/meseros/${id}`, 'DELETE', null, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
+    const response = await apiClient.delete(`/staff/meseros/${id}`);
+    return response.data;
   },
 
   // Get staff statistics
   getStaffStats: async (params = {}) => {
-    const token = localStorage.getItem('adminToken');
-    const queryString = new URLSearchParams(params).toString();
-    const path = queryString ? `/staff/stats?${queryString}` : '/staff/stats';
-    return apiRequest(path, 'GET', null, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
+    const response = await apiClient.get('/staff/stats', { params });
+    return response.data;
   }
 };
 

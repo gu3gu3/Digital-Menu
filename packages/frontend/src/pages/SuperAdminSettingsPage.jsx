@@ -13,6 +13,7 @@ import {
 import { superAdminAuth } from '../services/superAdminService'
 import { useForm } from 'react-hook-form'
 import { Toaster, toast } from 'sonner'
+import apiClient from '../lib/apiClient'
 
 const SuperAdminSettingsPage = () => {
   const [user, setUser] = useState(null)
@@ -48,23 +49,31 @@ const SuperAdminSettingsPage = () => {
 
   const loadUserData = async () => {
     try {
-      const token = localStorage.getItem('superAdminToken')
-      const response = await fetch(`/api/super-admin/auth/profile`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+      // Usar el endpoint correcto que existe en el backend
+      const response = await apiClient.get('/super-admin/auth/me')
+      const userData = response.data.data
+      
+      setUser(userData)
+      setProfileForm({
+        nombre: userData.nombre || '',
+        apellido: userData.apellido || '',
+        email: userData.email || ''
       })
-      const data = await response.json()
-      if (response.ok) {
-        setUser(data)
+    } catch (error) {
+      console.error('Error loading user data:', error)
+      // Fallback: usar datos de localStorage si la API falla
+      const storedUser = localStorage.getItem('superAdminUser')
+      if (storedUser) {
+        const userData = JSON.parse(storedUser)
+        setUser(userData)
         setProfileForm({
-          nombre: data.nombre || '',
-          apellido: data.apellido || '',
-          email: data.email || ''
+          nombre: userData.nombre || '',
+          apellido: userData.apellido || '',
+          email: userData.email || ''
         })
       } else {
-        toast.error(data.error || 'Error al cargar el perfil')
+        toast.error('Error al cargar el perfil')
       }
-    } catch (error) {
-      toast.error('Error de conexión al cargar el perfil')
     }
   }
 
@@ -75,30 +84,16 @@ const SuperAdminSettingsPage = () => {
     setSuccess('')
 
     try {
-      const token = localStorage.getItem('superAdminToken')
-      const response = await fetch(`/api/super-admin/auth/profile`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(profileForm)
-      })
+      const response = await apiClient.put('/super-admin/auth/profile', profileForm)
+      const updatedUser = response.data.data
 
-      const data = await response.json()
-
-      if (response.ok) {
-        // Actualizar datos en localStorage
-        const updatedUser = { ...user, ...profileForm }
-        localStorage.setItem('superAdminUser', JSON.stringify(updatedUser))
-        setUser(updatedUser)
-        setSuccess('Perfil actualizado exitosamente')
-      } else {
-        setError(data.message || 'Error al actualizar el perfil')
-      }
+      // Actualizar datos en localStorage
+      localStorage.setItem('superAdminUser', JSON.stringify(updatedUser))
+      setUser(updatedUser)
+      setSuccess('Perfil actualizado exitosamente')
     } catch (error) {
       console.error('Error updating profile:', error)
-      setError('Error de conexión. Inténtalo de nuevo.')
+      setError(error.response?.data?.message || 'Error al actualizar el perfil')
     } finally {
       setLoading(false)
     }
@@ -130,34 +125,20 @@ const SuperAdminSettingsPage = () => {
     }
 
     try {
-      const token = localStorage.getItem('superAdminToken')
-      const response = await fetch(`/api/super-admin/auth/change-password`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          currentPassword: passwordForm.currentPassword,
-          newPassword: passwordForm.newPassword
-        })
+      await apiClient.put('/super-admin/auth/change-password', {
+        currentPassword: passwordForm.currentPassword,
+        newPassword: passwordForm.newPassword
       })
 
-      const data = await response.json()
-
-      if (response.ok) {
-        setSuccess('Contraseña cambiada exitosamente')
-        setPasswordForm({
-          currentPassword: '',
-          newPassword: '',
-          confirmPassword: ''
-        })
-      } else {
-        setError(data.message || 'Error al cambiar la contraseña')
-      }
+      setSuccess('Contraseña cambiada exitosamente')
+      setPasswordForm({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      })
     } catch (error) {
       console.error('Error changing password:', error)
-      setError('Error de conexión. Inténtalo de nuevo.')
+      setError(error.response?.data?.message || 'Error al cambiar la contraseña')
     } finally {
       setLoading(false)
     }

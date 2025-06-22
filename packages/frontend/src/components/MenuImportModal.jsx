@@ -7,6 +7,7 @@ import {
   ExclamationTriangleIcon,
   ArrowDownTrayIcon
 } from '@heroicons/react/24/outline';
+import apiClient from '../lib/apiClient';
 
 const MenuImportModal = ({ isOpen, onClose, onImportSuccess }) => {
   const [step, setStep] = useState(1); // 1: Upload, 2: Validation, 3: Import, 4: Results
@@ -49,26 +50,19 @@ const MenuImportModal = ({ isOpen, onClose, onImportSuccess }) => {
 
   const downloadTemplate = async () => {
     try {
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch('/api/menu-import/template', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      const response = await apiClient.get('/menu-import/template', {
+        responseType: 'blob'
       });
       
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'menu-template.csv';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
-      } else {
-        console.error('Error downloading template');
-      }
+      const blob = response.data;
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'menu-template.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Error downloading template:', error);
     }
@@ -83,23 +77,18 @@ const MenuImportModal = ({ isOpen, onClose, onImportSuccess }) => {
       const formData = new FormData();
       formData.append('csvFile', file);
 
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch('/api/menu-import/validate', {
-        method: 'POST',
+      const response = await apiClient.post('/menu-import/validate', formData, {
         headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: formData
+          'Content-Type': 'multipart/form-data'
+        }
       });
-
-      const data = await response.json();
       
-      if (data.success) {
-        setValidationResults(data.data.validation);
+      if (response.data.success) {
+        setValidationResults(response.data.data.validation);
         setStep(2);
       } else {
-        console.error('Validation error:', data.error);
-        alert('Error validando archivo: ' + data.error);
+        console.error('Validation error:', response.data.error);
+        alert('Error validando archivo: ' + response.data.error);
       }
     } catch (error) {
       console.error('Error validating CSV:', error);
@@ -121,33 +110,29 @@ const MenuImportModal = ({ isOpen, onClose, onImportSuccess }) => {
       formData.append('skipDuplicates', options.skipDuplicates);
       formData.append('validateFirst', options.validateFirst);
 
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch('/api/menu-import/import', {
-        method: 'POST',
+      const response = await apiClient.post('/menu-import/import', formData, {
         headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: formData
+          'Content-Type': 'multipart/form-data'
+        }
       });
-
-      const data = await response.json();
       
-      if (data.success) {
-        setImportResults(data.data.import);
+      if (response.data.success) {
+        setImportResults(response.data.data.import);
         setStep(4);
         
         // Notify parent component of successful import
         if (onImportSuccess) {
-          onImportSuccess(data.data.import);
+          onImportSuccess(response.data.data.import);
         }
       } else {
-        console.error('Import error:', data.error);
-        setImportResults(data.data?.import || { errors: [data.error] });
+        console.error('Import error:', response.data.error);
+        setImportResults(response.data.data?.import || { errors: [response.data.error] });
         setStep(4);
       }
     } catch (error) {
       console.error('Error importing CSV:', error);
-      setImportResults({ errors: ['Error importando archivo CSV'] });
+      const errorMessage = error.response?.data?.error || 'Error importando archivo CSV';
+      setImportResults({ errors: [errorMessage] });
       setStep(4);
     } finally {
       setIsLoading(false);

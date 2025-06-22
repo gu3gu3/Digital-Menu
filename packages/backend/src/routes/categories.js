@@ -5,6 +5,110 @@ const { prisma } = require('../config/database');
 
 const router = express.Router();
 
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     Categoria:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *           description: ID único de la categoría
+ *         nombre:
+ *           type: string
+ *           description: Nombre de la categoría
+ *           example: Tapas y Entrantes
+ *         descripcion:
+ *           type: string
+ *           description: Descripción de la categoría
+ *           example: Pequeños bocados para compartir
+ *         orden:
+ *           type: integer
+ *           description: Orden de visualización
+ *           example: 1
+ *         activa:
+ *           type: boolean
+ *           description: Si la categoría está activa
+ *           example: true
+ *         restauranteId:
+ *           type: string
+ *           description: ID del restaurante propietario
+ *         productos:
+ *           type: array
+ *           items:
+ *             type: object
+ *             properties:
+ *               id:
+ *                 type: string
+ *               nombre:
+ *                 type: string
+ *               disponible:
+ *                 type: boolean
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *         updatedAt:
+ *           type: string
+ *           format: date-time
+ *     
+ *     CreateCategoriaRequest:
+ *       type: object
+ *       required:
+ *         - nombre
+ *       properties:
+ *         nombre:
+ *           type: string
+ *           minLength: 2
+ *           description: Nombre de la categoría
+ *           example: Tapas y Entrantes
+ *         descripcion:
+ *           type: string
+ *           description: Descripción opcional de la categoría
+ *           example: Pequeños bocados para compartir
+ *         orden:
+ *           type: integer
+ *           minimum: 0
+ *           description: Orden de visualización (opcional, se asigna automáticamente si no se especifica)
+ *           example: 1
+ *     
+ *     UpdateCategoriaRequest:
+ *       type: object
+ *       properties:
+ *         nombre:
+ *           type: string
+ *           minLength: 2
+ *           description: Nuevo nombre de la categoría
+ *           example: Entradas y Aperitivos
+ *         descripcion:
+ *           type: string
+ *           description: Nueva descripción de la categoría
+ *           example: Deliciosos bocados para empezar
+ *         orden:
+ *           type: integer
+ *           minimum: 0
+ *           description: Nuevo orden de visualización
+ *           example: 2
+ *         activa:
+ *           type: boolean
+ *           description: Estado de la categoría
+ *           example: true
+ *     
+ *     CategoriaResponse:
+ *       type: object
+ *       properties:
+ *         success:
+ *           type: boolean
+ *           example: true
+ *         data:
+ *           type: object
+ *           properties:
+ *             categorias:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Categoria'
+ */
+
 // Validation schemas
 const categorySchema = Joi.object({
   nombre: Joi.string().min(2).required().messages({
@@ -22,9 +126,35 @@ const updateCategorySchema = Joi.object({
   activa: Joi.boolean().optional()
 });
 
-// @desc    Get all categories for restaurant
-// @route   GET /api/categories
-// @access  Private
+/**
+ * @swagger
+ * /api/categories:
+ *   get:
+ *     summary: Obtener todas las categorías del restaurante
+ *     description: Devuelve todas las categorías del restaurante del usuario autenticado, ordenadas por el campo 'orden'
+ *     tags: [Categories]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Lista de categorías obtenida exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/CategoriaResponse'
+ *       401:
+ *         description: No autorizado - Token inválido o faltante
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 const getCategories = async (req, res) => {
   try {
     const restauranteId = req.user.restauranteId;
@@ -59,9 +189,82 @@ const getCategories = async (req, res) => {
   }
 };
 
-// @desc    Create new category
-// @route   POST /api/categories
-// @access  Private (Admin only)
+/**
+ * @swagger
+ * /api/categories:
+ *   post:
+ *     summary: Crear nueva categoría
+ *     description: Crea una nueva categoría para el restaurante. Verifica límites del plan y nombres únicos.
+ *     tags: [Categories]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CreateCategoriaRequest'
+ *     responses:
+ *       201:
+ *         description: Categoría creada exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Categoría creada exitosamente
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     categoria:
+ *                       $ref: '#/components/schemas/Categoria'
+ *                     remaining:
+ *                       type: integer
+ *                       description: Categorías restantes según el plan
+ *                       example: 4
+ *       400:
+ *         description: Datos de entrada inválidos
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       401:
+ *         description: No autorizado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       403:
+ *         description: Límite de categorías alcanzado para el plan
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 error:
+ *                   type: string
+ *                   example: Has alcanzado el límite de 5 categorías para tu plan.
+ *       409:
+ *         description: Ya existe una categoría con ese nombre
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 const createCategory = async (req, res) => {
   try {
     const { error, value } = categorySchema.validate(req.body);
@@ -141,9 +344,79 @@ const createCategory = async (req, res) => {
   }
 };
 
-// @desc    Update category
-// @route   PUT /api/categories/:id
-// @access  Private (Admin only)
+/**
+ * @swagger
+ * /api/categories/{id}:
+ *   put:
+ *     summary: Actualizar categoría existente
+ *     description: Actualiza una categoría del restaurante. Verifica permisos y nombres únicos.
+ *     tags: [Categories]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID de la categoría a actualizar
+ *         example: cmc6y8pa200011cahfgtlekcs
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UpdateCategoriaRequest'
+ *     responses:
+ *       200:
+ *         description: Categoría actualizada exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Categoría actualizada exitosamente
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     categoria:
+ *                       $ref: '#/components/schemas/Categoria'
+ *       400:
+ *         description: Datos de entrada inválidos
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       401:
+ *         description: No autorizado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: Categoría no encontrada
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       409:
+ *         description: Ya existe una categoría con ese nombre
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 const updateCategory = async (req, res) => {
   try {
     const { id } = req.params;
@@ -213,9 +486,69 @@ const updateCategory = async (req, res) => {
   }
 };
 
-// @desc    Delete category
-// @route   DELETE /api/categories/:id
-// @access  Private (Admin only)
+/**
+ * @swagger
+ * /api/categories/{id}:
+ *   delete:
+ *     summary: Eliminar categoría
+ *     description: Elimina una categoría del restaurante. No se puede eliminar si tiene productos asociados.
+ *     tags: [Categories]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID de la categoría a eliminar
+ *         example: cmc6y8pa200011cahfgtlekcs
+ *     responses:
+ *       200:
+ *         description: Categoría eliminada exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Categoría eliminada exitosamente
+ *       400:
+ *         description: No se puede eliminar - categoría tiene productos
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 error:
+ *                   type: string
+ *                   example: No se puede eliminar una categoría que tiene productos. Elimine o mueva los productos primero.
+ *       401:
+ *         description: No autorizado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: Categoría no encontrada
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 const deleteCategory = async (req, res) => {
   try {
     const { id } = req.params;

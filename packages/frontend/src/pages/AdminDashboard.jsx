@@ -10,7 +10,7 @@ import {
   EyeIcon,
   FolderIcon
 } from '@heroicons/react/24/outline'
-import adminApi from '../lib/adminApi'
+import apiClient from '../lib/apiClient'
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState({
@@ -37,8 +37,8 @@ const AdminDashboard = () => {
     const fetchData = async () => {
       setLoading(true)
       try {
-        const statsPromise = adminApi.get('/admin/stats')
-        const ordersPromise = adminApi.get('/orders?limit=5')
+        const statsPromise = apiClient.get('/admin/stats')
+        const ordersPromise = apiClient.get('/orders?limit=5')
         
         const [statsResponse, ordersResponse] = await Promise.all([statsPromise, ordersPromise])
 

@@ -16,6 +16,7 @@ import {
 } from '@heroicons/react/24/outline'
 import logo from '../assets/logo.png'
 import NotificationBell from './NotificationBell'
+import apiClient from '../lib/apiClient'
 
 const AdminLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -50,17 +51,8 @@ const AdminLayout = () => {
 
   const loadPlanInfo = async () => {
     try {
-      const token = localStorage.getItem('adminToken')
-      const response = await fetch(`/api/admin/stats`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
-      
-      if (response.ok) {
-        const data = await response.json()
-        setPlanInfo(data.data.plan)
-      }
+      const response = await apiClient.get('/admin/stats')
+      setPlanInfo(response.data.data.plan)
     } catch (error) {
       console.error('Error loading plan info:', error)
       setPlanInfo({ nombre: 'Plan Gratuito' }) // fallback

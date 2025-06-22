@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline'
 import logo from '../assets/logo.png'
+import authService from '../services/authService'
 
 const AdminLoginPage = () => {
   const [formData, setFormData] = useState({
@@ -26,25 +27,19 @@ const AdminLoginPage = () => {
     setError('')
 
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
+      
+      const result = await authService.login({
+        email: formData.email,
+        password: formData.password,
+        role: 'ADMINISTRADOR'
       })
 
-      const data = await response.json()
 
-      if (response.ok) {
-        // Guardar token en localStorage
-        localStorage.setItem('adminToken', data.data.token)
-        localStorage.setItem('adminUser', JSON.stringify(data.data.user))
-        
+      if (result.data) {
         // Redirigir al dashboard
         navigate('/admin/dashboard')
       } else {
-        setError(data.error || data.message || 'Error al iniciar sesión')
+        setError(result.error || 'Error al iniciar sesión')
       }
     } catch (error) {
       setError('Error de conexión. Inténtalo de nuevo.')

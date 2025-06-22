@@ -1,64 +1,64 @@
-import apiRequest from './api';
+import apiClient from '../lib/apiClient.js';
 
 class MenuService {
   // Obtener menú público por slug
   async getPublicMenu(slug) {
-    const data = await apiRequest(`/public/menu/${slug}`);
-    return data.data;
+    const response = await apiClient.get(`/public/menu/${slug}`);
+    return response.data.data;
   }
 
   // Crear o reanudar sesión de mesa
   async createOrResumeSession(restauranteSlug, mesaNumero) {
-    const data = await apiRequest('/sessions', 'POST', { restauranteSlug, mesaNumero });
-    return data.data.sesion;
+    const response = await apiClient.post('/sessions', { restauranteSlug, mesaNumero });
+    return response.data.data.sesion;
   }
 
   // Actualizar sesión con información del cliente
   async updateSession(sesionId, sessionData) {
-    const data = await apiRequest(`/sessions/${sesionId}`, 'PUT', sessionData);
-    return data.data.sesion;
+    const response = await apiClient.put(`/sessions/${sesionId}`, sessionData);
+    return response.data.data.sesion;
   }
 
   // Obtener información de sesión por token
   async getSession(sessionToken) {
-    const data = await apiRequest(`/sessions/${sessionToken}`);
-    return data.data.sesion;
+    const response = await apiClient.get(`/sessions/${sessionToken}`);
+    return response.data.data.sesion;
   }
 
   // Obtener carrito
   async getCart(sesionId) {
-    const data = await apiRequest(`/cart/${sesionId}`);
-    return data.data;
+    const response = await apiClient.get(`/cart/${sesionId}`);
+    return response.data.data;
   }
 
   // Agregar producto al carrito
   async addToCart(sesionId, productoId, cantidad) {
-    const data = await apiRequest(`/cart/${sesionId}/add`, 'POST', { productoId, cantidad });
-    return data.data;
+    const response = await apiClient.post(`/cart/${sesionId}/add`, { productoId, cantidad });
+    return response.data.data;
   }
 
   // Actualizar item del carrito
   async updateCartItem(sesionId, itemId, cantidad) {
-    const data = await apiRequest(`/cart/${sesionId}/item/${itemId}`, 'PUT', { cantidad });
-    return data.data;
+    const response = await apiClient.put(`/cart/${sesionId}/item/${itemId}`, { cantidad });
+    return response.data.data;
   }
 
   // Eliminar item del carrito
   async removeFromCart(sessionToken, itemId) {
-    const data = await apiRequest(`/cart/${sessionToken}/item/${itemId}`, 'DELETE');
-    return data.data;
+    const response = await apiClient.delete(`/cart/${sessionToken}/item/${itemId}`);
+    return response.data.data;
   }
 
   // Vaciar carrito
   async clearCart(sessionToken) {
-    const data = await apiRequest(`/cart/${sessionToken}/clear`, 'DELETE');
-    return data.data;
+    const response = await apiClient.delete(`/cart/${sessionToken}/clear`);
+    return response.data.data;
   }
 
   // Confirmar pedido
   async confirmOrder(sesionId, orderDetails) {
-    const data = await apiRequest(`/cart/${sesionId}/confirm`, 'POST', orderDetails);
-    return data.data;
+    const response = await apiClient.post(`/cart/${sesionId}/confirm`, orderDetails);
+    return response.data.data;
   }
 
   // Actualizar carrito de sesión (para sincronización con estado local)
@@ -76,22 +76,23 @@ class MenuService {
 
   // Cerrar sesión
   async closeSession(sessionToken) {
-    const data = await apiRequest(`/sessions/${sessionToken}/close`, 'POST');
-    return data.data;
+    const response = await apiClient.post(`/sessions/${sessionToken}/close`);
+    return response.data.data;
   }
 
   async getOrder(orderId) {
-    const data = await apiRequest(`/orders/${orderId}`);
-    return data.data;
+    const response = await apiClient.get(`/orders/${orderId}`);
+    return response.data.data;
   }
 
   async getOrderStatus(orderId) {
-    const data = await apiRequest(`/public/orden/${orderId}`);
-    return data.data;
+    const response = await apiClient.get(`/public/orden/${orderId}`);
+    return response.data.data;
   }
 
   async callWaiter(orderId) {
-    return apiRequest(`/orders/${orderId}/call`, 'POST');
+    const response = await apiClient.post(`/orders/${orderId}/call`);
+    return response.data;
   }
 }
 

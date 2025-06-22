@@ -8,6 +8,7 @@ import {
   CheckCircleIcon,
   ExclamationTriangleIcon
 } from '@heroicons/react/24/outline'
+import apiClient from '../lib/apiClient'
 
 const AdminSettingsPage = () => {
   const [user, setUser] = useState(null)
@@ -66,30 +67,16 @@ const AdminSettingsPage = () => {
     setSuccess('')
 
     try {
-      const token = localStorage.getItem('adminToken')
-      const response = await fetch('/api/admin/profile', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(profileForm)
-      })
+      const response = await apiClient.put('/admin/profile', profileForm)
 
-      const data = await response.json()
-
-      if (response.ok) {
-        // Actualizar datos en localStorage
-        const updatedUser = { ...user, ...profileForm }
-        localStorage.setItem('adminUser', JSON.stringify(updatedUser))
-        setUser(updatedUser)
-        setSuccess('Perfil actualizado exitosamente')
-      } else {
-        setError(data.error || 'Error al actualizar el perfil')
-      }
+      // Actualizar datos en localStorage
+      const updatedUser = { ...user, ...profileForm }
+      localStorage.setItem('adminUser', JSON.stringify(updatedUser))
+      setUser(updatedUser)
+      setSuccess('Perfil actualizado exitosamente')
     } catch (error) {
       console.error('Error updating profile:', error)
-      setError('Error de conexión. Inténtalo de nuevo.')
+      setError(error.response?.data?.error || 'Error al actualizar el perfil')
     } finally {
       setLoading(false)
     }
@@ -121,34 +108,20 @@ const AdminSettingsPage = () => {
     }
 
     try {
-      const token = localStorage.getItem('adminToken')
-      const response = await fetch('/api/admin/change-password', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          currentPassword: passwordForm.currentPassword,
-          newPassword: passwordForm.newPassword
-        })
+      await apiClient.put('/admin/change-password', {
+        currentPassword: passwordForm.currentPassword,
+        newPassword: passwordForm.newPassword
       })
 
-      const data = await response.json()
-
-      if (response.ok) {
-        setSuccess('Contraseña cambiada exitosamente')
-        setPasswordForm({
-          currentPassword: '',
-          newPassword: '',
-          confirmPassword: ''
-        })
-      } else {
-        setError(data.error || 'Error al cambiar la contraseña')
-      }
+      setSuccess('Contraseña cambiada exitosamente')
+      setPasswordForm({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      })
     } catch (error) {
       console.error('Error changing password:', error)
-      setError('Error de conexión. Inténtalo de nuevo.')
+      setError(error.response?.data?.error || 'Error al cambiar la contraseña')
     } finally {
       setLoading(false)
     }

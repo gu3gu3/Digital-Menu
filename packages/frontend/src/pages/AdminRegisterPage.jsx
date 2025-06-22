@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline'
 import logo from '../assets/logo.png'
+import authService from '../services/authService'
 
 const AdminRegisterPage = () => {
   const [formData, setFormData] = useState({
@@ -68,40 +69,32 @@ const AdminRegisterPage = () => {
     setLoading(true)
 
     try {
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          // Datos del administrador
-          nombre: formData.nombre,
-          email: formData.email,
-          password: formData.password,
-          // Datos del restaurante
-          restaurante: {
-            nombre: formData.nombreRestaurante,
-            descripcion: formData.descripcion,
-            telefono: formData.telefono,
-            direccion: formData.direccion
-          }
-        }),
+      const result = await authService.register({
+        // Datos del administrador
+        nombre: formData.nombre,
+        email: formData.email,
+        password: formData.password,
+        // Datos del restaurante
+        restaurante: {
+          nombre: formData.nombreRestaurante,
+          descripcion: formData.descripcion,
+          telefono: formData.telefono,
+          direccion: formData.direccion
+        }
       })
 
-      const data = await response.json()
-
-      if (response.ok) {
-        // Guardar token en localStorage
-        localStorage.setItem('adminToken', data.token)
-        localStorage.setItem('adminUser', JSON.stringify(data.user))
+      if (result.data && result.data.success) {
+        // Guardar token en localStorage (authService ya lo maneja automáticamente en login)
+        localStorage.setItem('adminToken', result.data.data.token)
+        localStorage.setItem('adminUser', JSON.stringify(result.data.data.user))
         
         // Redirigir al dashboard
         navigate('/admin/dashboard')
       } else {
-        if (data.errors) {
-          setErrors(data.errors)
+        if (result.data && result.data.errors) {
+          setErrors(result.data.errors)
         } else {
-          setErrors({ general: data.message || 'Error al registrar' })
+          setErrors({ general: result.error || result.data?.message || 'Error al registrar' })
         }
       }
     } catch (error) {
