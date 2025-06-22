@@ -11,6 +11,7 @@ import {
   XMarkIcon
 } from '@heroicons/react/24/outline'
 import { Toaster, toast } from 'sonner'
+import adminApi from '../lib/adminApi'
 
 const AdminTablesPage = () => {
   const [mesas, setMesas] = useState([])
@@ -36,163 +37,134 @@ const AdminTablesPage = () => {
     loadTables()
   }, [])
 
-  const loadTables = async () => {
+  const loadTables = useCallback(async () => {
     setLoading(true)
     try {
-      const token = localStorage.getItem('adminToken')
-      const response = await fetch('/api/tables', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        setMesas(data.data.mesas)
+      const response = await adminApi.get('/tables');
+      if (response.data.success) {
+        setMesas(response.data.data.mesas);
       } else {
-        const errorData = await response.json()
-        setError(errorData.error || 'Error al cargar las mesas')
+        toast.error(response.data.error || 'Error al cargar las mesas');
       }
     } catch (error) {
       console.error('Error loading tables:', error)
-      setError('Error de conexión')
+      toast.error(error.response?.data?.error || 'Error de conexión');
     } finally {
       setLoading(false)
     }
-  }
+  }, []);
 
   const handleTableSubmit = async (e) => {
     e.preventDefault()
-    setLoading(true)
-    setError('')
-    setSuccess('')
-
-    try {
-      const token = localStorage.getItem('adminToken')
-      const url = editingTable 
-        ? `/api/tables/${editingTable.id}`
-        : '/api/tables'
-      
-      const method = editingTable ? 'PUT' : 'POST'
-
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(tableForm)
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        setSuccess(editingTable ? 'Mesa actualizada exitosamente' : 'Mesa creada exitosamente')
-        setShowTableModal(false)
-        setTableForm({ numero: '', nombre: '', descripcion: '', capacidad: 4 })
-        setEditingTable(null)
-        loadTables()
+    
+    const promise = () => new Promise(async (resolve, reject) => {
+      try {
+        const url = editingTable 
+          ? `/tables/${editingTable.id}`
+          : '/tables';
         
-        // Si es una nueva mesa, mostrar el QR automáticamente
-        if (!editingTable && data.data?.qrCodeImage) {
-          setSelectedTable(data.data.mesa)
-          setQrCode({
-            qrUrl: data.data.qrUrl,
-            qrCodeImage: data.data.qrCodeImage
-          })
-          setShowQRModal(true)
+        const method = editingTable ? 'put' : 'post';
+
+        const response = await adminApi[method](url, tableForm);
+
+        if (response.data.success) {
+          setShowTableModal(false)
+          setTableForm({ numero: '', nombre: '', descripcion: '', capacidad: 4 })
+          setEditingTable(null)
+          loadTables()
+          
+          if (!editingTable && response.data.data?.qrCodeImage) {
+            setSelectedTable(response.data.data.mesa)
+            setQrCode({
+              qrUrl: response.data.data.qrUrl,
+              qrCodeImage: response.data.data.qrCodeImage
+            })
+            setShowQRModal(true)
+          }
+          resolve(response.data);
+        } else {
+          reject(new Error(response.data.error || 'Error al guardar la mesa'));
         }
-      } else {
-        const errorData = await response.json()
-        setError(errorData.error || 'Error al guardar la mesa')
+      } catch (error) {
+        reject(error.response?.data || error);
       }
-    } catch (error) {
-      console.error('Error saving table:', error)
-      setError('Error de conexión')
-    } finally {
-      setLoading(false)
-    }
+    });
+
+    toast.promise(promise(), {
+      loading: 'Guardando mesa...',
+      success: (data) => editingTable ? 'Mesa actualizada exitosamente' : 'Mesa creada exitosamente',
+      error: (err) => err.error || 'Ocurrió un error al guardar la mesa',
+    });
   }
 
   const handleDeleteTable = async (table) => {
-    if (!confirm(`¿Eliminar la mesa "${table.numero}"?`)) return
+    if (!confirm(`¿Eliminar la mesa "${table.numero}"?`)) return;
 
-    setLoading(true)
-    try {
-      const token = localStorage.getItem('adminToken')
-      const response = await fetch(`/api/tables/${table.id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
+    const promise = () => new Promise(async (resolve, reject) => {
+      try {
+        const response = await adminApi.delete(`/tables/${table.id}`);
+        if (response.data.success) {
+          loadTables();
+          resolve(response.data);
+        } else {
+          reject(new Error(response.data.error || 'Error al eliminar la mesa'));
         }
-      })
-
-      if (response.ok) {
-        setSuccess('Mesa eliminada exitosamente')
-        loadTables()
-      } else {
-        const errorData = await response.json()
-        setError(errorData.error || 'Error al eliminar la mesa')
+      } catch (error) {
+        reject(error.response?.data || error);
       }
-    } catch (error) {
-      console.error('Error deleting table:', error)
-      setError('Error de conexión')
-    } finally {
-      setLoading(false)
-    }
+    });
+
+    toast.promise(promise(), {
+      loading: 'Eliminando mesa...',
+      success: 'Mesa eliminada exitosamente',
+      error: (err) => err.error || 'Ocurrió un error al eliminar',
+    });
   }
 
   const handleShowQR = async (table) => {
-    setLoading(true)
-    try {
-      const token = localStorage.getItem('adminToken')
-      const response = await fetch(`/api/tables/${table.id}/qr`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
+    const promise = () => new Promise(async (resolve, reject) => {
+      try {
+        const response = await adminApi.get(`/tables/${table.id}/qr`);
+        if (response.data.success) {
+          setSelectedTable(table);
+          setQrCode(response.data.data);
+          setShowQRModal(true);
+          resolve(response.data);
+        } else {
+          reject(new Error(response.data.error || 'Error al generar QR'));
         }
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        setSelectedTable(table)
-        setQrCode(data.data)
-        setShowQRModal(true)
-      } else {
-        const errorData = await response.json()
-        setError(errorData.error || 'Error al generar código QR')
+      } catch (error) {
+        reject(error.response?.data || error);
       }
-    } catch (error) {
-      console.error('Error generating QR:', error)
-      setError('Error de conexión')
-    } finally {
-      setLoading(false)
-    }
+    });
+    
+    toast.promise(promise(), {
+      loading: 'Generando QR...',
+      success: 'Código QR generado',
+      error: (err) => err.error || 'Ocurrió un error al generar el QR',
+    });
   }
 
   const handleDownloadAllQRs = async () => {
-    setLoading(true)
-    try {
-      const token = localStorage.getItem('adminToken')
-      const response = await fetch(`/api/tables/qr/all`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
+     const promise = () => new Promise(async (resolve, reject) => {
+      try {
+        const response = await adminApi.get(`/tables/qr/all`);
+        if (response.data.success) {
+          generateQRsPDF(response.data.data);
+          resolve(response.data);
+        } else {
+          reject(new Error(response.data.error || 'Error al generar los códigos'));
         }
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        // Crear y descargar PDF con todos los QRs
-        generateQRsPDF(data.data)
-        setSuccess(`${data.data.total} códigos QR generados exitosamente`)
-      } else {
-        const errorData = await response.json()
-        setError(errorData.error || 'Error al generar códigos QR')
+      } catch (error) {
+        reject(error.response?.data || error);
       }
-    } catch (error) {
-      console.error('Error downloading QRs:', error)
-      setError('Error de conexión')
-    } finally {
-      setLoading(false)
-    }
+    });
+
+    toast.promise(promise(), {
+      loading: 'Generando todos los códigos QR...',
+      success: (data) => `${data.total} códigos QR generados. Iniciando descarga...`,
+      error: (err) => err.error || 'Ocurrió un error al generar los códigos',
+    });
   }
 
   const generateQRsPDF = (qrData) => {

@@ -109,8 +109,8 @@ if (process.env.NODE_ENV !== 'development') {
 
 // 5. Body parsing middleware
 console.log('Checkpoint 7: Configurando Body Parser...');
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.json({ limit: '5mb' }));
+app.use(express.urlencoded({ extended: true, limit: '5mb' }));
 console.log('Checkpoint 8: Body Parser aplicado.');
 
 // 6. Logging middleware

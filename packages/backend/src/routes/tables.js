@@ -133,7 +133,7 @@ const createTable = async (req, res) => {
     
     // Get restaurant slug for QR URL
     const restauranteSlug = restaurante.slug;
-    const qrUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/menu/${restauranteSlug}?mesa=${numero}`;
+    const qrUrl = `${process.env.VITE_FRONTEND_URL || 'http://localhost:5173'}/menu/${restauranteSlug}?mesa=${numero}`;
 
     // Create table
     const mesa = await prisma.mesa.create({
@@ -342,30 +342,25 @@ const getTableQR = async (req, res) => {
     const { id } = req.params;
     const { restauranteId } = req.user;
 
-    // Get table and restaurant info
     const mesa = await prisma.mesa.findFirst({
       where: {
         id,
-        restauranteId
+        restauranteId,
       },
       include: {
         restaurante: {
-          select: { slug: true, nombre: true }
+          select: { slug: true }
         }
       }
     });
 
     if (!mesa) {
-      return res.status(404).json({
-        success: false,
-        error: 'Mesa no encontrada'
-      });
+      return res.status(404).json({ success: false, error: 'Mesa no encontrada' });
     }
 
-    const qrUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/menu/${mesa.restaurante.slug}?mesa=${mesa.numero}`;
+    const qrUrl = `${process.env.VITE_FRONTEND_URL || 'http://localhost:5173'}/menu/${mesa.restaurante.slug}?mesa=${mesa.numero}`;
 
-    // Generate QR code
-    const qrCodeDataURL = await QRCode.toDataURL(qrUrl, {
+    const qrCodeImage = await QRCode.toDataURL(qrUrl, {
       width: 300,
       margin: 2,
       color: {
@@ -377,19 +372,10 @@ const getTableQR = async (req, res) => {
     res.json({
       success: true,
       data: {
-        mesa: {
-          id: mesa.id,
-          numero: mesa.numero,
-          nombre: mesa.nombre
-        },
-        restaurant: {
-          nombre: mesa.restaurante.nombre
-        },
         qrUrl,
-        qrCodeImage: qrCodeDataURL
+        qrCodeImage
       }
     });
-
   } catch (error) {
     console.error('Error generando QR:', error);
     res.status(500).json({
@@ -406,34 +392,27 @@ const getAllQRCodes = async (req, res) => {
   try {
     const { restauranteId } = req.user;
 
-    // Get all active tables
+    const restaurante = await prisma.restaurante.findUnique({
+      where: { id: restauranteId },
+      select: { nombre: true, slug: true }
+    });
+    
     const mesas = await prisma.mesa.findMany({
-      where: {
-        restauranteId,
-        activa: true
-      },
-      include: {
-        restaurante: {
-          select: { slug: true, nombre: true }
-        }
-      },
-      orderBy: { numero: 'asc' }
+      where: { restauranteId },
+      orderBy: { numero: 'asc' },
+      select: { id: true, numero: true, nombre: true }
     });
 
     if (mesas.length === 0) {
-      return res.status(404).json({
-        success: false,
-        error: 'No hay mesas activas'
-      });
+      return res.status(404).json({ success: false, error: 'No se encontraron mesas para este restaurante.' });
     }
 
-    // Generate QR codes for all tables
     const qrCodes = await Promise.all(
       mesas.map(async (mesa) => {
-        const qrUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/menu/${mesa.restaurante.slug}?mesa=${mesa.numero}`;
+        const qrUrl = `${process.env.VITE_FRONTEND_URL || 'http://localhost:5173'}/menu/${restaurante.slug}?mesa=${mesa.numero}`;
         
         try {
-          const qrCodeDataURL = await QRCode.toDataURL(qrUrl, {
+          const qrCodeImage = await QRCode.toDataURL(qrUrl, {
             width: 300,
             margin: 2,
             color: {
@@ -449,7 +428,7 @@ const getAllQRCodes = async (req, res) => {
               nombre: mesa.nombre
             },
             qrUrl,
-            qrCodeImage: qrCodeDataURL
+            qrCodeImage: qrCodeImage
           };
         } catch (error) {
           console.error(`Error generating QR for table ${mesa.numero}:`, error);
@@ -471,7 +450,7 @@ const getAllQRCodes = async (req, res) => {
       success: true,
       data: {
         restaurant: {
-          nombre: mesas[0].restaurante.nombre
+          nombre: restaurante.nombre
         },
         qrCodes,
         total: qrCodes.length
