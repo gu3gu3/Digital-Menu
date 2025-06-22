@@ -598,10 +598,199 @@ const deleteCategory = async (req, res) => {
   }
 };
 
-// Routes
+// Routes with Swagger documentation
+
+/**
+ * @swagger
+ * /api/categories:
+ *   get:
+ *     summary: Obtener categorías del restaurante
+ *     description: Devuelve todas las categorías del restaurante con sus productos (opcional)
+ *     tags: [Categories]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: includeProducts
+ *         schema:
+ *           type: boolean
+ *           default: false
+ *         description: Incluir productos en cada categoría
+ *       - in: query
+ *         name: includeInactive
+ *         schema:
+ *           type: boolean
+ *           default: false
+ *         description: Incluir categorías inactivas
+ *     responses:
+ *       200:
+ *         description: Lista de categorías obtenida exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Category'
+ *       401:
+ *         description: Token inválido
+ *       500:
+ *         description: Error interno del servidor
+ */
 router.get('/', authenticate, getCategories);
+
+/**
+ * @swagger
+ * /api/categories:
+ *   post:
+ *     summary: Crear nueva categoría
+ *     description: Crea una nueva categoría para el restaurante respetando límites del plan
+ *     tags: [Categories]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - nombre
+ *             properties:
+ *               nombre:
+ *                 type: string
+ *                 minLength: 2
+ *                 maxLength: 100
+ *                 description: Nombre de la categoría
+ *                 example: "Bebidas"
+ *               descripcion:
+ *                 type: string
+ *                 maxLength: 500
+ *                 description: Descripción de la categoría
+ *                 example: "Bebidas frías y calientes"
+ *               activo:
+ *                 type: boolean
+ *                 default: true
+ *                 description: Estado activo de la categoría
+ *               ordenVisualizacion:
+ *                 type: integer
+ *                 minimum: 0
+ *                 description: Orden de visualización
+ *                 example: 1
+ *           examples:
+ *             new_category:
+ *               summary: Nueva categoría
+ *               value:
+ *                 nombre: "Postres"
+ *                 descripcion: "Deliciosos postres caseros"
+ *                 activo: true
+ *                 ordenVisualizacion: 3
+ *     responses:
+ *       201:
+ *         description: Categoría creada exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Categoría creada exitosamente"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     categoria:
+ *                       $ref: '#/components/schemas/Category'
+ *       400:
+ *         description: Datos inválidos o límite de plan alcanzado
+ *       409:
+ *         description: Ya existe una categoría con ese nombre
+ *       401:
+ *         description: Token inválido
+ *       403:
+ *         description: Acceso denegado - solo administradores
+ */
 router.post('/', authenticate, requireAdmin, createCategory);
+
+/**
+ * @swagger
+ * /api/categories/{id}:
+ *   put:
+ *     summary: Actualizar categoría
+ *     description: Actualiza una categoría existente del restaurante
+ *     tags: [Categories]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID de la categoría
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               nombre:
+ *                 type: string
+ *                 minLength: 2
+ *                 maxLength: 100
+ *                 description: Nombre de la categoría
+ *               descripcion:
+ *                 type: string
+ *                 maxLength: 500
+ *                 description: Descripción de la categoría
+ *               activo:
+ *                 type: boolean
+ *                 description: Estado activo de la categoría
+ *               ordenVisualizacion:
+ *                 type: integer
+ *                 minimum: 0
+ *                 description: Orden de visualización
+ *     responses:
+ *       200:
+ *         description: Categoría actualizada exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Categoría actualizada exitosamente"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     categoria:
+ *                       $ref: '#/components/schemas/Category'
+ *       400:
+ *         description: Datos inválidos
+ *       404:
+ *         description: Categoría no encontrada
+ *       409:
+ *         description: Ya existe una categoría con ese nombre
+ *       401:
+ *         description: Token inválido
+ *       403:
+ *         description: Acceso denegado - solo administradores
+ */
 router.put('/:id', authenticate, requireAdmin, updateCategory);
+
 router.delete('/:id', authenticate, requireAdmin, deleteCategory);
 
 module.exports = router; 

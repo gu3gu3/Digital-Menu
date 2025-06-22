@@ -111,14 +111,16 @@ const OrderStatusBanner = ({ ordenId, restauranteSlug, onClearOrder, tableNumber
 
     const fetchOrder = async () => {
     try {
-        const response = await fetch(`/api/public/orders/${ordenId}?restaurantSlug=${restauranteSlug}`);
+        const response = await fetch(`/api/public/orden/${ordenId}?restaurantSlug=${restauranteSlug}`);
         if (!response.ok) {
           throw new Error('No se pudo obtener el estado de la orden');
         }
       const data = await response.json();
-        setOrden(data);
+        setOrden(data.data);
       } catch (err) {
         setError(err.message);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -132,12 +134,12 @@ const OrderStatusBanner = ({ ordenId, restauranteSlug, onClearOrder, tableNumber
   const fetchOrden = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/public/orders/${ordenId}?restaurantSlug=${restauranteSlug}`);
+      const response = await fetch(`/api/public/orden/${ordenId}?restaurantSlug=${restauranteSlug}`);
       if (!response.ok) {
         throw new Error('No se pudo obtener el estado de la orden');
       }
       const data = await response.json();
-      setOrden(data);
+      setOrden(data.data);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -173,8 +175,13 @@ const OrderStatusBanner = ({ ordenId, restauranteSlug, onClearOrder, tableNumber
   if (!ordenId || loading || !orden) return null;
 
   const estadoActual = estadosConfig[orden.estado];
+  
+  if (!estadoActual) {
+    return null;
+  }
+  
   const Icon = estadoActual.icon;
-
+  
   // No mostrar si la orden está completada o cancelada después de cierto tiempo
   const tiempoTranscurrido = new Date() - new Date(orden.updatedAt);
   const minutosTranscurridos = tiempoTranscurrido / (1000 * 60);

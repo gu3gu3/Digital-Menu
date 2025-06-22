@@ -44,8 +44,78 @@ const updateProfileSchema = Joi.object({
 });
 
 /**
- * POST /api/super-admin/auth/login
- * Login de super administrador
+ * @swagger
+ * /api/super-admin/auth/login:
+ *   post:
+ *     summary: Iniciar sesión como super administrador
+ *     description: Autentica al super administrador del sistema
+ *     tags: [Super Admin Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: Email del super administrador
+ *                 example: "admin@menuview.app"
+ *               password:
+ *                 type: string
+ *                 minLength: 6
+ *                 description: Contraseña del super administrador
+ *                 example: "SuperAdmin123!"
+ *           examples:
+ *             super_admin_login:
+ *               summary: Login de super admin
+ *               value:
+ *                 email: "admin@menuview.app"
+ *                 password: "SuperAdmin123!"
+ *     responses:
+ *       200:
+ *         description: Login exitoso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Login exitoso"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     token:
+ *                       type: string
+ *                       description: JWT token para super admin
+ *                     user:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: string
+ *                         email:
+ *                           type: string
+ *                         nombre:
+ *                           type: string
+ *                         apellido:
+ *                           type: string
+ *                         role:
+ *                           type: string
+ *                           example: "SUPER_ADMIN"
+ *       400:
+ *         description: Datos inválidos
+ *       401:
+ *         description: Credenciales incorrectas
+ *       403:
+ *         description: Cuenta inactiva
  */
 router.post('/login', async (req, res) => {
   console.log('--- Super Admin Login: Intento recibido ---');
@@ -235,8 +305,28 @@ router.get('/me', authenticateSuperAdmin, async (req, res) => {
 });
 
 /**
- * POST /api/super-admin/auth/logout
- * Logout (invalidar token del lado del cliente)
+ * @swagger
+ * /api/super-admin/auth/logout:
+ *   post:
+ *     summary: Cerrar sesión de super administrador
+ *     description: Invalida el token de autenticación del super administrador
+ *     tags: [Super Admin Auth]
+ *     security:
+ *       - superAdminAuth: []
+ *     responses:
+ *       200:
+ *         description: Logout exitoso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Logout exitoso"
  */
 router.post('/logout', authenticateSuperAdmin, async (req, res) => {
   try {
@@ -254,8 +344,38 @@ router.post('/logout', authenticateSuperAdmin, async (req, res) => {
 });
 
 /**
- * PUT /api/super-admin/auth/change-password
- * Cambiar contraseña del super administrador
+ * @swagger
+ * /api/super-admin/auth/change-password:
+ *   put:
+ *     summary: Cambiar contraseña del super administrador
+ *     description: Permite al super administrador cambiar su contraseña
+ *     tags: [Super Admin Auth]
+ *     security:
+ *       - superAdminAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - currentPassword
+ *               - newPassword
+ *             properties:
+ *               currentPassword:
+ *                 type: string
+ *                 description: Contraseña actual
+ *               newPassword:
+ *                 type: string
+ *                 minLength: 6
+ *                 description: Nueva contraseña
+ *     responses:
+ *       200:
+ *         description: Contraseña cambiada exitosamente
+ *       400:
+ *         description: Datos inválidos o contraseña actual incorrecta
+ *       404:
+ *         description: Usuario no encontrado
  */
 router.put('/change-password', authenticateSuperAdmin, async (req, res) => {
   try {
@@ -326,8 +446,51 @@ router.put('/change-password', authenticateSuperAdmin, async (req, res) => {
 });
 
 /**
- * PUT /api/super-admin/auth/profile
- * Actualizar perfil del super administrador
+ * @swagger
+ * /api/super-admin/auth/profile:
+ *   put:
+ *     summary: Actualizar perfil del super administrador
+ *     description: Permite al super administrador actualizar su información personal
+ *     tags: [Super Admin Auth]
+ *     security:
+ *       - superAdminAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               nombre:
+ *                 type: string
+ *                 description: Nombre del super administrador
+ *               apellido:
+ *                 type: string
+ *                 description: Apellido del super administrador
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: Email del super administrador
+ *     responses:
+ *       200:
+ *         description: Perfil actualizado exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Perfil actualizado exitosamente"
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Datos inválidos
+ *       409:
+ *         description: Email ya existe
  */
 router.put('/profile', authenticateSuperAdmin, async (req, res) => {
   try {

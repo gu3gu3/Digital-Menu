@@ -105,13 +105,13 @@ const OrderTracker = ({ ordenId, restauranteSlug, onClose }) => {
     const fetchOrder = async () => {
     try {
       setLoading(true);
-        const response = await fetch(`/api/public/orders/${ordenId}?restaurantSlug=${restauranteSlug}`);
+        const response = await fetch(`/api/public/orden/${ordenId}?restaurantSlug=${restauranteSlug}`);
         if (!response.ok) {
           const errorData = await response.json();
           throw new Error(errorData.error || 'No se pudo obtener la orden.');
         }
       const data = await response.json();
-        setOrden(data);
+        setOrden(data.data);
         setError('');
       } catch (err) {
         console.error('Error fetching order:', err);

@@ -21,9 +21,82 @@ const updateRestaurantSchema = Joi.object({
 });
 
 /**
- * GET /api/restaurants/currencies
- * Obtener todas las monedas soportadas
- * Público - no requiere autenticación
+ * @swagger
+ * /api/restaurants/currencies:
+ *   get:
+ *     summary: Obtener monedas soportadas
+ *     description: Devuelve todas las monedas soportadas por el sistema
+ *     tags: [Restaurants]
+ *     responses:
+ *       200:
+ *         description: Lista de monedas obtenida exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       code:
+ *                         type: string
+ *                         example: "NIO"
+ *                       name:
+ *                         type: string
+ *                         example: "Córdoba Nicaragüense"
+ *                       symbol:
+ *                         type: string
+ *                         example: "C$"
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+/**
+ * @swagger
+ * /api/restaurants/currencies:
+ *   get:
+ *     summary: Obtener monedas soportadas
+ *     description: Devuelve todas las monedas soportadas por el sistema
+ *     tags: [Restaurants]
+ *     responses:
+ *       200:
+ *         description: Lista de monedas obtenida exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       code:
+ *                         type: string
+ *                         example: "NIO"
+ *                       name:
+ *                         type: string
+ *                         example: "Córdoba Nicaragüense"
+ *                       symbol:
+ *                         type: string
+ *                         example: "C$"
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get('/currencies', async (req, res) => {
   try {
@@ -43,8 +116,57 @@ router.get('/currencies', async (req, res) => {
 });
 
 /**
- * GET /api/restaurants/me
- * Obtener información del restaurante del usuario autenticado (con plan)
+ * @swagger
+ * /api/restaurants/me:
+ *   get:
+ *     summary: Obtener información del restaurante
+ *     description: Devuelve la información completa del restaurante del administrador autenticado
+ *     tags: [Restaurants]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Información del restaurante obtenida exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   allOf:
+ *                     - $ref: '#/components/schemas/Restaurant'
+ *                     - type: object
+ *                       properties:
+ *                         admin:
+ *                           type: object
+ *                           properties:
+ *                             nombre:
+ *                               type: string
+ *                               example: "Carlos"
+ *                             apellido:
+ *                               type: string
+ *                               example: "González"
+ *                             email:
+ *                               type: string
+ *                               example: "admin@bellavista.com"
+ *                             telefono:
+ *                               type: string
+ *                               example: "+505 8888-9999"
+ *       404:
+ *         description: Restaurante no encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get('/me', authenticate, requireAdmin, async (req, res) => {
   try {
@@ -95,8 +217,83 @@ router.get('/me', authenticate, requireAdmin, async (req, res) => {
 });
 
 /**
- * PUT /api/restaurants/me
- * Actualizar información del restaurante (incluyendo moneda)
+ * @swagger
+ * /api/restaurants/me:
+ *   put:
+ *     summary: Actualizar información del restaurante
+ *     description: Actualiza la información básica del restaurante (sin archivos)
+ *     tags: [Restaurants]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               nombre:
+ *                 type: string
+ *                 minLength: 2
+ *                 example: "Bella Vista Restaurant"
+ *               descripcion:
+ *                 type: string
+ *                 example: "Restaurante de comida tradicional nicaragüense"
+ *               telefono:
+ *                 type: string
+ *                 example: "+505 2222-3333"
+ *               direccion:
+ *                 type: string
+ *                 example: "Centro Comercial Managua, Local 15"
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: "contacto@bellavista.com"
+ *               moneda:
+ *                 type: string
+ *                 enum: [USD, NIO, CRC, HNL, GTQ, PAB, SVC]
+ *                 example: "NIO"
+ *               backgroundColor:
+ *                 type: string
+ *                 pattern: "^#[0-9A-Fa-f]{6}$"
+ *                 example: "#FF6B35"
+ *               backgroundImage:
+ *                 type: string
+ *                 example: ""
+ *     responses:
+ *       200:
+ *         description: Restaurante actualizado exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Restaurante actualizado exitosamente"
+ *                 data:
+ *                   $ref: '#/components/schemas/Restaurant'
+ *       400:
+ *         description: Datos de entrada inválidos
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       409:
+ *         description: Email ya está en uso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.put('/me', authenticate, requireAdmin, async (req, res) => {
   try {
@@ -165,8 +362,79 @@ router.put('/me', authenticate, requireAdmin, async (req, res) => {
 });
 
 /**
- * PUT /api/restaurants/update
- * Actualizar info del restaurante con archivos (logo, banner, backgroundImage)
+ * @swagger
+ * /api/restaurants/update:
+ *   put:
+ *     summary: Actualizar restaurante con archivos
+ *     description: Actualiza la información del restaurante incluyendo logo, banner e imagen de fondo
+ *     tags: [Restaurants]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               nombre:
+ *                 type: string
+ *                 example: "Bella Vista Restaurant"
+ *               descripcion:
+ *                 type: string
+ *                 example: "Restaurante de comida tradicional"
+ *               telefono:
+ *                 type: string
+ *                 example: "+505 2222-3333"
+ *               direccion:
+ *                 type: string
+ *                 example: "Centro Comercial Managua, Local 15"
+ *               backgroundColor:
+ *                 type: string
+ *                 example: "#FF6B35"
+ *               logo:
+ *                 type: string
+ *                 format: binary
+ *                 description: Imagen del logo (máximo 1 archivo)
+ *               banner:
+ *                 type: string
+ *                 format: binary
+ *                 description: Imagen del banner (máximo 1 archivo)
+ *               backgroundImage:
+ *                 type: string
+ *                 format: binary
+ *                 description: Imagen de fondo (máximo 1 archivo)
+ *     responses:
+ *       200:
+ *         description: Restaurante actualizado exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Restaurante actualizado exitosamente"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     restaurante:
+ *                       $ref: '#/components/schemas/Restaurant'
+ *       404:
+ *         description: Restaurante no encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.put('/update', authenticate, requireAdmin, upload.fields([
   { name: 'logo', maxCount: 1 },
@@ -238,7 +506,59 @@ router.put('/update', authenticate, requireAdmin, upload.fields([
   }
 });
 
-// Ruta para eliminar una imagen específica del restaurante (logo, banner, etc.)
+/**
+ * @swagger
+ * /api/restaurants/image/{imageType}:
+ *   delete:
+ *     summary: Eliminar imagen del restaurante
+ *     description: Elimina una imagen específica del restaurante (logo, banner o background)
+ *     tags: [Restaurants]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: imageType
+ *         required: true
+ *         schema:
+ *           type: string
+ *           enum: [logo, banner, background]
+ *         description: Tipo de imagen a eliminar
+ *         example: "logo"
+ *     responses:
+ *       200:
+ *         description: Imagen eliminada exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "La imagen (logo) ha sido eliminada."
+ *                 data:
+ *                   $ref: '#/components/schemas/Restaurant'
+ *       400:
+ *         description: Tipo de imagen no válido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: Restaurante no encontrado o no hay imagen para eliminar
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 router.delete('/image/:imageType', authenticate, async (req, res) => {
   try {
     const { imageType } = req.params;

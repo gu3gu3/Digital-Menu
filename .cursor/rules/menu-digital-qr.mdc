@@ -248,3 +248,32 @@ try {
 **Regla 8.8: Fallback de localStorage.** En componentes de configuración, usar datos de localStorage como fallback si la API falla.
 
 **Regla 8.9: Endpoints Correctos.** Super Admin usa `/super-admin/auth/me`, no `/profile`. Verificar rutas en backend antes de migrar.
+
+## 9. ⭐ DOCUMENTACIÓN SWAGGER API (Junio 22 2025)
+
+### Documentación Completa de APIs
+**Regla 9.1: Swagger es la Fuente de Verdad.** Toda API debe estar documentada en Swagger con ejemplos funcionales. Acceso: `http://localhost:3001/api/docs`
+
+**Regla 9.2: Esquemas Consistentes.** Usar esquemas reutilizables para entidades principales (User, Restaurant, Category, Product, Order, etc.)
+
+**Regla 9.3: Ejemplos Reales.** Los ejemplos deben usar datos reales del proyecto (credenciales de Bella Vista, IDs válidos)
+
+**Regla 9.4: Seguridad Documentada.** Cada endpoint protegido debe especificar el esquema de seguridad correcto:
+- `bearerAuth`: Administradores de restaurante
+- `staffAuth`: Personal/meseros  
+- `superAdminAuth`: Super administradores
+
+### APIs Documentadas Completamente
+**Regla 9.5: Cobertura Total.** 56+ endpoints documentados organizados en 16 tags:
+- Autenticación (13 endpoints): Admin, Super Admin, Staff
+- Gestión de Personal (6 endpoints): CRUD completo de meseros
+- Gestión de Menú (10 endpoints): Categorías y productos
+- Gestión de Órdenes (10 endpoints): Estados, asignación, estadísticas
+- Gestión de Mesas (6 endpoints): CRUD y generación de QR
+- Gestión de Restaurantes (5 endpoints): Configuración y archivos
+- APIs Públicas (3+ endpoints): Menú público y seguimiento
+- Carrito de Compras (4+ endpoints): Flujo completo de compra
+
+**Regla 9.6: Validación Continua.** Todos los endpoints documentados deben estar probados y funcionando antes de commit
+
+**Regla 9.7: Mantenimiento de Documentación.** Cualquier cambio en APIs debe actualizarse inmediatamente en Swagger

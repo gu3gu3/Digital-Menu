@@ -466,12 +466,404 @@ const getAllQRCodes = async (req, res) => {
   }
 };
 
-// Routes
+// Routes with Swagger documentation
+
+/**
+ * @swagger
+ * /api/tables:
+ *   get:
+ *     summary: Obtener mesas del restaurante
+ *     description: Devuelve todas las mesas del restaurante con su estado actual
+ *     tags: [Tables]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Lista de mesas obtenida exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     mesas:
+ *                       type: array
+ *                       items:
+ *                         allOf:
+ *                           - $ref: '#/components/schemas/Table'
+ *                           - type: object
+ *                             properties:
+ *                               estaActiva:
+ *                                 type: boolean
+ *                                 description: Si la mesa tiene una sesión activa
+ *                               ordenesActivas:
+ *                                 type: integer
+ *                                 description: Número de órdenes activas en la mesa
+ *                     total:
+ *                       type: integer
+ *                       description: Total de mesas
+ *       401:
+ *         description: Token inválido
+ *       403:
+ *         description: Acceso denegado - solo administradores
+ */
 router.get('/', authenticate, requireAdmin, getTables);
+
+/**
+ * @swagger
+ * /api/tables:
+ *   post:
+ *     summary: Crear nueva mesa
+ *     description: Crea una nueva mesa y genera su código QR automáticamente
+ *     tags: [Tables]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - numero
+ *             properties:
+ *               numero:
+ *                 type: string
+ *                 minLength: 1
+ *                 maxLength: 10
+ *                 description: Número identificador de la mesa
+ *                 example: "1"
+ *               nombre:
+ *                 type: string
+ *                 maxLength: 50
+ *                 description: Nombre descriptivo de la mesa
+ *                 example: "Mesa Principal"
+ *               descripcion:
+ *                 type: string
+ *                 maxLength: 255
+ *                 description: Descripción adicional de la mesa
+ *                 example: "Mesa junto a la ventana"
+ *               capacidad:
+ *                 type: integer
+ *                 minimum: 1
+ *                 maximum: 20
+ *                 default: 4
+ *                 description: Capacidad máxima de personas
+ *                 example: 6
+ *           examples:
+ *             mesa_basica:
+ *               summary: Mesa básica
+ *               value:
+ *                 numero: "1"
+ *                 capacidad: 4
+ *             mesa_completa:
+ *               summary: Mesa con todos los datos
+ *               value:
+ *                 numero: "5"
+ *                 nombre: "Mesa VIP"
+ *                 descripcion: "Mesa privada para ocasiones especiales"
+ *                 capacidad: 8
+ *     responses:
+ *       201:
+ *         description: Mesa creada exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     mesa:
+ *                       $ref: '#/components/schemas/Table'
+ *                     qrUrl:
+ *                       type: string
+ *                       description: URL del menú para esta mesa
+ *                       example: "https://menuview.app/menu/bella-vista?mesa=1"
+ *                     qrCodeImage:
+ *                       type: string
+ *                       description: Imagen QR en formato Data URL
+ *                       example: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA..."
+ *                 message:
+ *                   type: string
+ *                   example: "Mesa creada exitosamente"
+ *       400:
+ *         description: Datos inválidos o límite de plan alcanzado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 error:
+ *                   type: string
+ *                   examples:
+ *                     limite_plan:
+ *                       value: "Has alcanzado el límite de 10 mesas para el plan Básico"
+ *                     numero_duplicado:
+ *                       value: "Ya existe una mesa con este número"
+ *                     validacion:
+ *                       value: "\"numero\" is required"
+ *       401:
+ *         description: Token inválido
+ *       403:
+ *         description: Acceso denegado - solo administradores
+ */
 router.post('/', authenticate, requireAdmin, createTable);
+
+/**
+ * @swagger
+ * /api/tables/{id}:
+ *   put:
+ *     summary: Actualizar mesa
+ *     description: Actualiza los datos de una mesa existente
+ *     tags: [Tables]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID de la mesa
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               numero:
+ *                 type: string
+ *                 minLength: 1
+ *                 maxLength: 10
+ *                 description: Nuevo número de la mesa
+ *               nombre:
+ *                 type: string
+ *                 maxLength: 50
+ *                 description: Nuevo nombre de la mesa
+ *               descripcion:
+ *                 type: string
+ *                 maxLength: 255
+ *                 description: Nueva descripción de la mesa
+ *               capacidad:
+ *                 type: integer
+ *                 minimum: 1
+ *                 maximum: 20
+ *                 description: Nueva capacidad de la mesa
+ *               activa:
+ *                 type: boolean
+ *                 description: Estado activo/inactivo de la mesa
+ *           examples:
+ *             actualizar_capacidad:
+ *               summary: Cambiar capacidad
+ *               value:
+ *                 capacidad: 8
+ *             desactivar_mesa:
+ *               summary: Desactivar mesa
+ *               value:
+ *                 activa: false
+ *     responses:
+ *       200:
+ *         description: Mesa actualizada exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   $ref: '#/components/schemas/Table'
+ *                 message:
+ *                   type: string
+ *                   example: "Mesa actualizada exitosamente"
+ *       400:
+ *         description: Datos inválidos o número duplicado
+ *       404:
+ *         description: Mesa no encontrada
+ *       401:
+ *         description: Token inválido
+ *       403:
+ *         description: Acceso denegado - solo administradores
+ */
 router.put('/:id', authenticate, requireAdmin, updateTable);
+
+/**
+ * @swagger
+ * /api/tables/{id}:
+ *   delete:
+ *     summary: Eliminar mesa
+ *     description: Elimina una mesa del sistema (solo si no tiene órdenes activas)
+ *     tags: [Tables]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID de la mesa
+ *     responses:
+ *       200:
+ *         description: Mesa eliminada exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Mesa eliminada exitosamente"
+ *       400:
+ *         description: Mesa tiene órdenes activas
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 error:
+ *                   type: string
+ *                   example: "No se puede eliminar una mesa con órdenes activas"
+ *       404:
+ *         description: Mesa no encontrada
+ *       401:
+ *         description: Token inválido
+ *       403:
+ *         description: Acceso denegado - solo administradores
+ */
 router.delete('/:id', authenticate, requireAdmin, deleteTable);
+
+/**
+ * @swagger
+ * /api/tables/{id}/qr:
+ *   get:
+ *     summary: Obtener código QR de mesa
+ *     description: Genera y devuelve el código QR para una mesa específica
+ *     tags: [Tables]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID de la mesa
+ *     responses:
+ *       200:
+ *         description: Código QR generado exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     qrUrl:
+ *                       type: string
+ *                       description: URL del menú para esta mesa
+ *                       example: "https://menuview.app/menu/bella-vista?mesa=1"
+ *                     qrCodeImage:
+ *                       type: string
+ *                       description: Imagen QR en formato Data URL (base64)
+ *                       example: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA..."
+ *       404:
+ *         description: Mesa no encontrada
+ *       401:
+ *         description: Token inválido
+ *       403:
+ *         description: Acceso denegado - solo administradores
+ *       500:
+ *         description: Error generando código QR
+ */
 router.get('/:id/qr', authenticate, requireAdmin, getTableQR);
+
+/**
+ * @swagger
+ * /api/tables/qr/all:
+ *   get:
+ *     summary: Obtener códigos QR de todas las mesas
+ *     description: Genera y devuelve los códigos QR para todas las mesas del restaurante
+ *     tags: [Tables]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Códigos QR generados exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     restaurant:
+ *                       type: object
+ *                       properties:
+ *                         nombre:
+ *                           type: string
+ *                           example: "Bella Vista"
+ *                     qrCodes:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           mesa:
+ *                             type: object
+ *                             properties:
+ *                               id:
+ *                                 type: string
+ *                               numero:
+ *                                 type: string
+ *                               nombre:
+ *                                 type: string
+ *                           qrUrl:
+ *                             type: string
+ *                             description: URL del menú para esta mesa
+ *                           qrCodeImage:
+ *                             type: string
+ *                             description: Imagen QR en formato Data URL
+ *                           error:
+ *                             type: string
+ *                             description: Error si no se pudo generar el QR
+ *                     total:
+ *                       type: integer
+ *                       description: Total de códigos QR generados
+ *       404:
+ *         description: No se encontraron mesas
+ *       401:
+ *         description: Token inválido
+ *       403:
+ *         description: Acceso denegado - solo administradores
+ */
 router.get('/qr/all', authenticate, requireAdmin, getAllQRCodes);
 
 module.exports = router; 

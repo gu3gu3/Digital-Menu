@@ -706,16 +706,479 @@ const callWaiter = async (req, res) => {
   }
 };
 
-// Routes
+// Routes with Swagger documentation
+
+/**
+ * @swagger
+ * /api/orders:
+ *   get:
+ *     summary: Obtener órdenes del restaurante
+ *     description: Devuelve todas las órdenes del restaurante con filtros y paginación
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *       - staffAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Número de página
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Elementos por página
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [PENDIENTE, EN_PREPARACION, LISTO, ENTREGADO, CANCELADO]
+ *         description: Filtrar por estado
+ *       - in: query
+ *         name: mesaId
+ *         schema:
+ *           type: string
+ *         description: Filtrar por mesa
+ *       - in: query
+ *         name: meseroId
+ *         schema:
+ *           type: string
+ *         description: Filtrar por mesero asignado
+ *       - in: query
+ *         name: fecha
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Filtrar por fecha (YYYY-MM-DD)
+ *     responses:
+ *       200:
+ *         description: Lista de órdenes obtenida exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Order'
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     page:
+ *                       type: integer
+ *                     limit:
+ *                       type: integer
+ *                     total:
+ *                       type: integer
+ *                     pages:
+ *                       type: integer
+ *       401:
+ *         description: Token inválido
+ *       403:
+ *         description: Acceso denegado - solo personal autorizado
+ */
 router.get('/', authenticate, requireStaff, getOrders);
+
+/**
+ * @swagger
+ * /api/orders/stats:
+ *   get:
+ *     summary: Obtener estadísticas de órdenes
+ *     description: Devuelve estadísticas de órdenes del restaurante
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *       - staffAuth: []
+ *     responses:
+ *       200:
+ *         description: Estadísticas obtenidas exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     totalOrdenes:
+ *                       type: integer
+ *                       description: Total de órdenes
+ *                     ordenesPendientes:
+ *                       type: integer
+ *                       description: Órdenes pendientes
+ *                     ordenesEnPreparacion:
+ *                       type: integer
+ *                       description: Órdenes en preparación
+ *                     ordenesListas:
+ *                       type: integer
+ *                       description: Órdenes listas
+ *                     ventasHoy:
+ *                       type: number
+ *                       description: Ventas del día actual
+ *                     ventasMes:
+ *                       type: number
+ *                       description: Ventas del mes actual
+ *       401:
+ *         description: Token inválido
+ *       403:
+ *         description: Acceso denegado - solo personal autorizado
+ */
 router.get('/stats', authenticate, requireStaff, getOrderStats);
+
+/**
+ * @swagger
+ * /api/orders/recent:
+ *   get:
+ *     summary: Obtener órdenes recientes
+ *     description: Devuelve las órdenes más recientes del restaurante
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *       - staffAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *           maximum: 50
+ *         description: Número máximo de órdenes a devolver
+ *     responses:
+ *       200:
+ *         description: Órdenes recientes obtenidas exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Order'
+ *       401:
+ *         description: Token inválido
+ *       403:
+ *         description: Acceso denegado - solo personal autorizado
+ */
 router.get('/recent', authenticate, requireStaff, getRecentOrders);
+
+/**
+ * @swagger
+ * /api/orders/mesa/{mesaId}:
+ *   get:
+ *     summary: Obtener órdenes por mesa
+ *     description: Devuelve todas las órdenes de una mesa específica
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *       - staffAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: mesaId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID de la mesa
+ *     responses:
+ *       200:
+ *         description: Órdenes de la mesa obtenidas exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Order'
+ *       401:
+ *         description: Token inválido
+ *       403:
+ *         description: Acceso denegado - solo personal autorizado
+ */
 router.get('/mesa/:mesaId', authenticate, requireStaff, getOrdersByMesa);
+
+/**
+ * @swagger
+ * /api/orders/{id}:
+ *   get:
+ *     summary: Obtener orden por ID
+ *     description: Devuelve los detalles de una orden específica
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *       - staffAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID de la orden
+ *     responses:
+ *       200:
+ *         description: Orden encontrada
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   $ref: '#/components/schemas/Order'
+ *       404:
+ *         description: Orden no encontrada
+ *       401:
+ *         description: Token inválido
+ *       403:
+ *         description: Acceso denegado - solo personal autorizado
+ */
 router.get('/:id', authenticate, requireStaff, getOrder);
+
+/**
+ * @swagger
+ * /api/orders/{id}/status:
+ *   put:
+ *     summary: Actualizar estado de la orden
+ *     description: Cambia el estado de una orden específica
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *       - staffAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID de la orden
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - status
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 enum: [PENDIENTE, EN_PREPARACION, LISTO, ENTREGADO, CANCELADO]
+ *                 description: Nuevo estado de la orden
+ *                 example: "EN_PREPARACION"
+ *           examples:
+ *             mark_ready:
+ *               summary: Marcar como listo
+ *               value:
+ *                 status: "LISTO"
+ *             mark_delivered:
+ *               summary: Marcar como entregado
+ *               value:
+ *                 status: "ENTREGADO"
+ *     responses:
+ *       200:
+ *         description: Estado actualizado exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Estado de la orden actualizado exitosamente"
+ *                 data:
+ *                   $ref: '#/components/schemas/Order'
+ *       400:
+ *         description: Estado inválido
+ *       404:
+ *         description: Orden no encontrada
+ *       401:
+ *         description: Token inválido
+ *       403:
+ *         description: Acceso denegado - solo personal autorizado
+ */
 router.put('/:id/status', authenticate, requireStaff, updateOrderStatus);
+
+/**
+ * @swagger
+ * /api/orders/{id}/assign:
+ *   put:
+ *     summary: Asignar mesero a la orden
+ *     description: Asigna un mesero específico a una orden
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *       - staffAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID de la orden
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - meseroId
+ *             properties:
+ *               meseroId:
+ *                 type: string
+ *                 description: ID del mesero a asignar
+ *                 example: "cm123abc456def"
+ *     responses:
+ *       200:
+ *         description: Mesero asignado exitosamente
+ *       400:
+ *         description: Datos inválidos
+ *       404:
+ *         description: Orden o mesero no encontrado
+ *       401:
+ *         description: Token inválido
+ *       403:
+ *         description: Acceso denegado - solo personal autorizado
+ */
 router.put('/:id/assign', authenticate, requireStaff, assignMeseroToOrder);
+
+/**
+ * @swagger
+ * /api/orders/{id}/take:
+ *   put:
+ *     summary: Tomar orden (auto-asignarse)
+ *     description: Permite al mesero autenticado asignarse a sí mismo una orden
+ *     tags: [Orders]
+ *     security:
+ *       - staffAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID de la orden
+ *     responses:
+ *       200:
+ *         description: Orden tomada exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Orden asignada exitosamente"
+ *                 data:
+ *                   $ref: '#/components/schemas/Order'
+ *       404:
+ *         description: Orden no encontrada
+ *       409:
+ *         description: Orden ya asignada a otro mesero
+ *       401:
+ *         description: Token inválido
+ *       403:
+ *         description: Acceso denegado - solo meseros
+ */
 router.put('/:id/take', authenticate, requireStaff, takeOrder);
+
+/**
+ * @swagger
+ * /api/orders/{id}:
+ *   delete:
+ *     summary: Eliminar orden
+ *     description: Elimina una orden del sistema (solo administradores)
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID de la orden
+ *     responses:
+ *       200:
+ *         description: Orden eliminada exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Orden eliminada exitosamente"
+ *       404:
+ *         description: Orden no encontrada
+ *       401:
+ *         description: Token inválido
+ *       403:
+ *         description: Acceso denegado - solo personal autorizado
+ */
 router.delete('/:id', authenticate, requireStaff, deleteOrder);
+
+/**
+ * @swagger
+ * /api/orders/{id}/call:
+ *   post:
+ *     summary: Llamar al mesero
+ *     description: Permite a un cliente solicitar la atención de un mesero (endpoint público)
+ *     tags: [Orders]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID de la orden desde la cual se solicita atención
+ *     responses:
+ *       200:
+ *         description: Notificación enviada exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Se ha notificado al personal."
+ *       404:
+ *         description: Orden no encontrada
+ *       500:
+ *         description: Error interno del servidor
+ */
 router.post('/:id/call', callWaiter);
 
 module.exports = router; 

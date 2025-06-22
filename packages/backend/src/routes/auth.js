@@ -931,14 +931,314 @@ const updateProfile = async (req, res) => {
   }
 };
 
-// Routes
+// Routes with Swagger documentation
+
+/**
+ * @swagger
+ * /api/auth/login:
+ *   post:
+ *     summary: Iniciar sesión de administrador de restaurante
+ *     description: Autentica a un administrador de restaurante y devuelve un token JWT
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/LoginRequest'
+ *           examples:
+ *             admin_login:
+ *               summary: Login de administrador
+ *               value:
+ *                 email: "admin@bellavista.com"
+ *                 password: "demo123456"
+ *                 role: "ADMINISTRADOR"
+ *     responses:
+ *       200:
+ *         description: Login exitoso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/LoginResponse'
+ *       400:
+ *         description: Datos inválidos o rol incorrecto
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       401:
+ *         description: Credenciales incorrectas
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       403:
+ *         description: Email no verificado o cuenta inactiva
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 router.post('/login', login);
+
+/**
+ * @swagger
+ * /api/auth/register:
+ *   post:
+ *     summary: Registrar nuevo administrador de restaurante
+ *     description: Crea una nueva cuenta de administrador con su restaurante asociado
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/RegisterRequest'
+ *           examples:
+ *             new_restaurant:
+ *               summary: Registro completo
+ *               value:
+ *                 email: "admin@nuevorestaurante.com"
+ *                 password: "password123"
+ *                 nombre: "Juan"
+ *                 apellido: "Pérez"
+ *                 telefono: "+1234567890"
+ *                 restaurante:
+ *                   nombre: "Nuevo Restaurante"
+ *                   descripcion: "Cocina tradicional"
+ *                   telefono: "+1234567890"
+ *                   direccion: "Calle Principal 123"
+ *                   email: "contacto@nuevorestaurante.com"
+ *     responses:
+ *       201:
+ *         description: Registro exitoso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Registro exitoso. Se ha enviado un email de verificación."
+ *       400:
+ *         description: Datos inválidos o email ya existe
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 router.post('/register', register);
+
+/**
+ * @swagger
+ * /api/auth/verify-email:
+ *   get:
+ *     summary: Verificar email de usuario
+ *     description: Verifica el email del usuario usando el token enviado por correo
+ *     tags: [Auth]
+ *     parameters:
+ *       - in: query
+ *         name: token
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Token de verificación enviado por email
+ *     responses:
+ *       200:
+ *         description: Email verificado exitosamente
+ *       400:
+ *         description: Token inválido o expirado
+ */
 router.get('/verify-email', verifyEmail);
+
+/**
+ * @swagger
+ * /api/auth/resend-verification:
+ *   post:
+ *     summary: Reenviar email de verificación
+ *     description: Reenvía el email de verificación al usuario
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: Email del usuario
+ *                 example: "admin@restaurant.com"
+ *     responses:
+ *       200:
+ *         description: Email de verificación reenviado
+ *       404:
+ *         description: Usuario no encontrado
+ */
 router.post('/resend-verification', authenticate, resendVerification);
+
+/**
+ * @swagger
+ * /api/auth/me:
+ *   get:
+ *     summary: Obtener perfil del usuario autenticado
+ *     description: Devuelve la información del usuario y restaurante autenticado
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Perfil obtenido exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     user:
+ *                       $ref: '#/components/schemas/UserData'
+ *       401:
+ *         description: Token inválido o expirado
+ *       404:
+ *         description: Usuario no encontrado
+ */
 router.get('/me', authenticate, getMe);
+
+/**
+ * @swagger
+ * /api/auth/logout:
+ *   post:
+ *     summary: Cerrar sesión
+ *     description: Invalida el token de autenticación actual
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Sesión cerrada exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Logout exitoso"
+ */
 router.post('/logout', authenticate, logout);
+
+/**
+ * @swagger
+ * /api/auth/change-password:
+ *   put:
+ *     summary: Cambiar contraseña
+ *     description: Permite al usuario cambiar su contraseña actual
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - currentPassword
+ *               - newPassword
+ *             properties:
+ *               currentPassword:
+ *                 type: string
+ *                 description: Contraseña actual
+ *                 example: "oldpassword123"
+ *               newPassword:
+ *                 type: string
+ *                 minLength: 6
+ *                 description: Nueva contraseña
+ *                 example: "newpassword123"
+ *     responses:
+ *       200:
+ *         description: Contraseña cambiada exitosamente
+ *       400:
+ *         description: Datos inválidos o contraseña actual incorrecta
+ *       401:
+ *         description: Token inválido
+ */
 router.put('/change-password', authenticate, changePassword);
+
+/**
+ * @swagger
+ * /api/auth/profile:
+ *   put:
+ *     summary: Actualizar perfil del usuario
+ *     description: Permite actualizar la información personal del usuario autenticado
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               nombre:
+ *                 type: string
+ *                 minLength: 2
+ *                 description: Nombre del usuario
+ *                 example: "Juan Carlos"
+ *               apellido:
+ *                 type: string
+ *                 minLength: 2
+ *                 description: Apellido del usuario
+ *                 example: "Pérez González"
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: Email del usuario
+ *                 example: "admin@restaurant.com"
+ *               telefono:
+ *                 type: string
+ *                 description: Teléfono del usuario
+ *                 example: "+1234567890"
+ *     responses:
+ *       200:
+ *         description: Perfil actualizado exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Perfil actualizado exitosamente"
+ *                 data:
+ *                   $ref: '#/components/schemas/UserData'
+ *       400:
+ *         description: Datos inválidos
+ *       401:
+ *         description: Token inválido
+ *       409:
+ *         description: Email ya existe
+ */
 router.put('/profile', authenticate, updateProfile);
 
 module.exports = router; 

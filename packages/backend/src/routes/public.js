@@ -15,9 +15,65 @@ const buildAbsoluteUrl = (path) => {
   return `${baseUrl}${cleanPath}`;
 };
 
-// @desc    Get restaurant by slug (public)
-// @route   GET /api/public/restaurant/:slug
-// @access  Public
+/**
+ * @swagger
+ * /api/public/restaurant/{slug}:
+ *   get:
+ *     summary: Obtener restaurante por slug (público)
+ *     description: Devuelve información completa del restaurante incluyendo menú y mesas para acceso público
+ *     tags: [Public]
+ *     parameters:
+ *       - in: path
+ *         name: slug
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Slug único del restaurante
+ *         example: "bella-vista"
+ *     responses:
+ *       200:
+ *         description: Restaurante obtenido exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     restaurante:
+ *                       $ref: '#/components/schemas/Restaurant'
+ *                     categorias:
+ *                       type: array
+ *                       items:
+ *                         allOf:
+ *                           - $ref: '#/components/schemas/Category'
+ *                           - type: object
+ *                             properties:
+ *                               productos:
+ *                                 type: array
+ *                                 items:
+ *                                   $ref: '#/components/schemas/Product'
+ *                     mesas:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/Table'
+ *       404:
+ *         description: Restaurante no encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 const getRestaurantBySlug = async (req, res) => {
   try {
     const { slug } = req.params;
@@ -216,6 +272,7 @@ const checkSlugAvailability = async (req, res) => {
 const getOrdenStatus = async (req, res) => {
   try {
     const { ordenId } = req.params;
+    const { restaurantSlug } = req.query;
 
     const orden = await prisma.orden.findUnique({
       where: {
@@ -224,6 +281,12 @@ const getOrdenStatus = async (req, res) => {
       include: {
         mesa: true,
         sesion: true,
+        restaurante: {
+          select: {
+            slug: true,
+            nombre: true
+          }
+        },
         items: {
           include: {
             producto: {
@@ -238,6 +301,14 @@ const getOrdenStatus = async (req, res) => {
     });
 
     if (!orden) {
+      return res.status(404).json({
+        success: false,
+        error: 'Orden no encontrada'
+      });
+    }
+
+    // Validar que la orden pertenece al restaurante correcto (si se proporciona el slug)
+    if (restaurantSlug && orden.restaurante.slug !== restaurantSlug) {
       return res.status(404).json({
         success: false,
         error: 'Orden no encontrada'

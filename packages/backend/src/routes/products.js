@@ -634,16 +634,354 @@ const toggleProductAvailability = async (req, res) => {
   }
 };
 
-// Routes
+// Routes with Swagger documentation
+
+/**
+ * @swagger
+ * /api/products:
+ *   get:
+ *     summary: Obtener productos del restaurante
+ *     description: Devuelve todos los productos del restaurante con paginación y filtros
+ *     tags: [Products]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Número de página
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Elementos por página
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Buscar por nombre o descripción
+ *       - in: query
+ *         name: categoriaId
+ *         schema:
+ *           type: string
+ *         description: Filtrar por categoría
+ *       - in: query
+ *         name: disponible
+ *         schema:
+ *           type: boolean
+ *         description: Filtrar por disponibilidad
+ *       - in: query
+ *         name: activo
+ *         schema:
+ *           type: boolean
+ *         description: Filtrar por estado activo
+ *     responses:
+ *       200:
+ *         description: Lista de productos obtenida exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Product'
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     page:
+ *                       type: integer
+ *                     limit:
+ *                       type: integer
+ *                     total:
+ *                       type: integer
+ *                     pages:
+ *                       type: integer
+ *       401:
+ *         description: Token inválido
+ *       403:
+ *         description: Acceso denegado - solo administradores
+ *   post:
+ *     summary: Crear nuevo producto
+ *     description: Crea un nuevo producto para el restaurante respetando límites del plan
+ *     tags: [Products]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - nombre
+ *               - precio
+ *               - categoriaId
+ *             properties:
+ *               nombre:
+ *                 type: string
+ *                 minLength: 2
+ *                 maxLength: 100
+ *                 description: Nombre del producto
+ *                 example: "Hamburguesa Clásica"
+ *               descripcion:
+ *                 type: string
+ *                 maxLength: 500
+ *                 description: Descripción del producto
+ *                 example: "Hamburguesa con carne, lechuga, tomate y queso"
+ *               precio:
+ *                 type: number
+ *                 minimum: 0
+ *                 description: Precio del producto
+ *                 example: 15.99
+ *               categoriaId:
+ *                 type: string
+ *                 description: ID de la categoría
+ *                 example: "cmc6y8pa200011cahfgtlekcs"
+ *               imagen:
+ *                 type: string
+ *                 format: binary
+ *                 description: Imagen del producto (opcional)
+ *               activo:
+ *                 type: boolean
+ *                 default: true
+ *                 description: Estado activo del producto
+ *               disponible:
+ *                 type: boolean
+ *                 default: true
+ *                 description: Disponibilidad del producto
+ *     responses:
+ *       201:
+ *         description: Producto creado exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Producto creado exitosamente"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     producto:
+ *                       $ref: '#/components/schemas/Product'
+ *       400:
+ *         description: Datos inválidos o límite de plan alcanzado
+ *       404:
+ *         description: Categoría no encontrada
+ *       409:
+ *         description: Ya existe un producto con ese nombre en la categoría
+ *       401:
+ *         description: Token inválido
+ *       403:
+ *         description: Acceso denegado - solo administradores
+ */
 router.route('/')
   .get(authenticate, requireAdmin, getProducts)
   .post(authenticate, requireAdmin, upload.single('imagen'), createProduct);
 
+/**
+ * @swagger
+ * /api/products/{id}:
+ *   get:
+ *     summary: Obtener producto por ID
+ *     description: Devuelve la información de un producto específico
+ *     tags: [Products]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID del producto
+ *     responses:
+ *       200:
+ *         description: Producto encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   $ref: '#/components/schemas/Product'
+ *       404:
+ *         description: Producto no encontrado
+ *       401:
+ *         description: Token inválido
+ *       403:
+ *         description: Acceso denegado - solo administradores
+ *   put:
+ *     summary: Actualizar producto
+ *     description: Actualiza un producto existente del restaurante
+ *     tags: [Products]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID del producto
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               nombre:
+ *                 type: string
+ *                 minLength: 2
+ *                 maxLength: 100
+ *                 description: Nombre del producto
+ *               descripcion:
+ *                 type: string
+ *                 maxLength: 500
+ *                 description: Descripción del producto
+ *               precio:
+ *                 type: number
+ *                 minimum: 0
+ *                 description: Precio del producto
+ *               categoriaId:
+ *                 type: string
+ *                 description: ID de la categoría
+ *               imagen:
+ *                 type: string
+ *                 format: binary
+ *                 description: Nueva imagen del producto (opcional)
+ *               activo:
+ *                 type: boolean
+ *                 description: Estado activo del producto
+ *               disponible:
+ *                 type: boolean
+ *                 description: Disponibilidad del producto
+ *     responses:
+ *       200:
+ *         description: Producto actualizado exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Producto actualizado exitosamente"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     producto:
+ *                       $ref: '#/components/schemas/Product'
+ *       400:
+ *         description: Datos inválidos
+ *       404:
+ *         description: Producto o categoría no encontrada
+ *       409:
+ *         description: Ya existe un producto con ese nombre en la categoría
+ *       401:
+ *         description: Token inválido
+ *       403:
+ *         description: Acceso denegado - solo administradores
+ *   delete:
+ *     summary: Eliminar producto
+ *     description: Elimina un producto del restaurante o lo marca como no disponible si tiene órdenes
+ *     tags: [Products]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID del producto
+ *     responses:
+ *       200:
+ *         description: Producto eliminado o marcado como no disponible
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Producto eliminado exitosamente"
+ *       404:
+ *         description: Producto no encontrado
+ *       401:
+ *         description: Token inválido
+ *       403:
+ *         description: Acceso denegado - solo administradores
+ */
 router.route('/:id')
   .get(authenticate, requireAdmin, getProductById)
   .put(authenticate, requireAdmin, upload.single('imagen'), updateProduct)
   .delete(authenticate, requireAdmin, deleteProduct);
 
+/**
+ * @swagger
+ * /api/products/{id}/toggle-availability:
+ *   patch:
+ *     summary: Alternar disponibilidad del producto
+ *     description: Cambia el estado de disponibilidad de un producto (disponible/no disponible)
+ *     tags: [Products]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID del producto
+ *     responses:
+ *       200:
+ *         description: Disponibilidad del producto actualizada
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Producto marcado como disponible"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     producto:
+ *                       $ref: '#/components/schemas/Product'
+ *       404:
+ *         description: Producto no encontrado
+ *       401:
+ *         description: Token inválido
+ *       403:
+ *         description: Acceso denegado - solo administradores
+ */
 router.route('/:id/toggle-availability')
   .patch(authenticate, requireAdmin, toggleProductAvailability);
 

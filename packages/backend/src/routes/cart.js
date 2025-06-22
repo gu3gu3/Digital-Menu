@@ -109,6 +109,41 @@ const calculateTotals = (items) => {
   return { subtotal, total: subtotal }; // Simplified totals
 };
 
+/**
+ * @swagger
+ * /api/cart/{sesionId}:
+ *   get:
+ *     summary: Obtener carrito de compras
+ *     description: Obtiene o crea un carrito de compras para la sesión especificada
+ *     tags: [Cart]
+ *     parameters:
+ *       - in: path
+ *         name: sesionId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID de la sesión de mesa
+ *         example: "clm123456789"
+ *     responses:
+ *       200:
+ *         description: Carrito obtenido exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   $ref: '#/components/schemas/Order'
+ *       400:
+ *         description: Sesión inválida o error en la solicitud
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 router.get('/:sesionId', async (req, res) => {
   try {
     const cart = await findOrCreateCart(req.params.sesionId);
@@ -198,6 +233,63 @@ router.put('/:sesionId/item/:itemId', async (req, res) => {
 });
 
 
+/**
+ * @swagger
+ * /api/cart/{sesionId}/confirm:
+ *   post:
+ *     summary: Confirmar orden
+ *     description: Confirma el carrito y lo convierte en una orden enviada al restaurante
+ *     tags: [Cart]
+ *     parameters:
+ *       - in: path
+ *         name: sesionId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID de la sesión de mesa
+ *         example: "clm123456789"
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               notas:
+ *                 type: string
+ *                 description: Notas adicionales para la orden
+ *                 example: "Sin cebolla en las hamburguesas"
+ *               nombreCliente:
+ *                 type: string
+ *                 description: Nombre del cliente
+ *                 example: "Juan Pérez"
+ *               nombreClienteFactura:
+ *                 type: string
+ *                 description: Nombre para facturación
+ *                 example: "Juan Carlos Pérez"
+ *     responses:
+ *       200:
+ *         description: Orden confirmada exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     orden:
+ *                       $ref: '#/components/schemas/Order'
+ *       400:
+ *         description: Carrito vacío o error en la confirmación
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 router.post('/:sesionId/confirm', async (req, res) => {
   const { sesionId } = req.params;
   const { notas, nombreCliente, nombreClienteFactura } = req.body;
