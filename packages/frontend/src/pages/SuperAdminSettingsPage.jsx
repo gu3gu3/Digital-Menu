@@ -11,7 +11,6 @@ import {
   ArrowLeftIcon
 } from '@heroicons/react/24/outline'
 import { superAdminAuth } from '../services/superAdminService'
-import API_BASE_URL from '../config/api'
 import { useForm } from 'react-hook-form'
 import { Toaster, toast } from 'sonner'
 
@@ -50,7 +49,7 @@ const SuperAdminSettingsPage = () => {
   const loadUserData = async () => {
     try {
       const token = localStorage.getItem('superAdminToken')
-      const response = await fetch(`${API_BASE_URL}/super-admin/auth/profile`, {
+      const response = await fetch(`/api/super-admin/auth/profile`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       const data = await response.json()
@@ -77,7 +76,7 @@ const SuperAdminSettingsPage = () => {
 
     try {
       const token = localStorage.getItem('superAdminToken')
-      const response = await fetch(`${API_BASE_URL}/super-admin/auth/profile`, {
+      const response = await fetch(`/api/super-admin/auth/profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -132,7 +131,7 @@ const SuperAdminSettingsPage = () => {
 
     try {
       const token = localStorage.getItem('superAdminToken')
-      const response = await fetch(`${API_BASE_URL}/super-admin/auth/change-password`, {
+      const response = await fetch(`/api/super-admin/auth/change-password`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

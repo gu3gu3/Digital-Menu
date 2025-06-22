@@ -8,7 +8,6 @@ import {
   XMarkIcon,
   CreditCardIcon
 } from '@heroicons/react/24/outline';
-import API_BASE_URL from '../config/api';
 
 const OrderTracker = ({ ordenId, restauranteSlug, onClose }) => {
   const [orden, setOrden] = useState(null);
@@ -106,7 +105,7 @@ const OrderTracker = ({ ordenId, restauranteSlug, onClose }) => {
     const fetchOrder = async () => {
     try {
       setLoading(true);
-        const response = await fetch(`${API_BASE_URL}/public/orders/${ordenId}?restaurantSlug=${restauranteSlug}`);
+        const response = await fetch(`/api/public/orders/${ordenId}?restaurantSlug=${restauranteSlug}`);
         if (!response.ok) {
           const errorData = await response.json();
           throw new Error(errorData.error || 'No se pudo obtener la orden.');

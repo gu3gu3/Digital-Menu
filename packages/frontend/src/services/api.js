@@ -1,7 +1,5 @@
-import API_BASE_URL from '../config/api';
-
 const apiRequest = async (path, method = 'GET', body = null, options = {}) => {
-  const url = `${API_BASE_URL}/api${path}`;
+  const url = `/api${path}`;
   const config = {
     method,
     headers: {

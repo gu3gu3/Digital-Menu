@@ -9,7 +9,6 @@ import {
   ArrowDownTrayIcon
 } from '@heroicons/react/24/outline'
 import MenuImportModal from '../components/MenuImportModal'
-import API_BASE_URL from '../config/api'
 
 const AdminMenuPage = () => {
   const [categorias, setCategorias] = useState([])
@@ -326,19 +325,6 @@ const AdminMenuPage = () => {
     }
   }
 
-  const getImageUrl = (url) => {
-    if (!url) return '';
-    // Si la URL ya es absoluta (comienza con http), la usamos directamente.
-    // De lo contrario, la construimos con la base de la API.
-    if (url.startsWith('http')) {
-      return url;
-    }
-    // Asumimos que la URL base de la API y donde se sirven las imágenes comparten dominio.
-    // Reemplazamos `/api` por la raíz para construir la URL de la imagen.
-    const baseUrl = API_BASE_URL.replace('/api', '');
-    return `${baseUrl}${url}`;
-  };
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -540,7 +526,7 @@ const AdminMenuPage = () => {
                       
                       {producto.imagenUrl && (
                         <img
-                          src={getImageUrl(producto.imagenUrl)}
+                          src={producto.imagenUrl}
                           alt={producto.nombre}
                           className={`w-16 h-16 object-cover rounded-md mr-4 ${!producto.disponible ? 'grayscale' : ''}`}
                         />

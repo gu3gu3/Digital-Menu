@@ -71,17 +71,23 @@ const AdminRestaurantPage = () => {
   
   const handleImageUpload = async (imageType, file) => {
     if (!file) return;
-    toast.info(`Subiendo imagen de ${imageType}...`);
+    toast.info(`Subiendo imagen...`);
+    
+    // The backend route expects 'backgroundImage' but our component uses 'background'
+    const fieldName = imageType === 'background' ? 'backgroundImage' : imageType;
+
     try {
       const formData = new FormData();
-      formData.append('file', file);
-      formData.append('type', imageType);
+      // The key here must match what multer expects on the backend
+      formData.append(fieldName, file);
 
       await restaurantService.uploadRestaurantFiles(formData);
-      toast.success(`Imagen de ${imageType} actualizada.`);
+      
+      toast.success(`Imagen actualizada.`);
       await fetchRestaurantData();
     } catch (error) {
-      toast.error(error.message || `Error al subir la imagen.`);
+      const errorMessage = error.response?.data?.error || error.message || `Error al subir la imagen.`;
+      toast.error(errorMessage);
     }
   };
 

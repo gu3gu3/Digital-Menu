@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react'
 import { PlayIcon, PhoneIcon, MapPinIcon, ArrowTopRightOnSquareIcon } from '@heroicons/react/24/solid'
 import { PlusIcon, MinusIcon, ShoppingCartIcon } from '@heroicons/react/24/outline'
 import { Link } from 'react-router-dom'
-import API_BASE_URL from '../../config/api'
 
 const DemoSection = () => {
   const [menuData, setMenuData] = useState(null)
@@ -14,7 +13,7 @@ const DemoSection = () => {
   useEffect(() => {
     const fetchDemoMenu = async () => {
     try {
-        const response = await fetch(`${API_BASE_URL}/menu/demo`)
+        const response = await fetch(`/api/public/menu/demo`)
       const data = await response.json()
       
       if (data.success) {

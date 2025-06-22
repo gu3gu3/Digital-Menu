@@ -13,7 +13,6 @@ import {
 } from '@heroicons/react/24/outline';
 import OrderTracker from './OrderTracker';
 import menuService from '../services/menuService';
-import API_BASE_URL from '../config/api';
 
 const OrderStatusBanner = ({ ordenId, restauranteSlug, onClearOrder, tableNumber }) => {
   const [orden, setOrden] = useState(null);
@@ -112,7 +111,7 @@ const OrderStatusBanner = ({ ordenId, restauranteSlug, onClearOrder, tableNumber
 
     const fetchOrder = async () => {
     try {
-        const response = await fetch(`${API_BASE_URL}/public/orders/${ordenId}?restaurantSlug=${restauranteSlug}`);
+        const response = await fetch(`/api/public/orders/${ordenId}?restaurantSlug=${restauranteSlug}`);
         if (!response.ok) {
           throw new Error('No se pudo obtener el estado de la orden');
         }
@@ -129,6 +128,22 @@ const OrderStatusBanner = ({ ordenId, restauranteSlug, onClearOrder, tableNumber
 
     return () => clearInterval(interval);
   }, [ordenId, restauranteSlug]);
+
+  const fetchOrden = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`/api/public/orders/${ordenId}?restaurantSlug=${restauranteSlug}`);
+      if (!response.ok) {
+        throw new Error('No se pudo obtener el estado de la orden');
+      }
+      const data = await response.json();
+      setOrden(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const formatCurrency = (amount) => {
     return `C$ ${parseFloat(amount).toFixed(2)}`;

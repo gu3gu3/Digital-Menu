@@ -9,7 +9,6 @@ import {
   PlusIcon,
   EyeIcon
 } from '@heroicons/react/24/outline'
-import API_BASE_URL from '../config/api'
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState({
@@ -38,7 +37,7 @@ const AdminDashboard = () => {
       const token = localStorage.getItem('adminToken')
       
       // Cargar estadísticas generales
-        const statsResponse = await fetch(`${API_BASE_URL}/admin/stats`, {
+        const statsResponse = await fetch(`/api/admin/stats`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -50,7 +49,7 @@ const AdminDashboard = () => {
       }
 
       // Cargar órdenes recientes
-        const ordersResponse = await fetch(`${API_BASE_URL}/orders?limit=5`, {
+        const ordersResponse = await fetch(`/api/orders?limit=5`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }

@@ -9,7 +9,6 @@ import {
   CheckCircleIcon,
   XMarkIcon
 } from '@heroicons/react/24/outline'
-import { API_ENDPOINTS, getImageUrl } from '../config/api'
 import menuService from '../services/menuService'
 import OrderStatusBanner from '../components/OrderStatusBanner'
 import { formatMenuPrice, formatOrderTotal } from '../utils/currencyUtils'
@@ -385,7 +384,7 @@ const PublicMenuPage = () => {
                           
                           {producto.imagenUrl && (
                             <img
-                              src={getImageUrl(producto.imagenUrl)}
+                              src={producto.imagenUrl}
                               alt={producto.nombre}
                               className="w-20 h-20 object-cover rounded-lg ml-4"
                             />

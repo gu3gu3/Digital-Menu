@@ -10,7 +10,6 @@ import {
   UsersIcon,
   XMarkIcon
 } from '@heroicons/react/24/outline'
-import { API_ENDPOINTS } from '../config/api'
 import { Toaster, toast } from 'sonner'
 
 const AdminTablesPage = () => {
@@ -41,7 +40,7 @@ const AdminTablesPage = () => {
     setLoading(true)
     try {
       const token = localStorage.getItem('adminToken')
-      const response = await fetch(API_ENDPOINTS.TABLES, {
+      const response = await fetch('/api/tables', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -71,8 +70,8 @@ const AdminTablesPage = () => {
     try {
       const token = localStorage.getItem('adminToken')
       const url = editingTable 
-        ? `${API_ENDPOINTS.TABLES}/${editingTable.id}`
-        : API_ENDPOINTS.TABLES
+        ? `/api/tables/${editingTable.id}`
+        : '/api/tables'
       
       const method = editingTable ? 'PUT' : 'POST'
 
@@ -120,7 +119,7 @@ const AdminTablesPage = () => {
     setLoading(true)
     try {
       const token = localStorage.getItem('adminToken')
-      const response = await fetch(`${API_ENDPOINTS.TABLES}/${table.id}`, {
+      const response = await fetch(`/api/tables/${table.id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -146,7 +145,7 @@ const AdminTablesPage = () => {
     setLoading(true)
     try {
       const token = localStorage.getItem('adminToken')
-      const response = await fetch(`${API_ENDPOINTS.TABLES}/${table.id}/qr`, {
+      const response = await fetch(`/api/tables/${table.id}/qr`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -173,7 +172,7 @@ const AdminTablesPage = () => {
     setLoading(true)
     try {
       const token = localStorage.getItem('adminToken')
-      const response = await fetch(`${API_ENDPOINTS.TABLES}/qr/all`, {
+      const response = await fetch(`/api/tables/qr/all`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -293,7 +292,7 @@ const AdminTablesPage = () => {
       const token = localStorage.getItem('adminToken')
       
       // Obtener sesiones activas de esta mesa específica
-      const sessionsResponse = await fetch(`${API_ENDPOINTS.SESSIONS}/restaurant/all?mesaId=${mesa.id}&estado=activa&limit=100`, {
+      const sessionsResponse = await fetch(`/api/sessions/restaurant/all?mesaId=${mesa.id}&estado=activa&limit=100`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -318,7 +317,7 @@ const AdminTablesPage = () => {
 
       for (const sesion of sesionesActivas) {
         try {
-          const closeResponse = await fetch(`${API_ENDPOINTS.SESSIONS}/${sesion.id}/close`, {
+          const closeResponse = await fetch(`/api/sessions/${sesion.id}/close`, {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${token}`,
