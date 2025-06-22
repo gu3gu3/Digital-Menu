@@ -64,39 +64,54 @@ const getCategories = async (req, res) => {
 // @access  Private (Admin only)
 const createCategory = async (req, res) => {
   try {
-    // Validate input
     const { error, value } = categorySchema.validate(req.body);
     if (error) {
-      return res.status(400).json({
-        success: false,
-        error: error.details[0].message
-      });
+      return res.status(400).json({ success: false, error: error.details[0].message });
     }
 
     const { nombre, descripcion, orden } = value;
-    const restauranteId = req.user.restauranteId;
+    const { restauranteId } = req.user;
 
-    // Check if category name already exists for this restaurant
+    const restaurant = await prisma.restaurante.findUnique({
+      where: { id: restauranteId },
+      include: {
+        plan: true,
+        _count: {
+          select: { categorias: true },
+        },
+      },
+    });
+
+    if (!restaurant) {
+      return res.status(404).json({ success: false, error: 'Restaurante no encontrado.' });
+    }
+
+    const categoryCount = restaurant._count.categorias;
+    const categoryLimit = restaurant.plan.limiteCategorias;
+
+    if (categoryCount >= categoryLimit) {
+      return res.status(403).json({
+        success: false,
+        error: `Has alcanzado el límite de ${categoryLimit} categorías para tu plan.`,
+      });
+    }
+
     const existingCategory = await prisma.categoria.findFirst({
-      where: {
-        restauranteId,
-        nombre
-      }
+      where: { restauranteId, nombre },
     });
 
     if (existingCategory) {
       return res.status(409).json({
         success: false,
-        error: 'Ya existe una categoría con ese nombre'
+        error: 'Ya existe una categoría con ese nombre.',
       });
     }
 
-    // Get next order if not provided
     let finalOrder = orden;
     if (finalOrder === undefined) {
       const lastCategory = await prisma.categoria.findFirst({
         where: { restauranteId },
-        orderBy: { orden: 'desc' }
+        orderBy: { orden: 'desc' },
       });
       finalOrder = lastCategory ? lastCategory.orden + 1 : 0;
     }
@@ -107,24 +122,22 @@ const createCategory = async (req, res) => {
         descripcion,
         orden: finalOrder,
         restauranteId,
-        activa: true
-      }
+        activa: true,
+      },
     });
 
     res.status(201).json({
       success: true,
       message: 'Categoría creada exitosamente',
       data: {
-        categoria: newCategory
-      }
+        categoria: newCategory,
+        remaining: categoryLimit - (categoryCount + 1),
+      },
     });
 
   } catch (error) {
     console.error('Error creando categoría:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Error interno del servidor'
-    });
+    res.status(500).json({ success: false, error: 'Error interno del servidor' });
   }
 };
 

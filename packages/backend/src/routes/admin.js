@@ -126,6 +126,7 @@ const getStats = async (req, res) => {
     };
     
     checkLimit(productos, plan.limiteProductos, 'Productos', 'productos');
+    checkLimit(categorias, plan.limiteCategorias, 'Categorías', 'categorias');
     checkLimit(mesas, plan.limiteMesas, 'Mesas', 'mesas');
     checkLimit(meseros, plan.limiteMeseros, 'Meseros', 'meseros');
     checkLimit(ordenes, plan.limiteOrdenes, 'Órdenes', 'ordenes');
@@ -163,6 +164,7 @@ const getStats = async (req, res) => {
         plan: {
           nombre: formatPlanName(admin.restaurante.plan.nombre),
           limiteProductos: admin.restaurante.plan.limiteProductos,
+          limiteCategorias: admin.restaurante.plan.limiteCategorias,
           limiteMesas: admin.restaurante.plan.limiteMesas,
           limiteMeseros: admin.restaurante.plan.limiteMeseros,
           limiteOrdenes: admin.restaurante.plan.limiteOrdenes
