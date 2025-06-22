@@ -180,7 +180,7 @@ const AdminRestaurantPage = () => {
               </div>
             </div>
           </div>
-          <div className="mt-4 pt-4 border-t border-gray-200"><div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm"><div_><span className="font-medium text-gray-700">Slug:</span><div className="font-mono text-gray-600 mt-1">{restaurantData.slug}</div></div_><div><span className="font-medium text-gray-700">Estado:</span><div className="text-green-600 mt-1 flex items-center"><div className="h-2 w-2 bg-green-500 rounded-full mr-2"></div>Menú público activo</div></div><div><span className="font-medium text-gray-700">Moneda:</span><div className="mt-1 flex items-center"><CurrencyDollarIcon className="h-4 w-4 mr-1 text-gray-500" />{getCurrencyDisplayInfo(restaurantData.moneda)?.displayName || 'N/A'}</div></div></div></div>
+          <div className="mt-4 pt-4 border-t border-gray-200"><div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm"><div><span className="font-medium text-gray-700">Slug:</span><div className="font-mono text-gray-600 mt-1">{restaurantData.slug}</div></div><div><span className="font-medium text-gray-700">Estado:</span><div className="text-green-600 mt-1 flex items-center"><div className="h-2 w-2 bg-green-500 rounded-full mr-2"></div>Menú público activo</div></div><div><span className="font-medium text-gray-700">Moneda:</span><div className="mt-1 flex items-center"><CurrencyDollarIcon className="h-4 w-4 mr-1 text-gray-500" />{getCurrencyDisplayInfo(restaurantData.moneda)?.displayName || 'N/A'}</div></div></div></div>
         </div>
       )}
 

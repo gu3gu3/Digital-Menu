@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, useLocation, Outlet } from 'react-router-dom'
+import { useNavigate, useLocation, Outlet, NavLink } from 'react-router-dom'
 import {
   HomeIcon,
   BuildingStorefrontIcon,
@@ -120,30 +120,31 @@ const AdminLayout = () => {
 
         {/* Navigation */}
         <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
-          {navigation.map((item) => {
-            const isActive = isCurrentPath(item.href)
-            return (
-              <button
-                key={item.name}
-                onClick={() => {
-                  navigate(item.href)
-                  setSidebarOpen(false)
-                }}
-                className={`w-full group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+          {navigation.map((item) => (
+            <NavLink
+              key={item.name}
+              to={item.href}
+              onClick={() => setSidebarOpen(false)}
+              className={({ isActive }) =>
+                `group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-150 ${
                   isActive
-                    ? 'bg-primary-50 text-primary-700 border-r-2 border-primary-500'
-                    : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
-                }`}
-              >
-                <item.icon
-                  className={`mr-3 h-5 w-5 ${
-                    isActive ? 'text-primary-500' : 'text-gray-400 group-hover:text-gray-500'
-                  }`}
-                />
-                {item.name}
-              </button>
-            )
-          })}
+                    ? 'bg-primary-50 text-primary-600'
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                }`
+              }
+            >
+              {({ isActive }) => (
+                <>
+                  <item.icon
+                    className={`mr-3 h-5 w-5 transition-colors duration-150 ${
+                      isActive ? 'text-primary-600' : 'text-gray-400 group-hover:text-gray-500'
+                    }`}
+                  />
+                  <span>{item.name}</span>
+                </>
+              )}
+            </NavLink>
+          ))}
         </nav>
 
         {/* User info and logout */}
