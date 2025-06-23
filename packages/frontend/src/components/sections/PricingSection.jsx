@@ -12,8 +12,8 @@ const PricingSection = () => {
       buttonColor: 'btn-secondary',
       popular: false,
       features: [
-        { text: 'Hasta 25 productos (vs 50 competencia)', included: true },
-        { text: 'Hasta 300 órdenes/mes (vs 200 competencia)', included: true, highlight: true },
+        { text: 'Hasta 25 productos', included: true },
+        { text: 'Hasta 300 órdenes/mes', included: true, highlight: false },
         { text: 'Hasta 5 mesas con QR únicos', included: true },
         { text: 'Hasta 1 mesero con panel dedicado', included: true },
         { text: '🤖 Digitalización de menú con IA*', included: true, highlight: true },
@@ -36,10 +36,10 @@ const PricingSection = () => {
       popular: true,
       badge: 'MÁS POPULAR',
       features: [
-        { text: 'Hasta 75 productos (vs 200 competencia)', included: true },
-        { text: 'Hasta 700 órdenes/mes (vs 1,000 competencia)', included: true },
-        { text: 'Hasta 10 mesas con QR únicos', included: true },
-        { text: 'Hasta 2 meseros con gestión completa', included: true },
+        { text: 'Hasta 75 productos', included: true },
+        { text: 'Hasta 700 órdenes/mes', included: true },
+        { text: 'Hasta 15 mesas con QR únicos', included: true },
+        { text: 'Hasta 2 meseros con gestión completa', included: true, highlight: true },
         { text: '🤖 Digitalización de menú con IA*', included: true, highlight: true },
         { text: '💱 7 monedas centroamericanas', included: true, highlight: true },
         { text: '📱 Menú digital responsivo', included: true },
@@ -62,10 +62,10 @@ const PricingSection = () => {
       popular: false,
       badge: 'MÁXIMO VALOR',
       features: [
-        { text: 'Hasta 125 productos (vs 200 competencia)', included: true },
-        { text: 'Hasta 1,000 órdenes/mes (igual competencia)', included: true },
-        { text: 'Hasta 20 mesas con QR únicos', included: true },
-        { text: 'Hasta 4 meseros con roles personalizados', included: true },
+        { text: 'Hasta 125 productos', included: true },
+        { text: 'Hasta 1,000 órdenes/mes', included: true },
+        { text: 'Hasta 30 mesas con QR únicos', included: true },
+        { text: 'Hasta 4 meseros con roles personalizados', included: true, highlight: true },
         { text: '🤖 Digitalización de menú con IA*', included: true, highlight: true },
         { text: '💱 7 monedas centroamericanas', included: true, highlight: true },
         { text: '📱 Menú digital responsivo', included: true },
@@ -85,14 +85,14 @@ const PricingSection = () => {
   const competitorFeatures = [
     '❌ Sin digitalización con IA',
     '❌ Solo USD/moneda local',
-    '❌ Sin gestión de personal',
+    '❌ Sin gestión de personal integrada',
     '❌ Sin notificaciones en tiempo real',
-    '❌ Sin panel para meseros',
+    '❌ Sin panel dedicado para meseros',
     '❌ Sin sistema de carrito avanzado'
   ]
 
   return (
-    <section className="py-20 bg-gradient-to-br from-gray-50 to-white">
+    <section id="pricing" className="py-20 bg-gradient-to-br from-gray-50 to-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-16">
@@ -100,7 +100,7 @@ const PricingSection = () => {
             Planes que <span className="text-primary-600">Superan a la Competencia</span>
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
-            Mismas funcionalidades, mejor tecnología, <strong className="text-primary-600">precios hasta 67% más bajos</strong>
+            Tecnología superior, funcionalidades exclusivas, <strong className="text-primary-600">precios hasta 67% más bajos</strong>
           </p>
           
           {/* Competitive Advantage Banner */}
@@ -122,11 +122,11 @@ const PricingSection = () => {
                 <h4 className="font-semibold mb-2">💰 Ventaja Competitiva:</h4>
                 <ul className="space-y-1 text-sm">
                   <li>📉 Plan Básico: $10 vs $29.99 competencia</li>
-                  <li>📈 Más órdenes incluidas (300 vs 200)</li>
                   <li>🎯 Mejor relación precio-funcionalidad</li>
                   <li>🆓 Plan gratuito sin limitaciones ocultas</li>
-                  <li>🚀 Tecnología más moderna</li>
-                  <li>🌎 Diseñado para Centroamérica</li>
+                  <li>🚀 Tecnología más moderna y rápida</li>
+                  <li>🌎 Diseñado específicamente para Centroamérica</li>
+                  <li>🔧 Soporte técnico en español</li>
                 </ul>
               </div>
             </div>
@@ -199,29 +199,26 @@ const PricingSection = () => {
           <h3 className="text-2xl font-bold text-gray-900 mb-4">
             🎯 Oferta Especial de Lanzamiento
           </h3>
-          <p className="text-gray-600 mb-6">
-            <strong>¡Digitalización GRATUITA de tu menú actual!</strong><br/>
-            Nuestro equipo convierte tu menú físico a digital con IA en menos de 24 horas
+          <p className="text-xl text-gray-600 mb-8">
+            Digitaliza tu menú con IA <strong className="text-primary-600">GRATIS</strong> + 30 días de prueba sin compromiso
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button className="bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold py-4 px-8 rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300">
-              🚀 Digitalizar Mi Menú GRATIS
+            <button 
+              onClick={() => document.getElementById('register').scrollIntoView({ behavior: 'smooth' })}
+              className="btn-primary text-lg px-8 py-4"
+            >
+              🚀 Comenzar Gratis Ahora
             </button>
-            <button className="border-2 border-primary-600 text-primary-600 font-semibold py-4 px-8 rounded-lg hover:bg-primary-50 transition-all duration-300">
-              📞 Hablar con un Experto
+            <button 
+              onClick={() => document.getElementById('demo').scrollIntoView({ behavior: 'smooth' })}
+              className="btn-secondary text-lg px-8 py-4"
+            >
+              Ver Demo en Vivo
             </button>
           </div>
-        </div>
-
-        {/* Footnote */}
-        <div className="mt-12 text-center">
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 max-w-4xl mx-auto">
-            <p className="text-sm text-gray-600">
-              <strong>*</strong> <strong>Digitalización de Menú con IA:</strong> Servicio especializado disponible como complemento para clientes activos. 
-              Durante el lanzamiento, ofrecemos digitalización <strong>GRATUITA</strong> de tu menú actual como beneficio especial. 
-              Posteriormente, este servicio tendrá un costo adicional de $25 por menú digitalizado.
-            </p>
-          </div>
+          <p className="text-sm text-gray-500 mt-4">
+            ✨ Sin tarjeta de crédito • Cancelación en cualquier momento • Soporte en español
+          </p>
         </div>
       </div>
     </section>

@@ -3,18 +3,20 @@ import { useNavigate } from 'react-router-dom'
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline'
 import logo from '../assets/logo.png'
 import authService from '../services/authService'
+import InternationalPhoneInput from '../components/InternationalPhoneInput'
 
 const AdminRegisterPage = () => {
   const [formData, setFormData] = useState({
     // Datos del administrador
     nombre: '',
     email: '',
+    telefono: '', // Teléfono personal del administrador
     password: '',
     confirmPassword: '',
     // Datos del restaurante
     nombreRestaurante: '',
     descripcion: '',
-    telefono: '',
+    telefonoRestaurante: '', // Teléfono del restaurante
     direccion: ''
   })
   const [showPassword, setShowPassword] = useState(false)
@@ -37,6 +39,20 @@ const AdminRegisterPage = () => {
     }
   }
 
+  const handlePhoneChange = (value, fieldName) => {
+    setFormData({
+      ...formData,
+      [fieldName]: value || ''
+    })
+    // Limpiar error específico
+    if (errors[fieldName]) {
+      setErrors({
+        ...errors,
+        [fieldName]: ''
+      })
+    }
+  }
+
   const validateForm = () => {
     const newErrors = {}
 
@@ -52,7 +68,7 @@ const AdminRegisterPage = () => {
 
     // Validaciones del restaurante
     if (!formData.nombreRestaurante.trim()) newErrors.nombreRestaurante = 'El nombre del restaurante es requerido'
-    if (!formData.telefono.trim()) newErrors.telefono = 'El teléfono es requerido'
+    if (!formData.telefonoRestaurante.trim()) newErrors.telefonoRestaurante = 'El teléfono del restaurante es requerido'
     if (!formData.direccion.trim()) newErrors.direccion = 'La dirección es requerida'
 
     setErrors(newErrors)
@@ -73,12 +89,13 @@ const AdminRegisterPage = () => {
         // Datos del administrador
         nombre: formData.nombre,
         email: formData.email,
+        telefono: formData.telefono,
         password: formData.password,
         // Datos del restaurante
         restaurante: {
           nombre: formData.nombreRestaurante,
           descripcion: formData.descripcion,
-          telefono: formData.telefono,
+          telefono: formData.telefonoRestaurante,
           direccion: formData.direccion
         }
       })
@@ -164,11 +181,23 @@ const AdminRegisterPage = () => {
                     className={`mt-1 block w-full px-3 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm ${
                       errors.email ? 'border-red-300' : 'border-gray-300'
                     }`}
-                    placeholder="admin@restaurante.com"
+                    placeholder="admin@bellavista.com"
                     value={formData.email}
                     onChange={handleChange}
                   />
                   {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
+                </div>
+
+                <div className="md:col-span-2">
+                  <InternationalPhoneInput
+                    label="Teléfono Personal"
+                    value={formData.telefono}
+                    onChange={(value) => handlePhoneChange(value, 'telefono')}
+                    placeholder="Tu número de teléfono personal"
+                    name="telefono"
+                    error={errors.telefono}
+                    required={false}
+                  />
                 </div>
 
                 <div>
@@ -277,22 +306,15 @@ const AdminRegisterPage = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label htmlFor="telefono" className="block text-sm font-medium text-gray-700">
-                      Teléfono *
-                    </label>
-                    <input
-                      id="telefono"
-                      name="telefono"
-                      type="tel"
-                      required
-                      className={`mt-1 block w-full px-3 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm ${
-                        errors.telefono ? 'border-red-300' : 'border-gray-300'
-                      }`}
-                      placeholder="+1-234-567-8900"
-                      value={formData.telefono}
-                      onChange={handleChange}
+                    <InternationalPhoneInput
+                      label="Teléfono del Restaurante *"
+                      value={formData.telefonoRestaurante}
+                      onChange={(value) => handlePhoneChange(value, 'telefonoRestaurante')}
+                      placeholder="Teléfono de contacto del restaurante"
+                      name="telefonoRestaurante"
+                      error={errors.telefonoRestaurante}
+                      required={true}
                     />
-                    {errors.telefono && <p className="mt-1 text-sm text-red-600">{errors.telefono}</p>}
                   </div>
 
                   <div>
@@ -317,16 +339,22 @@ const AdminRegisterPage = () => {
               </div>
             </div>
 
-            {/* Plan Information */}
+            {/* Plan Information - CORREGIDO */}
             <div className="bg-primary-50 p-4 rounded-lg">
               <h4 className="text-sm font-medium text-primary-800 mb-2">Plan Gratuito Incluye:</h4>
               <ul className="text-sm text-primary-700 space-y-1">
-                <li>• Hasta 50 productos en el menú</li>
-                <li>• Hasta 10 mesas con código QR</li>
-                <li>• Hasta 2 cuentas de meseros</li>
-                <li>• Hasta 200 órdenes mensuales</li>
-                <li>• Soporte por comunidad</li>
+                <li>• Hasta 25 productos en el menú</li>
+                <li>• Hasta 5 mesas con código QR</li>
+                <li>• Hasta 1 cuenta de meseros</li>
+                <li>• Hasta 300 órdenes mensuales</li>
+                <li>• 🤖 Digitalización de menú con IA*</li>
+                <li>• 💱 7 monedas centroamericanas</li>
+                <li>• 📱 Menú digital responsivo</li>
+                <li>• Soporte por email</li>
               </ul>
+              <p className="text-xs text-primary-600 mt-2">
+                * Servicio de digitalización disponible como servicio adicional para clientes activos
+              </p>
             </div>
 
             <div>

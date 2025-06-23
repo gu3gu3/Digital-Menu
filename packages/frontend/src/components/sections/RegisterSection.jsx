@@ -3,6 +3,7 @@ import { EnvelopeIcon, BuildingStorefrontIcon, UserIcon, PhoneIcon } from '@hero
 import apiService from '../../services/api'
 import EmailVerification from '../EmailVerification'
 import WelcomeDashboard from '../WelcomeDashboard'
+import InternationalPhoneInput from '../InternationalPhoneInput'
 
 const RegisterSection = () => {
   const [formData, setFormData] = useState({
@@ -26,6 +27,13 @@ const RegisterSection = () => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
+    })
+  }
+
+  const handlePhoneChange = (value, fieldName = 'telefono') => {
+    setFormData({
+      ...formData,
+      [fieldName]: value || ''
     })
   }
 
@@ -192,16 +200,13 @@ const RegisterSection = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Teléfono
-                    </label>
-                    <input
-                      type="tel"
-                      name="telefono"
+                    <InternationalPhoneInput
+                      label="Teléfono Personal"
                       value={formData.telefono}
-                      onChange={handleChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                      placeholder="+1 (555) 123-4567"
+                      onChange={(value) => handlePhoneChange(value, 'telefono')}
+                      placeholder="Ingresa tu número de teléfono"
+                      name="telefono"
+                      required={false}
                     />
                   </div>
                 </div>
@@ -245,16 +250,13 @@ const RegisterSection = () => {
 
                   <div className="grid md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Teléfono del Restaurante
-                      </label>
-                      <input
-                        type="tel"
-                        name="restauranteTelefono"
+                      <InternationalPhoneInput
+                        label="Teléfono del Restaurante"
                         value={formData.restauranteTelefono}
-                        onChange={handleChange}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                        placeholder="+1 (555) 123-4567"
+                        onChange={(value) => handlePhoneChange(value, 'restauranteTelefono')}
+                        placeholder="Teléfono de contacto del restaurante"
+                        name="restauranteTelefono"
+                        required={false}
                       />
                     </div>
                     <div>
@@ -286,6 +288,24 @@ const RegisterSection = () => {
                     />
                   </div>
                 </div>
+              </div>
+
+              {/* Plan Gratuito Info */}
+              <div className="bg-green-50 border border-green-200 rounded-lg p-6">
+                <h4 className="text-lg font-semibold text-green-800 mb-3">Plan Gratuito Incluye:</h4>
+                <div className="grid md:grid-cols-2 gap-2 text-sm text-green-700">
+                  <div>• Hasta 25 productos en el menú</div>
+                  <div>• Hasta 5 mesas con código QR</div>
+                  <div>• Hasta 1 cuenta de meseros</div>
+                  <div>• Hasta 300 órdenes mensuales</div>
+                  <div>• Soporte por comunidad</div>
+                  <div>• 🤖 Digitalización de menú con IA*</div>
+                  <div>• 💱 7 monedas centroamericanas</div>
+                  <div>• 📱 Menú digital responsivo</div>
+                </div>
+                <p className="text-xs text-green-600 mt-3">
+                  * Servicio de digitalización disponible como servicio adicional para clientes activos
+                </p>
               </div>
 
               {/* Terms and Submit */}

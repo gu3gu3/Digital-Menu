@@ -358,7 +358,10 @@ router.get('/:id', authenticateSuperAdmin, async (req, res) => {
       include: { 
         restaurante: {
           include: {
-            plan: true
+            plan: true,
+            usuariosAdmin: true,
+            productos: true,
+            mesas: true
           }
         },
         historialPagos: true

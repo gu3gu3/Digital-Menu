@@ -21,7 +21,7 @@ async function seedUnified() {
     console.log('\n📋 Creando planes del sistema...');
     
     const planGratuito = await prisma.plan.upsert({
-      where: { nombre: 'Gratuito' },
+      where: { nombre: 'Plan Gratuito' },
       update: {
         precio: 0,
         limiteProductos: 25,
@@ -35,7 +35,7 @@ async function seedUnified() {
         activo: true
       },
       create: {
-        nombre: 'Gratuito',
+        nombre: 'Plan Gratuito',
         precio: 0,
         limiteProductos: 25,
         limiteCategorias: 5,
@@ -50,7 +50,7 @@ async function seedUnified() {
     });
 
     const planBasico = await prisma.plan.upsert({
-      where: { nombre: 'Basics' },
+      where: { nombre: 'Plan Básico' },
       update: {
         precio: 10,
         limiteProductos: 75,
@@ -64,7 +64,7 @@ async function seedUnified() {
         activo: true
       },
       create: {
-        nombre: 'Basics',
+        nombre: 'Plan Básico',
         precio: 10,
         limiteProductos: 75,
         limiteCategorias: 15,
@@ -78,8 +78,8 @@ async function seedUnified() {
       }
     });
 
-    const planPlatinium = await prisma.plan.upsert({
-      where: { nombre: 'Platinium' },
+    const planPlatinum = await prisma.plan.upsert({
+      where: { nombre: 'Plan Platinum' },
       update: {
         precio: 25,
         limiteProductos: 125,
@@ -93,7 +93,7 @@ async function seedUnified() {
         activo: true
       },
       create: {
-        nombre: 'Platinium',
+        nombre: 'Plan Platinum',
         precio: 25,
         limiteProductos: 125,
         limiteCategorias: 25,
@@ -108,7 +108,7 @@ async function seedUnified() {
     });
 
     const planGold = await prisma.plan.upsert({
-      where: { nombre: 'Gold' },
+      where: { nombre: 'Plan Gold' },
       update: {
         precio: 50,
         limiteProductos: 200,
@@ -122,7 +122,7 @@ async function seedUnified() {
         activo: true
       },
       create: {
-        nombre: 'Gold',
+        nombre: 'Plan Gold',
         precio: 50,
         limiteProductos: 200,
         limiteCategorias: 50,
@@ -139,7 +139,7 @@ async function seedUnified() {
     console.log('✅ Planes creados exitosamente:');
     console.log(`   - ${planGratuito.nombre}: ${planGratuito.limiteProductos} productos, ${planGratuito.limiteOrdenes} órdenes, ${planGratuito.limiteMesas} mesas, ${planGratuito.limiteMeseros} meseros.`);
     console.log(`   - ${planBasico.nombre}: ${planBasico.limiteProductos} productos, ${planBasico.limiteOrdenes} órdenes, ${planBasico.limiteMesas} mesas, ${planBasico.limiteMeseros} meseros.`);
-    console.log(`   - ${planPlatinium.nombre}: ${planPlatinium.limiteProductos} productos, ${planPlatinium.limiteOrdenes} órdenes, ${planPlatinium.limiteMesas} mesas, ${planPlatinium.limiteMeseros} meseros.`);
+    console.log(`   - ${planPlatinum.nombre}: ${planPlatinum.limiteProductos} productos, ${planPlatinum.limiteOrdenes} órdenes, ${planPlatinum.limiteMesas} mesas, ${planPlatinum.limiteMeseros} meseros.`);
     console.log(`   - ${planGold.nombre}: ${planGold.limiteProductos} productos, ${planGold.limiteOrdenes} órdenes, ${planGold.limiteMesas} mesas, ${planGold.limiteMeseros} meseros.`);
 
     // ========================================
@@ -209,7 +209,7 @@ async function seedUnified() {
         telefono: '+51 955 444 333',
         direccion: 'Malecón de la Reserva 456, Miraflores, Lima',
         email: 'admin@donceviche.com',
-        planId: planPlatinium.id,
+        planId: planPlatinum.id,
         moneda: 'NIO',
         backgroundColor: '#f0f9ff', // Azul claro para mariscos
         activo: true
@@ -245,7 +245,7 @@ async function seedUnified() {
         telefono: '+1 555 123 4567',
         direccion: '123 Demo Street, Demo City',
         email: 'demo@restaurant.com',
-        planId: planPlatinium.id,
+        planId: planPlatinum.id,
         moneda: 'USD',
         backgroundColor: '#f3f4f6', // Gris claro para demo
         activo: true
@@ -254,9 +254,9 @@ async function seedUnified() {
 
     console.log('✅ Restaurantes demo creados:');
     console.log(`   - ${restaurante1.nombre} (${restaurante1.moneda}) - Plan: ${planBasico.nombre}`);
-    console.log(`   - ${restaurante2.nombre} (${restaurante2.moneda}) - Plan: ${planPlatinium.nombre}`);
+    console.log(`   - ${restaurante2.nombre} (${restaurante2.moneda}) - Plan: ${planPlatinum.nombre}`);
     console.log(`   - ${restaurante3.nombre} (${restaurante3.moneda}) - Plan: ${planGratuito.nombre}`);
-    console.log(`   - ${restauranteDemo.nombre} (${restauranteDemo.moneda}) - Plan: ${planPlatinium.nombre} (DEMO)`);
+    console.log(`   - ${restauranteDemo.nombre} (${restauranteDemo.moneda}) - Plan: ${planPlatinum.nombre} (DEMO)`);
 
     // ========================================
     // 4. CREAR USUARIOS ADMIN DE RESTAURANTES
@@ -343,7 +343,7 @@ async function seedUnified() {
     });
     console.log(`   - 2/2 meseros creados para La Parrilla Criolla`);
 
-    // Meseros para Don Ceviche (Plan Platinium - Límite 4)
+    // Meseros para Don Ceviche (Plan Platinum - Límite 4)
     for (let i = 1; i <= 4; i++) {
         await prisma.usuarioMesero.upsert({
             where: { email: `mesero${i}@ceviche.com` },
@@ -381,7 +381,7 @@ async function seedUnified() {
     console.log('\n💳 Creando suscripciones...');
     
     const restaurantes = [restaurante1, restaurante2, restaurante3, restauranteDemo];
-    const planes = [planBasico, planPlatinium, planGratuito, planPlatinium];
+    const planes = [planBasico, planPlatinum, planGratuito, planPlatinum];
     
     for (let i = 0; i < restaurantes.length; i++) {
       const restaurante = restaurantes[i];
@@ -479,7 +479,7 @@ async function seedUnified() {
         { nombre: 'Cerveza Pilsen', descripcion: 'Botella de 620ml', precio: 12.00, categoria: 'Bebidas' },
         { nombre: 'Copa de Vino Blanco', descripcion: 'Sauvignon Blanc, Tabernero', precio: 15.00, categoria: 'Bebidas' }
       ],
-      mesas: 20 // Límite del Plan Platinium
+      mesas: 20 // Límite del Plan Platinum
     });
 
     // --- Menú para Bella Vista ---
