@@ -53,12 +53,12 @@ const StaffLoginPage = () => {
       <div className="max-w-md w-full space-y-8">
         {/* Header */}
         <div className="text-center">
-          <img src={logo} alt="Menu View" className="mx-auto h-16 w-auto" />
-          <div className="mt-4">
-            <span className="text-2xl font-bold text-primary-600">menu</span>
-            <span className="text-2xl font-bold text-secondary-600">view.app</span>
+          <div className="flex justify-center">
+            <div className="bg-white rounded-2xl p-4 shadow-lg border border-gray-100">
+              <img src={logo} alt="Menu View" className="h-20 w-auto" />
+            </div>
           </div>
-          <h2 className="mt-6 text-3xl font-bold text-gray-900">
+          <h2 className="mt-8 text-3xl font-bold text-gray-900">
             Portal de Meseros
           </h2>
           <p className="mt-2 text-sm text-gray-600">

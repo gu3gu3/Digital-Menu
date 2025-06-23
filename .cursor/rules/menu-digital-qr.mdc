@@ -47,7 +47,7 @@ Cada parte tiene una única responsabilidad.
 
 ---
 
-## 6. ⭐ ARQUITECTURA API CONSOLIDADA (Post-Refactorización 2024)
+## 6. ⭐ ARQUITECTURA API CONSOLIDADA (Post-Refactorización 2025)
 
 ### Cliente API Unificado
 **Regla 6.1: Un Solo Cliente API.** Todo el frontend debe usar `apiClient.js` (packages/frontend/src/lib/apiClient.js). NUNCA usar fetch directo o múltiples clientes.

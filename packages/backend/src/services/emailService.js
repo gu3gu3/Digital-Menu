@@ -276,6 +276,132 @@ class EmailService {
     return this.sendEmail(emailContent);
   }
 
+  async sendPasswordResetEmail(email, resetToken, userName, restaurantName) {
+    const resetUrl = `${process.env.FRONTEND_URL}/admin/reset-password?token=${resetToken}`;
+    
+    const emailContent = {
+      from: {
+        name: 'Digital Menu',
+        address: process.env.EMAIL_USER || 'registro@menuview.app'
+      },
+      to: email,
+      subject: '🔐 Recuperación de Contraseña - Digital Menu',
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Recuperación de Contraseña - Digital Menu</title>
+        </head>
+        <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f7fafc;">
+          <div style="max-width: 600px; margin: 0 auto; background-color: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+            
+            <!-- Header -->
+            <div style="background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%); padding: 40px 20px; text-align: center;">
+              <h1 style="color: white; margin: 0; font-size: 28px; font-weight: bold;">🔐 Recuperar Contraseña</h1>
+              <p style="color: #fed7d7; margin: 10px 0 0 0; font-size: 16px;">Solicitud de restablecimiento</p>
+            </div>
+
+            <!-- Content -->
+            <div style="padding: 40px 20px;">
+              <h2 style="color: #2d3748; margin: 0 0 20px 0; font-size: 24px;">¡Hola ${userName}!</h2>
+              
+              <p style="color: #4a5568; line-height: 1.6; margin: 0 0 20px 0; font-size: 16px;">
+                Hemos recibido una solicitud para restablecer la contraseña de tu cuenta de 
+                <strong>${restaurantName}</strong> en Digital Menu.
+              </p>
+
+              <p style="color: #4a5568; line-height: 1.6; margin: 0 0 30px 0; font-size: 16px;">
+                Si solicitaste este cambio, haz clic en el botón de abajo para crear una nueva contraseña:
+              </p>
+
+              <!-- Button -->
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${resetUrl}" style="background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%); color: white; text-decoration: none; padding: 15px 30px; border-radius: 8px; font-weight: bold; font-size: 16px; display: inline-block; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                  🔐 Restablecer Contraseña
+                </a>
+              </div>
+
+              <p style="color: #718096; font-size: 14px; line-height: 1.6; margin: 20px 0;">
+                Si el botón no funciona, también puedes copiar y pegar este enlace en tu navegador:
+              </p>
+              
+              <div style="background-color: #f7fafc; padding: 15px; border-radius: 6px; border-left: 4px solid #f56565; margin: 20px 0;">
+                <code style="color: #4a5568; font-size: 14px; word-break: break-all;">${resetUrl}</code>
+              </div>
+
+              <div style="background-color: #fef5e7; border: 1px solid #f6ad55; border-radius: 6px; padding: 15px; margin: 30px 0;">
+                <p style="color: #c05621; margin: 0; font-size: 14px;">
+                  <strong>⏰ Importante:</strong> Este enlace expirará en 1 hora por motivos de seguridad.
+                </p>
+              </div>
+
+              <div style="background-color: #fef2f2; border: 1px solid #f56565; border-radius: 6px; padding: 20px; margin: 30px 0;">
+                <h4 style="color: #c53030; margin: 0 0 10px 0; font-size: 16px;">🛡️ ¿No solicitaste este cambio?</h4>
+                <p style="color: #742a2a; margin: 0; font-size: 14px;">
+                  Si no solicitaste restablecer tu contraseña, puedes ignorar este email de forma segura. 
+                  Tu contraseña actual permanecerá sin cambios.
+                </p>
+                <p style="color: #742a2a; margin: 10px 0 0 0; font-size: 14px;">
+                  <strong>Recomendación:</strong> Si recibes estos emails frecuentemente sin solicitarlos, 
+                  contacta nuestro soporte inmediatamente.
+                </p>
+              </div>
+
+              <h3 style="color: #2d3748; margin: 30px 0 15px 0; font-size: 18px;">🔒 Consejos de Seguridad:</h3>
+              
+              <ul style="color: #4a5568; line-height: 1.8; font-size: 15px; padding-left: 20px;">
+                <li>Usa una contraseña única de al menos 8 caracteres</li>
+                <li>Combina letras mayúsculas, minúsculas, números y símbolos</li>
+                <li>No compartas tu contraseña con nadie</li>
+                <li>Considera usar un gestor de contraseñas</li>
+              </ul>
+            </div>
+
+            <!-- Footer -->
+            <div style="background-color: #f7fafc; padding: 30px 20px; border-top: 1px solid #e2e8f0; text-align: center;">
+              <p style="color: #718096; margin: 0 0 10px 0; font-size: 14px;">
+                ¿Necesitas ayuda? Estamos aquí para apoyarte.
+              </p>
+              <p style="color: #718096; margin: 0; font-size: 14px;">
+                📧 <a href="mailto:soporte@menuview.app" style="color: #f56565; text-decoration: none;">soporte@menuview.app</a>
+                | 🌐 <a href="${process.env.FRONTEND_URL}" style="color: #f56565; text-decoration: none;">Digital Menu</a>
+              </p>
+              
+              <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+                <p style="color: #a0aec0; margin: 0; font-size: 12px;">
+                  © ${new Date().getFullYear()} Digital Menu. Manteniendo tu cuenta segura.
+                </p>
+              </div>
+            </div>
+
+          </div>
+        </body>
+        </html>
+      `,
+      text: `
+        ¡Hola ${userName}!
+
+        Hemos recibido una solicitud para restablecer la contraseña de tu cuenta de ${restaurantName} en Digital Menu.
+
+        Para restablecer tu contraseña, visita el siguiente enlace:
+        
+        ${resetUrl}
+        
+        Este enlace expirará en 1 hora por motivos de seguridad.
+        
+        Si no solicitaste este cambio, puedes ignorar este email de forma segura.
+        
+        ¿Necesitas ayuda? Contacta: soporte@menuview.app
+        
+        Digital Menu - Seguridad de tu cuenta
+      `
+    };
+
+    return this.sendEmail(emailContent);
+  }
+
   async sendEmail(emailOptions) {
     try {
       if (!this.transporter) {

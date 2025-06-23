@@ -223,6 +223,23 @@ const changePasswordSchema = Joi.object({
   })
 });
 
+const requestPasswordResetSchema = Joi.object({
+  email: Joi.string().email().required().messages({
+    'string.email': 'Debe ser un email válido',
+    'any.required': 'El email es requerido'
+  })
+});
+
+const resetPasswordSchema = Joi.object({
+  token: Joi.string().required().messages({
+    'any.required': 'El token es requerido'
+  }),
+  newPassword: Joi.string().min(6).required().messages({
+    'string.min': 'La nueva contraseña debe tener al menos 6 caracteres',
+    'any.required': 'La nueva contraseña es requerida'
+  })
+});
+
 const updateProfileSchema = Joi.object({
   nombre: Joi.string().min(2).required().messages({
     'string.min': 'El nombre debe tener al menos 2 caracteres',
@@ -251,6 +268,15 @@ const generateEmailVerificationToken = (userId, email) => {
     { userId, email, type: 'email_verification' },
     process.env.JWT_SECRET,
     { expiresIn: '24h' }
+  );
+};
+
+// Utility function to generate password reset token
+const generatePasswordResetToken = (userId, email) => {
+  return jwt.sign(
+    { userId, email, type: 'password_reset' },
+    process.env.JWT_SECRET,
+    { expiresIn: '1h' } // Token válido por 1 hora
   );
 };
 
@@ -513,9 +539,13 @@ const register = async (req, res) => {
       });
     }
 
-    // Get default free plan
-    const planGratuito = await prisma.plan.findUnique({
-      where: { nombre: 'Plan Gratuito' }
+    // Get default free plan (buscar por precio 0 para mayor flexibilidad)
+    const planGratuito = await prisma.plan.findFirst({
+      where: { 
+        precio: 0,
+        activo: true
+      },
+      orderBy: { createdAt: 'asc' } // Tomar el más antiguo si hay varios
     });
 
     if (!planGratuito) {
@@ -931,6 +961,144 @@ const updateProfile = async (req, res) => {
   }
 };
 
+// @desc    Request password reset
+// @route   POST /api/auth/request-password-reset
+// @access  Public
+const requestPasswordReset = async (req, res) => {
+  try {
+    // Validate request body
+    const { error, value } = requestPasswordResetSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        error: error.details[0].message
+      });
+    }
+
+    const { email } = value;
+
+    // Find user by email
+    const user = await prisma.usuarioAdmin.findUnique({
+      where: { email },
+      include: {
+        restaurante: true
+      }
+    });
+
+    // Always return success to prevent email enumeration
+    if (!user) {
+      return res.json({
+        success: true,
+        message: 'Si el email existe en nuestro sistema, recibirás un enlace de recuperación'
+      });
+    }
+
+    // Generate password reset token
+    const resetToken = generatePasswordResetToken(user.id, user.email);
+    
+    // Send password reset email
+    try {
+      await emailService.sendPasswordResetEmail(
+        user.email,
+        resetToken,
+        user.nombre,
+        user.restaurante?.nombre || 'tu restaurante'
+      );
+      console.log(`📧 Email de recuperación enviado a ${user.email}`);
+    } catch (emailError) {
+      console.error('Error enviando email de recuperación:', emailError);
+      return res.status(500).json({
+        success: false,
+        error: 'Error enviando email de recuperación'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Si el email existe en nuestro sistema, recibirás un enlace de recuperación'
+    });
+
+  } catch (error) {
+    console.error('Error en solicitud de recuperación:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error interno del servidor'
+    });
+  }
+};
+
+// @desc    Reset password with token
+// @route   POST /api/auth/reset-password
+// @access  Public
+const resetPassword = async (req, res) => {
+  try {
+    // Validate request body
+    const { error, value } = resetPasswordSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        error: error.details[0].message
+      });
+    }
+
+    const { token, newPassword } = value;
+
+    // Verify and decode token
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
+      
+      // Verify token type
+      if (decoded.type !== 'password_reset') {
+        throw new Error('Invalid token type');
+      }
+    } catch (tokenError) {
+      return res.status(400).json({
+        success: false,
+        error: 'Token inválido o expirado'
+      });
+    }
+
+    // Find user
+    const user = await prisma.usuarioAdmin.findUnique({
+      where: { 
+        id: decoded.userId,
+        email: decoded.email 
+      }
+    });
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        error: 'Usuario no encontrado'
+      });
+    }
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
+
+    // Update password
+    await prisma.usuarioAdmin.update({
+      where: { id: user.id },
+      data: { password: hashedPassword }
+    });
+
+    console.log(`🔐 Contraseña restablecida para usuario: ${user.email}`);
+
+    res.json({
+      success: true,
+      message: 'Contraseña restablecida exitosamente'
+    });
+
+  } catch (error) {
+    console.error('Error restableciendo contraseña:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error interno del servidor'
+    });
+  }
+};
+
 // Routes with Swagger documentation
 
 /**
@@ -1240,5 +1408,16 @@ router.put('/change-password', authenticate, changePassword);
  *         description: Email ya existe
  */
 router.put('/profile', authenticate, updateProfile);
+
+// Routes
+router.post('/register', register);
+router.post('/login', login);
+router.post('/verify-email', verifyEmail);
+router.post('/resend-verification', authenticate, resendVerification);
+router.post('/request-password-reset', requestPasswordReset);
+router.post('/reset-password', resetPassword);
+router.put('/change-password', authenticate, changePassword);
+router.put('/profile', authenticate, updateProfile);
+router.get('/me', authenticate, getMe);
 
 module.exports = router; 

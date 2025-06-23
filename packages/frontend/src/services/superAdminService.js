@@ -237,6 +237,40 @@ export const subscriptionsService = {
     } catch (error) {
       throw error.response?.data || { message: 'Error de conexión' };
     }
+  },
+
+  // ==================== ELIMINACIÓN COMPLETA DE RESTAURANTE ====================
+
+  // Eliminar completamente un restaurante y todas sus relaciones
+  async deleteRestaurantCompletely(restauranteId) {
+    try {
+      const response = await apiClient.delete(`/super-admin/subscriptions/restaurant/${restauranteId}/complete`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: 'Error de conexión' };
+    }
+  },
+
+  // ==================== BLOQUEO AUTOMÁTICO ====================
+
+  // Ejecutar bloqueo automático de suscripciones vencidas
+  async autoBlockExpiredSubscriptions(options = {}) {
+    try {
+      const {
+        gracePeriodDays = 3,
+        dryRun = false,
+        notifyUsers = true
+      } = options;
+
+      const response = await apiClient.post('/super-admin/subscriptions/auto-block-expired', {
+        gracePeriodDays,
+        dryRun,
+        notifyUsers
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: 'Error de conexión' };
+    }
   }
 };
 
@@ -333,6 +367,8 @@ export const superAdminService = {
   deletePlan: subscriptionsService.deletePlan.bind(subscriptionsService),
   togglePlan: subscriptionsService.togglePlan.bind(subscriptionsService),
   getPlanUsage: subscriptionsService.getPlanUsage.bind(subscriptionsService),
+  deleteRestaurantCompletely: subscriptionsService.deleteRestaurantCompletely.bind(subscriptionsService),
+  autoBlockExpiredSubscriptions: subscriptionsService.autoBlockExpiredSubscriptions.bind(subscriptionsService),
 
   // Utility methods
   formatDate: superAdminUtils.formatDate.bind(superAdminUtils),

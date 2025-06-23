@@ -53,9 +53,11 @@ const AdminLoginPage = () => {
       <div className="max-w-md w-full space-y-8">
         <div>
           <div className="flex justify-center">
-            <img src={logo} alt="Menu View" className="h-14 w-auto" />
+            <div className="bg-white rounded-2xl p-4 shadow-lg border border-gray-100">
+              <img src={logo} alt="Menu View" className="h-20 w-auto" />
+            </div>
           </div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          <h2 className="mt-8 text-center text-3xl font-extrabold text-gray-900">
             Acceso Administrador
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
@@ -135,7 +137,7 @@ const AdminLoginPage = () => {
             </button>
           </div>
 
-          <div className="text-center">
+          <div className="text-center space-y-2">
             <p className="text-sm text-gray-600">
               ¿No tienes cuenta?{' '}
               <button
@@ -144,6 +146,16 @@ const AdminLoginPage = () => {
                 className="font-medium text-primary-600 hover:text-primary-500 transition-colors"
               >
                 Regístrate aquí
+              </button>
+            </p>
+            <p className="text-sm text-gray-600">
+              ¿Olvidaste tu contraseña?{' '}
+              <button
+                type="button"
+                onClick={() => navigate('/admin/forgot-password')}
+                className="font-medium text-primary-600 hover:text-primary-500 transition-colors"
+              >
+                Recuperar aquí
               </button>
             </p>
           </div>

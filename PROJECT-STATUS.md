@@ -566,7 +566,7 @@ npm test -- --testNamePattern="carrito"
 
 ---
 
-## 🔧 **Refactorización y Consolidación de APIs (Diciembre 2024)**
+## 🔧 **Refactorización y Consolidación de APIs (Junio 2025)**
 
 ### **📋 Contexto de la Refactorización**
 Después de una restauración desde GitHub (`git reset --hard origin/main`), se detectó **deriva de código** que causó inconsistencias arquitecturales. El proyecto tenía **dos sistemas de API coexistiendo**:

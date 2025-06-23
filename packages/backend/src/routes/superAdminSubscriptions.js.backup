@@ -715,8 +715,8 @@ router.post('/:id/renew', authenticateSuperAdmin, async (req, res) => {
     }
 
     // Si se especifica un planId, verificar que existe
-    let nuevoPlan = suscripcion.restaurante.plan;
-    if (planId && planId !== suscripcion.restaurante.planId) {
+    let nuevoPlan = suscripcion.plan;
+    if (planId && planId !== suscripcion.planId) {
       nuevoPlan = await prisma.plan.findUnique({
         where: { id: planId }
       });
@@ -751,8 +751,12 @@ router.post('/:id/renew', authenticateSuperAdmin, async (req, res) => {
       const suscripcionActualizada = await tx.suscripcion.update({
         where: { id },
         data: {
+          planId: planId || suscripcion.planId,
           estado: 'ACTIVA',
-          fechaVencimiento: nuevaFechaVencimiento
+          fechaVencimiento: nuevaFechaVencimiento,
+          fechaUltimoPago: new Date(),
+          mesesPagados: meses,
+          montoUltimoPago: montoCalculado
         },
         include: {
           restaurante: {
@@ -761,12 +765,13 @@ router.post('/:id/renew', authenticateSuperAdmin, async (req, res) => {
               nombre: true,
               email: true
             }
-          }
+          },
+          plan: true
         }
       });
 
       // Si hay cambio de plan, actualizar también el restaurante
-      if (planId && planId !== suscripcion.restaurante.planId) {
+      if (planId && planId !== suscripcion.planId) {
         await tx.restaurante.update({
           where: { id: suscripcion.restauranteId },
           data: { planId: planId }
@@ -787,14 +792,14 @@ router.post('/:id/renew', authenticateSuperAdmin, async (req, res) => {
       });
 
       // Crear notificación
-      const tipoNotificacion = planId && planId !== suscripcion.restaurante.planId ? 'UPGRADE_PLAN' : 'PAGO_CONFIRMADO';
-      const tituloNotificacion = planId && planId !== suscripcion.restaurante.planId 
+      const tipoNotificacion = planId && planId !== suscripcion.planId ? 'UPGRADE_PLAN' : 'PAGO_CONFIRMADO';
+      const tituloNotificacion = planId && planId !== suscripcion.planId 
         ? 'Plan Actualizado y Renovado'
         : 'Suscripción Renovada';
       
       let mensajeNotificacion = `Su suscripción ha sido renovada por ${meses} mes(es) hasta el ${nuevaFechaVencimiento.toLocaleDateString()}.`;
       
-      if (planId && planId !== suscripcion.restaurante.planId) {
+      if (planId && planId !== suscripcion.planId) {
         mensajeNotificacion = `Su plan ha sido actualizado a "${nuevoPlan.nombre}" y renovado por ${meses} mes(es) hasta el ${nuevaFechaVencimiento.toLocaleDateString()}.`;
       }
 
@@ -854,7 +859,7 @@ router.post('/sync-restaurant-plans', authenticateSuperAdmin, async (req, res) =
 
     // Filtrar las que tienen plan diferente
     const desincronizadas = suscripciones.filter(
-      suscripcion => suscripcion.restaurante.planId !== suscripcion.restaurante.planId
+      suscripcion => suscripcion.planId !== suscripcion.restaurante.planId
     );
 
     // Actualizar restaurantes
@@ -863,14 +868,14 @@ router.post('/sync-restaurant-plans', authenticateSuperAdmin, async (req, res) =
     for (const suscripcion of desincronizadas) {
       await prisma.restaurante.update({
         where: { id: suscripcion.restauranteId },
-        data: { planId: suscripcion.restaurante.planId }
+        data: { planId: suscripcion.planId }
       });
       
       actualizaciones.push({
         restauranteId: suscripcion.restauranteId,
         restauranteNombre: suscripcion.restaurante.nombre,
         planAnterior: suscripcion.restaurante.planId,
-        planNuevo: suscripcion.restaurante.planId,
+        planNuevo: suscripcion.planId,
         planNombre: suscripcion.plan.nombre
       });
     }

@@ -116,6 +116,28 @@ const authService = {
     }
   },
 
+  // Request password reset
+  requestPasswordReset: async (email) => {
+    try {
+      const response = await apiClient.post('/auth/request-password-reset', { email });
+      return { data: response.data };
+    } catch (error) {
+      console.error('Request password reset error:', error);
+      return { error: error.response?.data?.error || error.message || 'Error al solicitar recuperación de contraseña' };
+    }
+  },
+
+  // Reset password with token
+  resetPassword: async (token, newPassword) => {
+    try {
+      const response = await apiClient.post('/auth/reset-password', { token, newPassword });
+      return { data: response.data };
+    } catch (error) {
+      console.error('Reset password error:', error);
+      return { error: error.response?.data?.error || error.message || 'Error al restablecer contraseña' };
+    }
+  },
+
   // Check if user is authenticated
   isAuthenticated: (userType = 'auth') => {
     if (userType === 'staff') {

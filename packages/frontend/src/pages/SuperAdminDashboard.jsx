@@ -8,6 +8,9 @@ const SuperAdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [syncingPlans, setSyncingPlans] = useState(false);
+  const [autoBlockLoading, setAutoBlockLoading] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showAutoBlockModal, setShowAutoBlockModal] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -59,6 +62,29 @@ const SuperAdminDashboard = () => {
       setError(error.message || 'Error sincronizando planes');
     } finally {
       setSyncingPlans(false);
+    }
+  };
+
+  const handleAutoBlockExpired = async (dryRun = false) => {
+    try {
+      setAutoBlockLoading(true);
+      const response = await superAdminService.autoBlockExpiredSubscriptions({
+        gracePeriodDays: 3,
+        dryRun,
+        notifyUsers: true
+      });
+      
+      if (response.success) {
+        alert(response.message);
+        if (!dryRun) {
+          loadDashboardData(); // Recargar datos después del bloqueo real
+        }
+      }
+    } catch (error) {
+      setError(error.message || 'Error en bloqueo automático');
+    } finally {
+      setAutoBlockLoading(false);
+      setShowAutoBlockModal(false);
     }
   };
 
@@ -309,18 +335,68 @@ const SuperAdminDashboard = () => {
             </Link>
           </div>
 
-          {/* Sync Button */}
+          {/* Acciones administrativas */}
           <div className="mt-4 pt-4 border-t border-gray-200">
-            <button
-              onClick={handleSyncPlans}
-              disabled={syncingPlans}
-              className="bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
-            >
-              {syncingPlans ? 'Sincronizando...' : 'Sincronizar Planes'}
-            </button>
-            <p className="text-xs text-gray-500 mt-1">
-              Sincroniza los planes de restaurantes con sus suscripciones activas
-            </p>
+            <div className="space-y-4">
+              {/* Sincronizar Planes */}
+              <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
+                <div>
+                  <h4 className="text-sm font-medium text-blue-900">Sincronizar Planes</h4>
+                  <p className="text-sm text-blue-700">
+                    Sincroniza los planes de restaurantes con sus suscripciones activas
+                  </p>
+                </div>
+                <button
+                  onClick={handleSyncPlans}
+                  disabled={syncingPlans}
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                >
+                  {syncingPlans ? 'Sincronizando...' : 'Sincronizar Planes'}
+                </button>
+              </div>
+
+              {/* Bloqueo Automático */}
+              <div className="flex items-center justify-between p-4 bg-orange-50 rounded-lg">
+                <div>
+                  <h4 className="text-sm font-medium text-orange-900">Bloqueo Automático</h4>
+                  <p className="text-sm text-orange-700">
+                    Bloquear automáticamente suscripciones vencidas (período de gracia: 3 días)
+                  </p>
+                </div>
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => handleAutoBlockExpired(true)}
+                    disabled={autoBlockLoading}
+                    className="inline-flex items-center px-3 py-2 border border-orange-300 text-sm font-medium rounded-md text-orange-700 bg-white hover:bg-orange-50 focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-50"
+                  >
+                    Simular
+                  </button>
+                  <button
+                    onClick={() => setShowAutoBlockModal(true)}
+                    disabled={autoBlockLoading}
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-50"
+                  >
+                    {autoBlockLoading ? 'Procesando...' : 'Ejecutar Bloqueo'}
+                  </button>
+                </div>
+              </div>
+
+              {/* Gestión de Planes */}
+              <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg">
+                <div>
+                  <h4 className="text-sm font-medium text-green-900">Gestión de Planes</h4>
+                  <p className="text-sm text-green-700">
+                    Crear, editar y gestionar los planes de suscripción
+                  </p>
+                </div>
+                <Link
+                  to="/super-admin/plans"
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+                >
+                  Gestionar Planes
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -366,6 +442,49 @@ const SuperAdminDashboard = () => {
           </div>
         </div>
       </main>
+
+      {/* Modal de Confirmación para Bloqueo Automático */}
+      {showAutoBlockModal && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-orange-100">
+                <svg className="h-6 w-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.314 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+              <div className="mt-2 text-center">
+                <h3 className="text-lg leading-6 font-medium text-gray-900">
+                  Confirmar Bloqueo Automático
+                </h3>
+                <div className="mt-2 px-7 py-3">
+                  <p className="text-sm text-gray-500">
+                    Esta acción bloqueará automáticamente todas las suscripciones que estén vencidas por más de 3 días y suspenderá los restaurantes asociados.
+                  </p>
+                  <p className="text-sm text-red-600 mt-2 font-medium">
+                    ⚠️ Esta acción no se puede deshacer automáticamente.
+                  </p>
+                </div>
+                <div className="flex justify-center space-x-3 mt-4">
+                  <button
+                    onClick={() => setShowAutoBlockModal(false)}
+                    className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={() => handleAutoBlockExpired(false)}
+                    disabled={autoBlockLoading}
+                    className="px-4 py-2 bg-orange-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-orange-700 disabled:opacity-50"
+                  >
+                    {autoBlockLoading ? 'Ejecutando...' : 'Confirmar Bloqueo'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

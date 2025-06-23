@@ -3,6 +3,8 @@ import LandingPage from './pages/LandingPage'
 import DemoPage from './pages/DemoPage'
 import AdminLoginPage from './pages/AdminLoginPage'
 import AdminRegisterPage from './pages/AdminRegisterPage'
+import AdminForgotPasswordPage from './pages/AdminForgotPasswordPage'
+import AdminResetPasswordPage from './pages/AdminResetPasswordPage'
 import EmailVerificationPage from './pages/EmailVerificationPage'
 import PublicMenuPage from './pages/PublicMenuPage'
 import AdminLayout from './components/AdminLayout'
@@ -39,6 +41,8 @@ function App() {
           {/* Admin authentication routes */}
           <Route path="/admin/login" element={<AdminLoginPage />} />
           <Route path="/admin/register" element={<AdminRegisterPage />} />
+          <Route path="/admin/forgot-password" element={<AdminForgotPasswordPage />} />
+          <Route path="/admin/reset-password" element={<AdminResetPasswordPage />} />
           
           {/* Staff authentication routes */}
           <Route path="/staff/login" element={<StaffLoginPage />} />

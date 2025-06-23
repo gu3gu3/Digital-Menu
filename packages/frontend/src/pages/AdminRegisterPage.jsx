@@ -108,13 +108,9 @@ const AdminRegisterPage = () => {
     <div className="min-h-screen bg-gradient-to-br from-primary-50 to-secondary-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-2xl mx-auto">
         <div className="text-center mb-8">
-          <div className="flex justify-center mb-4">
-            <div className="flex items-center space-x-3">
-              <img src={logo} alt="Menu View" className="h-12 w-auto" />
-              <div className="flex flex-col">
-                <span className="text-xl font-bold text-primary-600">menu</span>
-                <span className="text-xl font-bold text-secondary-600 -mt-1">view.app</span>
-              </div>
+          <div className="flex justify-center mb-6">
+            <div className="bg-white rounded-2xl p-4 shadow-lg border border-gray-100">
+              <img src={logo} alt="Menu View" className="h-20 w-auto" />
             </div>
           </div>
           <h2 className="text-3xl font-extrabold text-gray-900">
