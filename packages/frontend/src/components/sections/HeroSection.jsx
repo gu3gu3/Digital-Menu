@@ -1,4 +1,4 @@
-import { CheckCircleIcon } from '@heroicons/react/24/solid'
+import { CheckCircleIcon, SparklesIcon } from '@heroicons/react/24/solid'
 
 const HeroSection = () => {
   const scrollToRegister = () => {
@@ -41,6 +41,35 @@ const HeroSection = () => {
                 <p className="text-xl text-gray-600 leading-relaxed">
                   Transforma la experiencia de tus clientes con menús digitales QR. 
                   Adiós a los menús físicos deteriorados, sin imágenes y poco higiénicos.
+                </p>
+              </div>
+
+              {/* AI Digitization Banner - DESTACADO */}
+              <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6 rounded-2xl shadow-xl border-2 border-blue-200">
+                <div className="flex items-center gap-3 mb-3">
+                  <SparklesIcon className="h-8 w-8 text-yellow-300" />
+                  <h3 className="text-2xl font-bold">🚀 Oferta Especial de Lanzamiento</h3>
+                </div>
+                <p className="text-lg mb-4 leading-relaxed">
+                  <strong>¡Digitalizamos tu menú actual con IA GRATIS!</strong><br/>
+                  Nuestro equipo convierte tu menú físico a digital en menos de 24 horas
+                </p>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <button 
+                    onClick={scrollToRegister}
+                    className="bg-white text-blue-600 font-bold py-3 px-6 rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300"
+                  >
+                    🤖 Digitalizar Mi Menú GRATIS
+                  </button>
+                  <button 
+                    onClick={() => document.getElementById('pricing').scrollIntoView({ behavior: 'smooth' })}
+                    className="border-2 border-white text-white font-semibold py-3 px-6 rounded-lg hover:bg-white hover:text-blue-600 transition-all duration-300"
+                  >
+                    Ver Planes y Precios
+                  </button>
+                </div>
+                <p className="text-sm mt-3 opacity-90">
+                  * Servicio de digitalización disponible como servicio adicional para clientes activos
                 </p>
               </div>
 
@@ -141,4 +170,4 @@ const HeroSection = () => {
   )
 }
 
-export default HeroSection 
+export default HeroSection

@@ -25,11 +25,11 @@ async function seedUnified() {
       update: {
         precio: 0,
         limiteProductos: 25,
-        limiteCategorias: 5, // Asumiendo un valor razonable
+        limiteCategorias: 5,
         limiteMeseros: 1,
         limiteMesas: 5,
         limiteOrdenes: 300,
-        soporteEmail: false,
+        soporteEmail: true,
         soporteChat: false,
         analiticas: false,
         activo: true
@@ -42,7 +42,7 @@ async function seedUnified() {
         limiteMeseros: 1,
         limiteMesas: 5,
         limiteOrdenes: 300,
-        soporteEmail: false,
+        soporteEmail: true,
         soporteChat: false,
         analiticas: false,
         activo: true
@@ -50,27 +50,27 @@ async function seedUnified() {
     });
 
     const planBasico = await prisma.plan.upsert({
-      where: { nombre: 'Básico' },
+      where: { nombre: 'Basics' },
       update: {
-        precio: 29.99, // Manteniendo un precio de ejemplo
+        precio: 10,
         limiteProductos: 75,
-        limiteCategorias: 15, // Asumiendo un valor razonable
+        limiteCategorias: 15,
         limiteMeseros: 2,
         limiteMesas: 10,
-        limiteOrdenes: 750,
+        limiteOrdenes: 700,
         soporteEmail: true,
         soporteChat: false,
         analiticas: true,
         activo: true
       },
       create: {
-        nombre: 'Básico',
-        precio: 29.99,
+        nombre: 'Basics',
+        precio: 10,
         limiteProductos: 75,
         limiteCategorias: 15,
         limiteMeseros: 2,
         limiteMesas: 10,
-        limiteOrdenes: 750,
+        limiteOrdenes: 700,
         soporteEmail: true,
         soporteChat: false,
         analiticas: true,
@@ -81,9 +81,9 @@ async function seedUnified() {
     const planPlatinium = await prisma.plan.upsert({
       where: { nombre: 'Platinium' },
       update: {
-        precio: 59.99, // Manteniendo un precio de ejemplo
+        precio: 25,
         limiteProductos: 125,
-        limiteCategorias: 25, // Asumiendo un valor razonable
+        limiteCategorias: 25,
         limiteMeseros: 4,
         limiteMesas: 20,
         limiteOrdenes: 1000,
@@ -94,7 +94,7 @@ async function seedUnified() {
       },
       create: {
         nombre: 'Platinium',
-        precio: 59.99,
+        precio: 25,
         limiteProductos: 125,
         limiteCategorias: 25,
         limiteMeseros: 4,
@@ -110,9 +110,9 @@ async function seedUnified() {
     const planGold = await prisma.plan.upsert({
       where: { nombre: 'Gold' },
       update: {
-        precio: 99.99, // Manteniendo un precio de ejemplo
+        precio: 50,
         limiteProductos: 200,
-        limiteCategorias: 50, // Asumiendo un valor razonable
+        limiteCategorias: 50,
         limiteMeseros: 8,
         limiteMesas: 40,
         limiteOrdenes: 3000,
@@ -123,7 +123,7 @@ async function seedUnified() {
       },
       create: {
         nombre: 'Gold',
-        precio: 99.99,
+        precio: 50,
         limiteProductos: 200,
         limiteCategorias: 50,
         limiteMeseros: 8,
@@ -234,10 +234,29 @@ async function seedUnified() {
       }
     });
 
+    // Restaurante 4: Demo Restaurant (para el demo público)
+    const restauranteDemo = await prisma.restaurante.upsert({
+      where: { slug: 'demo-restaurant' },
+      update: {},
+      create: {
+        nombre: 'Demo Restaurant',
+        slug: 'demo-restaurant',
+        descripcion: 'Restaurante de demostración para mostrar las funcionalidades del sistema',
+        telefono: '+1 555 123 4567',
+        direccion: '123 Demo Street, Demo City',
+        email: 'demo@restaurant.com',
+        planId: planPlatinium.id,
+        moneda: 'USD',
+        backgroundColor: '#f3f4f6', // Gris claro para demo
+        activo: true
+      }
+    });
+
     console.log('✅ Restaurantes demo creados:');
     console.log(`   - ${restaurante1.nombre} (${restaurante1.moneda}) - Plan: ${planBasico.nombre}`);
     console.log(`   - ${restaurante2.nombre} (${restaurante2.moneda}) - Plan: ${planPlatinium.nombre}`);
     console.log(`   - ${restaurante3.nombre} (${restaurante3.moneda}) - Plan: ${planGratuito.nombre}`);
+    console.log(`   - ${restauranteDemo.nombre} (${restauranteDemo.moneda}) - Plan: ${planPlatinium.nombre} (DEMO)`);
 
     // ========================================
     // 4. CREAR USUARIOS ADMIN DE RESTAURANTES
@@ -361,8 +380,8 @@ async function seedUnified() {
     // ========================================
     console.log('\n💳 Creando suscripciones...');
     
-    const restaurantes = [restaurante1, restaurante2, restaurante3];
-    const planes = [planBasico, planPlatinium, planGratuito];
+    const restaurantes = [restaurante1, restaurante2, restaurante3, restauranteDemo];
+    const planes = [planBasico, planPlatinium, planGratuito, planPlatinium];
     
     for (let i = 0; i < restaurantes.length; i++) {
       const restaurante = restaurantes[i];
@@ -478,6 +497,33 @@ async function seedUnified() {
         { nombre: 'Cheesecake de Fresa', descripcion: 'Cremoso cheesecake con coulis de fresa', precio: 18.00, categoria: 'Café y Postres' }
       ],
       mesas: 5 // Límite del Plan Gratuito
+    });
+
+    // --- Menú para Demo Restaurant ---
+    console.log('   -> Creando menú para Demo Restaurant...');
+    await crearMenuCompleto(restauranteDemo, {
+      categorias: [
+        { nombre: 'Aperitivos', descripcion: 'Deliciosos aperitivos para empezar', orden: 1 },
+        { nombre: 'Platos Principales', descripcion: 'Nuestras especialidades de la casa', orden: 2 },
+        { nombre: 'Bebidas', descripcion: 'Refrescantes bebidas para acompañar', orden: 3 },
+        { nombre: 'Postres', descripcion: 'Dulces tentaciones para finalizar', orden: 4 }
+      ],
+      productos: [
+        { nombre: 'Nachos Supreme', descripcion: 'Nachos con queso, guacamole y jalapeños', precio: 12.99, categoria: 'Aperitivos' },
+        { nombre: 'Alitas Buffalo', descripcion: 'Alitas picantes con salsa ranch', precio: 14.99, categoria: 'Aperitivos' },
+        { nombre: 'Hamburguesa Clásica', descripcion: 'Carne angus, lechuga, tomate y queso cheddar', precio: 16.99, categoria: 'Platos Principales' },
+        { nombre: 'Pizza Margherita', descripcion: 'Salsa de tomate, mozzarella fresca y albahaca', precio: 18.99, categoria: 'Platos Principales' },
+        { nombre: 'Pasta Alfredo', descripcion: 'Fettuccine en cremosa salsa alfredo con pollo', precio: 19.99, categoria: 'Platos Principales' },
+        { nombre: 'Salmón a la Parrilla', descripcion: 'Salmón fresco con verduras asadas', precio: 24.99, categoria: 'Platos Principales' },
+        { nombre: 'Coca Cola', descripcion: 'Refresco clásico 355ml', precio: 2.99, categoria: 'Bebidas' },
+        { nombre: 'Agua Mineral', descripcion: 'Agua mineral con gas 500ml', precio: 1.99, categoria: 'Bebidas' },
+        { nombre: 'Café Americano', descripcion: 'Café recién preparado', precio: 3.99, categoria: 'Bebidas' },
+        { nombre: 'Cerveza Corona', descripcion: 'Cerveza mexicana 355ml', precio: 4.99, categoria: 'Bebidas' },
+        { nombre: 'Tiramisu', descripcion: 'Clásico postre italiano con café', precio: 7.99, categoria: 'Postres' },
+        { nombre: 'Cheesecake', descripcion: 'Cremoso cheesecake de vainilla', precio: 6.99, categoria: 'Postres' },
+        { nombre: 'Helado Artesanal', descripcion: 'Tres bolas de helado con toppings', precio: 5.99, categoria: 'Postres' }
+      ],
+      mesas: 20 // Plan Platinum
     });
 
     // ========================================

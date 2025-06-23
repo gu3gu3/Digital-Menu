@@ -13,7 +13,7 @@ const DemoSection = () => {
   useEffect(() => {
     const fetchDemoMenu = async () => {
     try {
-        const response = await fetch(`/api/public/menu/demo`)
+        const response = await fetch(`/api/menu/demo`)
       const data = await response.json()
       
       if (data.success) {
