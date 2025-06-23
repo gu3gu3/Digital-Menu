@@ -6,11 +6,19 @@ const options = {
     openapi: '3.0.0',
     info: {
       title: 'Digital Menu QR API',
-      version: '1.0.0',
-      description: 'API para el sistema de menús digitales QR - Documentación completa de endpoints post-refactorización 2024',
+      version: '1.0.1',
+      description: 'API para el sistema de menús digitales QR - Documentación completa post-refactorización 2025 con correcciones de endpoints de suscripciones',
       contact: {
         name: 'Digital Menu QR',
         email: 'support@menuview.app'
+      },
+      changelog: {
+        'v1.0.1': [
+          'Corrección de include statements en endpoints de suscripciones',
+          'Mejora en búsqueda de planes por precio en lugar de nombre hardcodeado',
+          'Resolución de problemas de tokens tras cambios en suscripciones',
+          'Validación mejorada de relaciones Prisma en Super Admin endpoints'
+        ]
       }
     },
     servers: [

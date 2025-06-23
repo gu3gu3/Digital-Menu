@@ -45,6 +45,28 @@ Cada parte tiene una única responsabilidad.
 
 **Regla 5.1: Los Logs son la Verdad.** Ante un error 500 en producción, el primer paso es siempre revisar los logs de Cloud Run. No se deben hacer cambios en el código sin saber qué está fallando.
 
+## 5.2 ⭐ **CORRECCIONES CRÍTICAS RECIENTES (Junio 23 2025)**
+
+### Reglas de Manejo de Relaciones Prisma
+**Regla 5.2.1: Include Statements Completos.** Los endpoints que acceden a propiedades de relaciones DEBEN incluir esas relaciones en el query Prisma. Error común: `suscripcion.restaurante.usuariosAdmin.length` sin `include: { restaurante: { include: { usuariosAdmin: true } } }`
+
+**Regla 5.2.2: Validación de Relaciones.** Antes de acceder a `objeto.relacion.propiedad`, verificar que la relación esté incluida en el query o manejar casos undefined.
+
+### Reglas de Búsqueda de Planes
+**Regla 5.2.3: Búsqueda Dinámica de Planes.** NUNCA buscar planes por nombre hardcodeado. Usar criterios dinámicos como `precio: 0` para plan gratuito.
+
+**Regla 5.2.4: Compatibilidad Producción.** El código debe funcionar independientemente de los nombres exactos de datos en diferentes entornos.
+
+### Reglas de Manejo de Tokens
+**Regla 5.2.5: Invalidación de Tokens.** Cuando se hacen cambios importantes en suscripciones/planes desde Super Admin, los tokens de administradores pueden invalidarse. Documentar este comportamiento.
+
+**Regla 5.2.6: Experiencia de Usuario.** Proporcionar mensajes claros cuando se requiere renovar sesión tras cambios administrativos.
+
+### Casos Específicos Corregidos
+- ✅ **GET /api/super-admin/subscriptions/:id**: Agregadas relaciones `usuariosAdmin`, `productos`, `mesas`
+- ✅ **Registro de usuarios**: Cambiado de `nombre: 'Gratuito'` a `precio: 0, activo: true`
+- ✅ **Manejo de tokens**: Documentado comportamiento de invalidación tras cambios
+
 ---
 
 ## 6. ⭐ ARQUITECTURA API CONSOLIDADA (Post-Refactorización 2025)
@@ -249,7 +271,7 @@ try {
 
 **Regla 8.9: Endpoints Correctos.** Super Admin usa `/super-admin/auth/me`, no `/profile`. Verificar rutas en backend antes de migrar.
 
-## 9. ⭐ DOCUMENTACIÓN SWAGGER API (Junio 22 2025)
+## 9. ⭐ DOCUMENTACIÓN SWAGGER API (Junio 23 2025 - Actualizada)
 
 ### Documentación Completa de APIs
 **Regla 9.1: Swagger es la Fuente de Verdad.** Toda API debe estar documentada en Swagger con ejemplos funcionales. Acceso: `http://localhost:3001/api/docs`
@@ -277,3 +299,15 @@ try {
 **Regla 9.6: Validación Continua.** Todos los endpoints documentados deben estar probados y funcionando antes de commit
 
 **Regla 9.7: Mantenimiento de Documentación.** Cualquier cambio en APIs debe actualizarse inmediatamente en Swagger
+
+### 🔧 **Correcciones Recientes en Documentación (v1.0.1)**
+**Regla 9.8: Changelog en Swagger.** Mantener historial de cambios en la documentación Swagger para tracking de mejoras:
+- ✅ **v1.0.1**: Corrección de include statements en endpoints de suscripciones
+- ✅ **v1.0.1**: Mejora en búsqueda de planes por precio dinámico
+- ✅ **v1.0.1**: Documentación de invalidación de tokens tras cambios administrativos
+- ✅ **v1.0.1**: Validación mejorada de relaciones Prisma en Super Admin endpoints
+
+**Regla 9.9: Endpoints Críticos Validados.** Los siguientes endpoints han sido corregidos y validados:
+- `GET /api/super-admin/subscriptions/:id` - Include statements completos para relaciones
+- `POST /api/auth/register` - Búsqueda dinámica de plan gratuito por precio
+- Todos los endpoints de Super Admin - Manejo correcto de invalidación de tokens

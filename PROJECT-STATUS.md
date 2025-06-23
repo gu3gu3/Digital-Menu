@@ -1,15 +1,38 @@
 # 📊 Estado del Proyecto - Digital Menu QR
 
 ## Información General
-- **Estado Actual**: MVP + Super Admin System + Plans Management + Multi-Currency System + Swagger Documentation ✅
+- **Estado Actual**: MVP + Super Admin System + Plans Management + Multi-Currency System + Swagger Documentation + Bug Fixes ✅
 - **Progreso General**: ~99% completado
-- **Última Actualización**: Junio 22 2025
+- **Última Actualización**: Junio 23 2025
 
 ## Tecnologías Implementadas
 - **Backend**: Node.js + Express + Prisma ORM
 - **Frontend**: React + Vite + Tailwind CSS
 - **Base de Datos**: PostgreSQL
 - **Autenticación**: JWT
+
+## ⭐ **CORRECCIONES CRÍTICAS RECIENTES (Junio 23 2025)**
+
+### **🔧 Corrección de Endpoints de Suscripciones**
+- ✅ **Fix Include Statements**: Corregido endpoint `GET /api/super-admin/subscriptions/:id` que fallaba con error "Cannot read properties of undefined (reading 'length')"
+- ✅ **Relaciones Prisma Completas**: Agregadas relaciones faltantes `usuariosAdmin`, `productos`, `mesas` en consultas de suscripciones
+- ✅ **Compatibilidad Cloud**: Include statements ahora incluyen todas las relaciones necesarias para estadísticas
+
+### **🎯 Mejora en Búsqueda de Planes**
+- ✅ **Plan Lookup Dinámico**: Cambiado de búsqueda hardcodeada por nombre "Gratuito" a búsqueda flexible por `precio: 0`
+- ✅ **Compatibilidad Producción**: El registro de nuevos usuarios ahora funciona independientemente del nombre exacto del plan gratuito
+- ✅ **Robustez Mejorada**: Sistema más resiliente a cambios en nombres de planes entre desarrollo y producción
+
+### **🔐 Resolución de Problemas de Autenticación**
+- ✅ **Token Invalidation**: Documentado comportamiento de invalidación de tokens tras cambios en suscripciones
+- ✅ **Session Management**: Mejora en manejo de sesiones cuando se actualizan planes desde Super Admin
+- ✅ **User Experience**: Guías claras para renovar sesión tras cambios administrativos
+
+### **📊 Impacto de las Correcciones**
+- **Renovación de Suscripciones**: ✅ Funcionando completamente
+- **Cambio de Planes**: ✅ Sincronización automática correcta
+- **Registro de Usuarios**: ✅ Compatible con cualquier configuración de planes
+- **Super Admin Panel**: ✅ Todas las secciones operativas
 
 ## Funcionalidades Completadas
 

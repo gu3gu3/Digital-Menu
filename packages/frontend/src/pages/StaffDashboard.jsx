@@ -59,14 +59,14 @@ const StaffDashboard = () => {
       loadStats();
       loadCallNotifications();
 
-      // Auto-refresh cada 15 segundos si está habilitado
+      // Auto-refresh cada 45 segundos si está habilitado (reducido de 15s para evitar rate limiting)
       let interval;
       if (autoRefresh) {
         interval = setInterval(() => {
           loadOrders();
           loadStats();
           loadCallNotifications();
-        }, 15000);
+        }, 45000); // Cambiado de 15000 a 45000 (45 segundos)
       }
 
       return () => {
@@ -94,7 +94,12 @@ const StaffDashboard = () => {
       setOrders(response.data?.orders || response.orders || []);
     } catch (error) {
       console.error('Error loading orders:', error);
-      setError('Error al cargar las órdenes');
+      if (error.response?.status === 429) {
+        setError('Demasiadas solicitudes. Pausando actualización automática...');
+        setAutoRefresh(false); // Pausar auto-refresh si hay rate limiting
+      } else {
+        setError('Error al cargar las órdenes');
+      }
     } finally {
       setLoading(false);
     }
@@ -106,6 +111,9 @@ const StaffDashboard = () => {
       setStats(response.data || response);
     } catch (error) {
       console.error('Error loading stats:', error);
+      if (error.response?.status === 429) {
+        console.log('Rate limited - stats request paused');
+      }
     }
   };
 
@@ -119,6 +127,9 @@ const StaffDashboard = () => {
       }
     } catch (error) {
       console.error('Error loading call notifications:', error);
+      if (error.response?.status === 429) {
+        console.log('Rate limited - notifications request paused');
+      }
     }
   };
 
@@ -287,7 +298,7 @@ const StaffDashboard = () => {
             ¡Hola, {user.nombre}! 👋
           </h2>
           <p className="text-gray-600">
-            Aquí tienes las órdenes de hoy. {autoRefresh && '(Actualización automática cada 15 segundos)'}
+            Aquí tienes las órdenes de hoy. {autoRefresh && '(Actualización automática cada 45 segundos)'}
           </p>
         </div>
 

@@ -27,8 +27,8 @@ const NotificationBell = () => {
 
     useEffect(() => {
         fetchNotifications();
-        // Option B: Polling every 30 seconds
-        const interval = setInterval(fetchNotifications, 30000);
+        // Polling every 60 seconds (optimizado para reducir rate limiting)
+        const interval = setInterval(fetchNotifications, 60000);
         return () => clearInterval(interval);
     }, []);
 
