@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { superAdminAuth, subscriptionsService, superAdminUtils, superAdminService } from '../services/superAdminService';
+import useDocumentTitle from '../hooks/useDocumentTitle';
 
 const SuperAdminDashboard = () => {
   const [stats, setStats] = useState(null);
@@ -12,6 +13,9 @@ const SuperAdminDashboard = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showAutoBlockModal, setShowAutoBlockModal] = useState(false);
   const navigate = useNavigate();
+
+  // Set dynamic page title
+  useDocumentTitle('MenuView.app | Superadmin Panel');
 
   useEffect(() => {
     // Verificar autenticación

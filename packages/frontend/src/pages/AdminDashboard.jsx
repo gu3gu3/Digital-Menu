@@ -11,6 +11,7 @@ import {
   FolderIcon
 } from '@heroicons/react/24/outline'
 import apiClient from '../lib/apiClient'
+import useDocumentTitle from '../hooks/useDocumentTitle'
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState({
@@ -32,6 +33,9 @@ const AdminDashboard = () => {
   const [recentOrders, setRecentOrders] = useState([])
   const [loading, setLoading] = useState(true)
   const navigate = useNavigate()
+
+  // Set dynamic page title
+  useDocumentTitle('MenuView.app | Panel de Administración de Menú')
 
   useEffect(() => {
     const fetchData = async () => {

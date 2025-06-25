@@ -19,8 +19,11 @@ import NotificationBell from '../components/NotificationBell';
 import ordersService from '../services/ordersService';
 import { notificationService } from '../services/notificationService';
 import logo from '../assets/logo.png';
+import useDocumentTitle from '../hooks/useDocumentTitle';
 
 const StaffDashboard = () => {
+  // Set dynamic page title
+  useDocumentTitle('MenuView.app | Panel de Staff');
   const [user, setUser] = useState(null);
   const [orders, setOrders] = useState([]);
   const [stats, setStats] = useState({});
