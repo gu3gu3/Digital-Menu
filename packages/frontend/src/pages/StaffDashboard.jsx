@@ -230,15 +230,11 @@ const StaffDashboard = () => {
             <div className="flex items-center">
               <div className="flex items-center space-x-3">
                 <img src={logo} alt="Menu View" className="h-8 w-auto" />
-                <div className="flex flex-col">
-                  <span className="text-sm font-bold text-primary-600">menu</span>
-                  <span className="text-sm font-bold text-secondary-600 -mt-1">view.app</span>
+                <div className="ml-3">
+                  <h1 className="text-lg font-semibold text-gray-900">
+                    Portal de Meseros
+                  </h1>
                 </div>
-              </div>
-              <div className="ml-6 hidden md:block">
-                <h1 className="text-lg font-semibold text-gray-900">
-                  Portal de Meseros
-                </h1>
               </div>
             </div>
 

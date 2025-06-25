@@ -32,6 +32,38 @@ const AdminTablesPage = () => {
     capacidad: 4
   })
 
+  // Función para generar el nombre de visualización de la mesa
+  const getDisplayName = (mesa) => {
+    if (!mesa.nombre) {
+      return `Mesa ${mesa.numero}`
+    }
+    
+    // Si el nombre ya incluye el número, no duplicarlo
+    if (mesa.nombre.toLowerCase().includes(mesa.numero.toString())) {
+      return mesa.nombre
+    }
+    
+    // Concatenar el nombre personalizado con el número
+    return `${mesa.nombre} ${mesa.numero}`
+  }
+
+  // Función para preparar los datos antes de enviar
+  const prepareTableData = (formData) => {
+    // Si no hay nombre personalizado, enviar vacío para que el backend/frontend use el default
+    if (!formData.nombre.trim()) {
+      return {
+        ...formData,
+        nombre: ''
+      }
+    }
+    
+    // Si hay nombre personalizado, enviarlo tal como está (sin número)
+    return {
+      ...formData,
+      nombre: formData.nombre.trim()
+    }
+  }
+
   useEffect(() => {
     loadTables()
   }, [])
@@ -58,11 +90,12 @@ const AdminTablesPage = () => {
     
     const promise = () => new Promise(async (resolve, reject) => {
       try {
-        // Asegurar que numero sea un entero
-        const submitData = {
+        // Preparar los datos del formulario
+        const formData = {
           ...tableForm,
           numero: parseInt(tableForm.numero)
         }
+        const submitData = prepareTableData(formData)
 
         const url = editingTable 
           ? `/tables/${editingTable.id}`
@@ -425,7 +458,7 @@ const AdminTablesPage = () => {
                     {mesa.numero}
                   </div>
                   <div>
-                    <h3 className="font-bold text-gray-800">{mesa.nombre || `Mesa ${mesa.numero}`}</h3>
+                    <h3 className="font-bold text-gray-800">{getDisplayName(mesa)}</h3>
                     <p className="text-sm text-gray-500 flex items-center">
                       <UsersIcon className="h-4 w-4 mr-1 text-gray-400" />
                       {mesa.capacidad} personas
@@ -514,19 +547,28 @@ const AdminTablesPage = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Nombre (opcional)
+                  Nombre personalizado (opcional)
                 </label>
                 <input
                   type="text"
                   value={tableForm.nombre}
                   onChange={(e) => setTableForm({...tableForm, nombre: e.target.value})}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500"
-                  placeholder="Ej: Mesa VIP, Terraza, etc."
+                  placeholder="Ej: Mesa, Habitación, Cabaña, Salón, Banca, VIP, Terraza..."
                 />
+                <p className="mt-1 text-xs text-gray-500">
+                  💡 Si escribes "Mesa", se mostrará como "Mesa {tableForm.numero || '#'}". Si dejas vacío, se mostrará como "Mesa {tableForm.numero || '#'}"
+                </p>
+                {(tableForm.numero || tableForm.nombre) && (
+                  <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-md">
+                    <p className="text-xs font-medium text-blue-800">Vista previa:</p>
+                    <p className="text-sm font-semibold text-blue-900">
+                      {getDisplayName({numero: tableForm.numero || '#', nombre: tableForm.nombre})}
+                    </p>
+                  </div>
+                )}
               </div>
 
-        
-        
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Capacidad
@@ -568,11 +610,11 @@ const AdminTablesPage = () => {
           <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-lg bg-white">
             <div className="mb-4">
               <h3 className="text-lg font-medium text-gray-900">
-                Código QR - Mesa {selectedTable?.numero}
+                Código QR - {selectedTable ? getDisplayName(selectedTable) : 'Mesa'}
               </h3>
-              {selectedTable?.nombre && (
-                <p className="text-sm text-gray-500">{selectedTable.nombre}</p>
-              )}
+              <p className="text-sm text-gray-500">
+                Capacidad: {selectedTable?.capacidad} personas
+              </p>
             </div>
             
             <div className="text-center mb-4">
