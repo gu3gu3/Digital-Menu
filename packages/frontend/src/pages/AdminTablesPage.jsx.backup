@@ -29,6 +29,7 @@ const AdminTablesPage = () => {
   const [tableForm, setTableForm] = useState({
     numero: '',
     nombre: '',
+    descripcion: '',
     capacidad: 4
   })
 
@@ -58,23 +59,17 @@ const AdminTablesPage = () => {
     
     const promise = () => new Promise(async (resolve, reject) => {
       try {
-        // Asegurar que numero sea un entero
-        const submitData = {
-          ...tableForm,
-          numero: parseInt(tableForm.numero)
-        }
-
         const url = editingTable 
           ? `/tables/${editingTable.id}`
           : '/tables';
         
         const method = editingTable ? 'put' : 'post';
 
-        const response = await apiClient[method](url, submitData);
+        const response = await apiClient[method](url, tableForm);
 
         if (response.data.success) {
           setShowTableModal(false)
-          setTableForm({ numero: '', nombre: '', capacidad: 4 })
+          setTableForm({ numero: '', nombre: '', descripcion: '', capacidad: 4 })
           setEditingTable(null)
           loadTables()
           
@@ -241,12 +236,12 @@ const AdminTablesPage = () => {
       setTableForm({
         numero: table.numero,
         nombre: table.nombre || '',
-        
+        descripcion: table.descripcion || '',
         capacidad: table.capacidad
       })
     } else {
       setEditingTable(null)
-      setTableForm({ numero: '', nombre: '', capacidad: 4 })
+      setTableForm({ numero: '', nombre: '', descripcion: '', capacidad: 4 })
     }
     setShowTableModal(true)
   }
@@ -525,8 +520,19 @@ const AdminTablesPage = () => {
                 />
               </div>
 
-        
-        
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Descripción (opcional)
+                </label>
+                <textarea
+                  value={tableForm.descripcion}
+                  onChange={(e) => setTableForm({...tableForm, descripcion: e.target.value})}
+                  rows={3}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500"
+                  placeholder="Ubicación o características especiales"
+                />
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Capacidad

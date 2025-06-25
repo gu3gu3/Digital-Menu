@@ -597,6 +597,22 @@ const register = async (req, res) => {
         }
       });
 
+      // Create subscription for the restaurant
+      const fechaInicio = new Date();
+      const fechaVencimiento = new Date();
+      fechaVencimiento.setDate(fechaInicio.getDate() + 30); // 30 días gratis
+
+      await tx.suscripcion.create({
+        data: {
+          restauranteId: newRestaurante.id,
+          estado: 'ACTIVA',
+          fechaInicio,
+          fechaVencimiento,
+          renovacionAutomatica: false,
+          notasAdmin: 'Suscripción creada automáticamente durante el registro'
+        }
+      });
+
       return newAdmin;
     });
 

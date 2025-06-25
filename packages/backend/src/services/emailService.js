@@ -148,6 +148,7 @@ class EmailService {
 
   async sendWelcomeEmail(email, userName, restaurantName) {
     const dashboardUrl = `${process.env.FRONTEND_URL}/admin/dashboard`;
+    const staffUrl = `${process.env.FRONTEND_URL}/staff/login`;
     
     const emailContent = {
       from: {
@@ -186,10 +187,10 @@ class EmailService {
                 <h3 style="color: #2d3748; margin: 0 0 15px 0; font-size: 18px;">📊 Tu Plan Actual</h3>
                 <p style="color: #4a5568; margin: 0; font-size: 15px;">
                   <strong>✨ Plan Gratuito</strong> - 30 días gratis<br>
-                  • Hasta 50 productos<br>
-                  • Hasta 10 mesas<br>
-                  • Hasta 2 meseros<br>
-                  • 200 órdenes por mes
+                  • Hasta 25 productos<br>
+                  • Hasta 5 mesas<br>
+                  • Hasta 1 mesero<br>
+                  • 300 órdenes por mes
                 </p>
               </div>
 
@@ -217,11 +218,27 @@ class EmailService {
                 </div>
               </div>
 
-              <!-- Button -->
+              <!-- Buttons -->
               <div style="text-align: center; margin: 40px 0;">
-                <a href="${dashboardUrl}" style="background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); color: white; text-decoration: none; padding: 15px 30px; border-radius: 8px; font-weight: bold; font-size: 16px; display: inline-block; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                <a href="${dashboardUrl}" style="background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); color: white; text-decoration: none; padding: 15px 30px; border-radius: 8px; font-weight: bold; font-size: 16px; display: inline-block; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); margin: 5px;">
                   🚀 Ir a mi Dashboard
                 </a>
+              </div>
+
+              <!-- Staff Panel Link -->
+              <div style="background-color: #ebf8ff; border: 1px solid #90cdf4; border-radius: 8px; padding: 20px; margin: 30px 0;">
+                <h4 style="color: #2b6cb0; margin: 0 0 10px 0; font-size: 16px;">👥 Panel de Meseros</h4>
+                <p style="color: #2c5282; margin: 0 0 15px 0; font-size: 14px;">
+                  Comparte este enlace con tu equipo de meseros para que puedan acceder al sistema:
+                </p>
+                <div style="background-color: #bee3f8; padding: 10px; border-radius: 4px; margin: 10px 0;">
+                  <code style="color: #2a69ac; font-size: 13px; word-break: break-all;">${staffUrl}</code>
+                </div>
+                <div style="text-align: center; margin: 15px 0;">
+                  <a href="${staffUrl}" style="background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%); color: white; text-decoration: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; font-size: 14px; display: inline-block;">
+                    🔗 Panel de Staff
+                  </a>
+                </div>
               </div>
 
               <div style="background-color: #e6fffa; border: 1px solid #4fd1c7; border-radius: 6px; padding: 20px; margin: 30px 0;">
@@ -266,6 +283,7 @@ class EmailService {
         4. Invita a tu equipo
 
         Accede a tu dashboard: ${dashboardUrl}
+        Panel de meseros: ${staffUrl}
 
         ¿Necesitas ayuda? Contacta: soporte@menuview.app
 

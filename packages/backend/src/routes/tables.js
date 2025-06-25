@@ -8,16 +8,14 @@ const router = express.Router();
 
 // Validation schemas
 const tableSchema = Joi.object({
-  numero: Joi.string().required().min(1).max(10),
+  numero: Joi.number().integer().required().min(1).max(999),
   nombre: Joi.string().optional().max(50),
-  descripcion: Joi.string().optional().max(255),
   capacidad: Joi.number().integer().min(1).max(20).default(4)
 });
 
 const updateTableSchema = Joi.object({
-  numero: Joi.string().optional().min(1).max(10),
+  numero: Joi.number().integer().optional().min(1).max(999),
   nombre: Joi.string().optional().max(50),
-  descripcion: Joi.string().optional().max(255),
   capacidad: Joi.number().integer().min(1).max(20),
   activa: Joi.boolean().optional()
 });
@@ -93,7 +91,7 @@ const createTable = async (req, res) => {
     }
 
     const { restauranteId } = req.user;
-    const { numero, nombre, descripcion, capacidad } = value;
+    const { numero, nombre, capacidad } = value;
 
     // Check plan limits
     const restaurante = await prisma.restaurante.findUnique({
@@ -140,9 +138,8 @@ const createTable = async (req, res) => {
       data: {
         numero,
         nombre,
-        descripcion,
         capacidad,
-        qrCode,
+        qrCodeUrl: qrCode,
         restauranteId
       }
     });
@@ -248,7 +245,7 @@ const updateTable = async (req, res) => {
     if (value.numero && value.numero !== existingTable.numero) {
       const restauranteSlug = existingTable.restaurante.slug;
       const newQrCode = `table-${restauranteId}-${value.numero}-${Date.now()}`;
-      value.qrCode = newQrCode;
+      value.qrCodeUrl = newQrCode;
     }
 
     // Update table

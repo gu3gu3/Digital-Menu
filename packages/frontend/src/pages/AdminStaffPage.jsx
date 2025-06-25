@@ -11,7 +11,9 @@ import {
   PencilIcon,
   TrashIcon,
   ChartBarIcon,
-  FunnelIcon
+  FunnelIcon,
+  LinkIcon,
+  ClipboardDocumentIcon
 } from '@heroicons/react/24/outline';
 import { Dialog, Transition } from '@headlessui/react';
 import { Fragment } from 'react';
@@ -195,6 +197,44 @@ const AdminStaffPage = () => {
             <PlusIcon className="h-4 w-4 mr-2" />
             Agregar Mesero
           </button>
+        </div>
+      </div>
+
+      {/* Staff Panel Access */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center">
+            <div className="p-2 bg-blue-100 rounded-lg">
+              <UsersIcon className="h-5 w-5 text-blue-600" />
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-blue-900">Panel de Acceso para Meseros</h3>
+              <p className="text-sm text-blue-700">Comparte este enlace con tu equipo para que puedan acceder al sistema</p>
+            </div>
+          </div>
+          <div className="flex items-center space-x-2">
+            <div className="bg-white border border-blue-300 rounded-lg px-3 py-2 text-sm text-blue-800 font-mono">
+              {window.location.origin}/staff/login
+            </div>
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(`${window.location.origin}/staff/login`);
+              }}
+              className="inline-flex items-center px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
+              title="Copiar enlace"
+            >
+              📋 Copiar
+            </button>
+            <a
+              href="/staff/login"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center px-3 py-2 bg-white border border-blue-300 text-blue-700 rounded-lg hover:bg-blue-50 text-sm"
+              title="Abrir panel de staff"
+            >
+              🔗 Abrir
+            </a>
+          </div>
         </div>
       </div>
 
