@@ -557,7 +557,7 @@ const AdminTablesPage = () => {
                   placeholder="Ej: Mesa, Habitación, Cabaña, Salón, Banca, VIP, Terraza..."
                 />
                 <p className="mt-1 text-xs text-gray-500">
-                  💡 Si escribes "Mesa", se mostrará como "Mesa {tableForm.numero || '#'}". Si dejas vacío, se mostrará como "Mesa {tableForm.numero || '#'}"
+                  💡 Si escribes "Mesa", se mostrará como "Mesa {tableForm.numero || '+ Número de Mesa o Nombre que hayas escrito'}."
                 </p>
                 {(tableForm.numero || tableForm.nombre) && (
                   <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-md">
