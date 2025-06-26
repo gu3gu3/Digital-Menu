@@ -1660,9 +1660,14 @@ router.get('/:id/orders', authenticateSuperAdmin, async (req, res) => {
     }
 
     if (fecha) {
-      const startDate = new Date(fecha);
-      const endDate = new Date(fecha);
-      endDate.setDate(endDate.getDate() + 1);
+      // Crear fechas usando la zona horaria del servidor (America/Managua)
+      // Esto evita problemas de timezone al parsear fechas
+      const year = parseInt(fecha.split('-')[0]);
+      const month = parseInt(fecha.split('-')[1]) - 1; // Los meses en JS van de 0-11
+      const day = parseInt(fecha.split('-')[2]);
+      
+      const startDate = new Date(year, month, day, 0, 0, 0, 0);  // Inicio del día local
+      const endDate = new Date(year, month, day + 1, 0, 0, 0, 0); // Inicio del día siguiente local
       
       where.createdAt = {
         gte: startDate,
@@ -1719,11 +1724,17 @@ router.get('/:id/orders', authenticateSuperAdmin, async (req, res) => {
           fecha: fecha || 'No especificada',
           fechaParseada: fecha ? new Date(fecha).toISOString() : 'N/A',
           rangoCalculado: fecha ? {
-            inicio: new Date(fecha).toISOString(),
+            inicio: (() => {
+              const year = parseInt(fecha.split('-')[0]);
+              const month = parseInt(fecha.split('-')[1]) - 1;
+              const day = parseInt(fecha.split('-')[2]);
+              return new Date(year, month, day, 0, 0, 0, 0).toISOString();
+            })(),
             fin: (() => {
-              const end = new Date(fecha);
-              end.setDate(end.getDate() + 1);
-              return end.toISOString();
+              const year = parseInt(fecha.split('-')[0]);
+              const month = parseInt(fecha.split('-')[1]) - 1;
+              const day = parseInt(fecha.split('-')[2]);
+              return new Date(year, month, day + 1, 0, 0, 0, 0).toISOString();
             })()
           } : 'N/A'
         },
