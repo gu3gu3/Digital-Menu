@@ -1176,6 +1176,66 @@ router.get('/restaurants', authenticateSuperAdmin, async (req, res) => {
  *       500:
  *         description: Error interno del servidor
  */
+// Endpoint para actualizar información básica del restaurante desde Super Admin
+router.put('/basic-info', authenticateSuperAdmin, async (req, res) => {
+  try {
+    const { restauranteId, nombre, descripcion, telefono, direccion, email, moneda } = req.body;
+
+    if (!restauranteId) {
+      return res.status(400).json({
+        success: false,
+        error: 'El ID del restaurante es requerido'
+      });
+    }
+
+    // Verificar que el restaurante existe
+    const restaurante = await prisma.restaurante.findUnique({
+      where: { id: restauranteId }
+    });
+
+    if (!restaurante) {
+      return res.status(404).json({
+        success: false,
+        error: 'Restaurante no encontrado'
+      });
+    }
+
+    // Preparar datos para actualizar (solo los campos que se envían)
+    const updateData = {};
+    if (nombre !== undefined) updateData.nombre = nombre;
+    if (descripcion !== undefined) updateData.descripcion = descripcion;
+    if (telefono !== undefined) updateData.telefono = telefono;
+    if (direccion !== undefined) updateData.direccion = direccion;
+    if (email !== undefined) updateData.email = email;
+    if (moneda !== undefined) updateData.moneda = moneda;
+
+    // Actualizar restaurante
+    const updatedRestaurant = await prisma.restaurante.update({
+      where: { id: restauranteId },
+      data: updateData,
+      include: {
+        plan: true
+      }
+    });
+
+    res.json({
+      success: true,
+      message: 'Información básica del restaurante actualizada exitosamente',
+      data: {
+        restaurante: updatedRestaurant.nombre,
+        camposActualizados: Object.keys(updateData)
+      }
+    });
+
+  } catch (error) {
+    console.error('Error actualizando información básica:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error interno del servidor'
+    });
+  }
+});
+
 router.post('/visual-identity', authenticateSuperAdmin, upload.fields([
   { name: 'logo', maxCount: 1 },
   { name: 'banner', maxCount: 1 },

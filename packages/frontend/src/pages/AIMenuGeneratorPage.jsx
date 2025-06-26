@@ -4,6 +4,7 @@ import { superAdminAuth } from '../services/superAdminService';
 import aiMenuService from '../services/aiMenuService';
 import useDocumentTitle from '../hooks/useDocumentTitle';
 import RestaurantAutocomplete from '../components/RestaurantAutocomplete';
+import { getCurrenciesByRegion } from '../utils/currencyUtils';
 
 const AIMenuGeneratorPage = () => {
   const [restaurants, setRestaurants] = useState([]);
@@ -38,6 +39,17 @@ const AIMenuGeneratorPage = () => {
     backgroundImage: null
   });
   const [visualLoading, setVisualLoading] = useState(false);
+
+  // Estados para información básica
+  const [basicInfoData, setBasicInfoData] = useState({
+    nombre: '',
+    descripcion: '',
+    telefono: '',
+    direccion: '',
+    email: '',
+    moneda: 'USD'
+  });
+  const [basicInfoLoading, setBasicInfoLoading] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [bulkTableLoading, setBulkTableLoading] = useState(false);
@@ -353,6 +365,52 @@ const AIMenuGeneratorPage = () => {
   };
 
   const selectedRestaurantInfo = restaurants.find(r => r.id === selectedRestaurant);
+
+  // Cargar información básica cuando se selecciona un restaurante
+  useEffect(() => {
+    if (selectedRestaurantInfo) {
+      setBasicInfoData({
+        nombre: selectedRestaurantInfo.nombre || '',
+        descripcion: selectedRestaurantInfo.descripcion || '',
+        telefono: selectedRestaurantInfo.telefono || '',
+        direccion: selectedRestaurantInfo.direccion || '',
+        email: selectedRestaurantInfo.email || '',
+        moneda: selectedRestaurantInfo.moneda || 'USD'
+      });
+    }
+  }, [selectedRestaurantInfo]);
+
+  // Función para actualizar información básica
+  const handleUpdateBasicInfo = async (e) => {
+    e.preventDefault();
+    
+    if (!selectedRestaurant) {
+      setError('Debe seleccionar un restaurante');
+      return;
+    }
+
+    setBasicInfoLoading(true);
+    setError('');
+    setResult(null);
+
+    try {
+      const response = await aiMenuService.updateBasicInfo(selectedRestaurant, basicInfoData);
+      
+      if (response.success) {
+        setResult({
+          type: 'basic-info',
+          data: response.data,
+          message: response.message
+        });
+        // Recargar lista de restaurantes para actualizar los datos
+        await loadRestaurants();
+      }
+    } catch (error) {
+      setError(error.error || error.message || 'Error actualizando información básica');
+    } finally {
+      setBasicInfoLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -939,13 +997,132 @@ const AIMenuGeneratorPage = () => {
 
         {/* Visual Identity Tab */}
         {activeTab === 'visual-identity' && (
-          <div className="bg-white shadow rounded-lg p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-medium text-gray-900">Personalización Visual del Restaurante</h3>
-              <div className="text-sm text-gray-500">
-                Actualiza la identidad visual de tu restaurante
+          <div className="space-y-6">
+            {/* Información Básica */}
+            <div className="bg-white shadow rounded-lg p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-medium text-gray-900">Información Básica del Restaurante</h3>
+                <div className="text-sm text-gray-500">
+                  Solo lectura para el administrador - Editable desde Super Admin
+                </div>
               </div>
+              
+              <form onSubmit={handleUpdateBasicInfo} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Nombre del Restaurante *
+                    </label>
+                    <input
+                      type="text"
+                      value={basicInfoData.nombre}
+                      onChange={(e) => setBasicInfoData({...basicInfoData, nombre: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                      required
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Teléfono
+                    </label>
+                    <input
+                      type="tel"
+                      value={basicInfoData.telefono}
+                      onChange={(e) => setBasicInfoData({...basicInfoData, telefono: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Email del Restaurante
+                    </label>
+                    <input
+                      type="email"
+                      value={basicInfoData.email}
+                      onChange={(e) => setBasicInfoData({...basicInfoData, email: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Moneda *
+                    </label>
+                    <select
+                      value={basicInfoData.moneda}
+                      onChange={(e) => setBasicInfoData({...basicInfoData, moneda: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                      required
+                    >
+                      {Object.entries(getCurrenciesByRegion()).map(([region, currencies]) => (
+                        <optgroup key={region} label={region}>
+                          {currencies.map((currency) => (
+                            <option key={currency.code} value={currency.code}>
+                              {currency.symbol} {currency.name} ({currency.country})
+                            </option>
+                          ))}
+                        </optgroup>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Descripción
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={basicInfoData.descripcion}
+                    onChange={(e) => setBasicInfoData({...basicInfoData, descripcion: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Dirección
+                  </label>
+                  <input
+                    type="text"
+                    value={basicInfoData.direccion}
+                    onChange={(e) => setBasicInfoData({...basicInfoData, direccion: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                  />
+                </div>
+                
+                <div>
+                  <button
+                    type="submit"
+                    disabled={basicInfoLoading || !selectedRestaurant}
+                    className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {basicInfoLoading ? (
+                      <>
+                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Actualizando Información...
+                      </>
+                    ) : (
+                      '📝 Actualizar Información Básica'
+                    )}
+                  </button>
+                </div>
+              </form>
             </div>
+
+            {/* Personalización Visual */}
+            <div className="bg-white shadow rounded-lg p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-medium text-gray-900">Personalización Visual del Restaurante</h3>
+                <div className="text-sm text-gray-500">
+                  Actualiza la identidad visual de tu restaurante
+                </div>
+              </div>
             
             <form onSubmit={handleUpdateVisualIdentity} className="space-y-6">
               {/* Logo Upload */}
@@ -1122,6 +1299,7 @@ const AIMenuGeneratorPage = () => {
                 </button>
               </div>
             </form>
+            </div>
           </div>
         )}
       </main>

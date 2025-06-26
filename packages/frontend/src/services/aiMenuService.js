@@ -128,6 +128,19 @@ export const aiMenuService = {
     }
   },
 
+  // Actualizar información básica del restaurante
+  async updateBasicInfo(restauranteId, data) {
+    try {
+      const response = await apiClient.put(`${AI_MENU_API_URL}/basic-info`, {
+        restauranteId,
+        ...data
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: 'Error de conexión' };
+    }
+  },
+
   // Funciones utilitarias
   formatFileSize(bytes) {
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];

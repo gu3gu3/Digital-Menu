@@ -17,6 +17,7 @@ const AdminRegisterPage = () => {
     nombreRestaurante: '',
     descripcion: '',
     telefonoRestaurante: '', // Teléfono del restaurante
+    emailRestaurante: '', // Email del restaurante
     direccion: ''
   })
   const [showPassword, setShowPassword] = useState(false)
@@ -96,6 +97,7 @@ const AdminRegisterPage = () => {
           nombre: formData.nombreRestaurante,
           descripcion: formData.descripcion,
           telefono: formData.telefonoRestaurante,
+          email: formData.emailRestaurante,
           direccion: formData.direccion
         }
       })
@@ -318,23 +320,41 @@ const AdminRegisterPage = () => {
                   </div>
 
                   <div>
-                    <label htmlFor="direccion" className="block text-sm font-medium text-gray-700">
-                      Dirección *
+                    <label htmlFor="emailRestaurante" className="block text-sm font-medium text-gray-700">
+                      Email del Restaurante
                     </label>
                     <input
-                      id="direccion"
-                      name="direccion"
-                      type="text"
-                      required
+                      id="emailRestaurante"
+                      name="emailRestaurante"
+                      type="email"
                       className={`mt-1 block w-full px-3 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm ${
-                        errors.direccion ? 'border-red-300' : 'border-gray-300'
+                        errors.emailRestaurante ? 'border-red-300' : 'border-gray-300'
                       }`}
-                      placeholder="Dirección del restaurante"
-                      value={formData.direccion}
+                      placeholder="contacto@turestaurante.com"
+                      value={formData.emailRestaurante}
                       onChange={handleChange}
                     />
-                    {errors.direccion && <p className="mt-1 text-sm text-red-600">{errors.direccion}</p>}
+                    {errors.emailRestaurante && <p className="mt-1 text-sm text-red-600">{errors.emailRestaurante}</p>}
                   </div>
+                </div>
+
+                <div>
+                  <label htmlFor="direccion" className="block text-sm font-medium text-gray-700">
+                    Dirección *
+                  </label>
+                  <input
+                    id="direccion"
+                    name="direccion"
+                    type="text"
+                    required
+                    className={`mt-1 block w-full px-3 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm ${
+                      errors.direccion ? 'border-red-300' : 'border-gray-300'
+                    }`}
+                    placeholder="Dirección del restaurante"
+                    value={formData.direccion}
+                    onChange={handleChange}
+                  />
+                  {errors.direccion && <p className="mt-1 text-sm text-red-600">{errors.direccion}</p>}
                 </div>
               </div>
             </div>
