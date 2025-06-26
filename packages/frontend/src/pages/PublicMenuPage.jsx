@@ -324,25 +324,25 @@ const PublicMenuPage = () => {
         style={bannerStyle}
       >
         <div className="max-w-4xl mx-auto px-4">
-          <div className="flex flex-col md:flex-row items-center gap-6 text-center md:text-left">
-            {/* Logo a la izquierda */}
+          <div className="flex items-center gap-6 text-left">
+            {/* Logo siempre a la izquierda */}
             {restaurante?.logoUrl && isValidImageUrl(restaurante.logoUrl) && (
               <div className="flex-shrink-0">
                 <img
                   src={restaurante.logoUrl} 
                   alt={`${restaurante.nombre} logo`} 
-                  className="w-28 h-28 md:w-32 md:h-32 rounded-full border-4 border-white object-cover shadow-2xl"
+                  className="w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 rounded-full border-4 border-white object-cover shadow-2xl"
                 />
               </div>
             )}
             
             {/* Info a la derecha */}
-            <div className="flex-1">
-              <h1 className="text-4xl md:text-5xl font-bold" style={{ textShadow: '1px 1px 3px rgba(0,0,0,0.8)' }}>
+            <div className="flex-1 min-w-0">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold leading-tight" style={{ textShadow: '1px 1px 3px rgba(0,0,0,0.8)' }}>
                 {restaurante?.nombre}
               </h1>
               {restaurante?.descripcion && (
-                <p className="mt-2 text-lg opacity-90" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.7)' }}>
+                <p className="mt-2 text-sm sm:text-base md:text-lg opacity-90 leading-relaxed" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.7)' }}>
                   {restaurante.descripcion}
                 </p>
               )}
