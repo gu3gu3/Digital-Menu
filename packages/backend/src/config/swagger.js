@@ -299,23 +299,133 @@ const options = {
               type: 'integer',
               description: 'ID único de la mesa'
             },
-            name: {
-              type: 'string',
-              description: 'Nombre/número de la mesa'
+            numero: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 999,
+              description: 'Número de la mesa'
             },
-            qrCode: {
+            nombre: {
               type: 'string',
-              description: 'Código QR único de la mesa'
+              maxLength: 50,
+              description: 'Nombre personalizado de la mesa (opcional)',
+              example: 'Mesa VIP'
             },
-            isActive: {
+            capacidad: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 20,
+              default: 4,
+              description: 'Capacidad máxima de personas'
+            },
+            qrCodeUrl: {
+              type: 'string',
+              description: 'URL del código QR único de la mesa'
+            },
+            activa: {
               type: 'boolean',
+              default: true,
               description: 'Estado activo de la mesa'
             },
-            restaurantId: {
+            restauranteId: {
               type: 'integer',
-              description: 'ID del restaurante'
+              description: 'ID del restaurante al que pertenece'
+            },
+            estaActiva: {
+              type: 'boolean',
+              description: 'Indica si hay una sesión activa en la mesa'
+            },
+            ordenesActivas: {
+              type: 'integer',
+              description: 'Número de órdenes activas en la mesa'
+            },
+            createdAt: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Fecha de creación de la mesa'
+            },
+            updatedAt: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Fecha de última actualización'
+            }
+          },
+          required: ['numero', 'capacidad', 'restauranteId']
+        },
+        CreateTableRequest: {
+          type: 'object',
+          required: ['numero'],
+          properties: {
+            numero: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 999,
+              description: 'Número de la mesa',
+              example: 5
+            },
+            nombre: {
+              type: 'string',
+              maxLength: 50,
+              description: 'Nombre personalizado de la mesa (opcional)',
+              example: 'Mesa Terraza'
+            },
+            capacidad: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 20,
+              default: 4,
+              description: 'Capacidad máxima de personas',
+              example: 6
             }
           }
+        },
+        UpdateTableRequest: {
+          type: 'object',
+          properties: {
+            numero: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 999,
+              description: 'Número de la mesa',
+              example: 5
+            },
+            nombre: {
+              type: 'string',
+              maxLength: 50,
+              description: 'Nombre personalizado de la mesa',
+              example: 'Mesa VIP Renovada'
+            },
+            capacidad: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 20,
+              description: 'Capacidad máxima de personas',
+              example: 8
+            },
+            activa: {
+              type: 'boolean',
+              description: 'Estado activo de la mesa',
+              example: true
+            }
+          }
+        },
+        TableWithQR: {
+          allOf: [
+            { $ref: '#/components/schemas/Table' },
+            {
+              type: 'object',
+              properties: {
+                qrUrl: {
+                  type: 'string',
+                  description: 'URL del menú para esta mesa específica'
+                },
+                qrCodeImage: {
+                  type: 'string',
+                  description: 'Imagen del código QR en formato data URL'
+                }
+              }
+            }
+          ]
         },
 
         // === SCHEMAS DE PEDIDOS ===

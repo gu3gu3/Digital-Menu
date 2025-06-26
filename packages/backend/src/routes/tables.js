@@ -20,9 +20,69 @@ const updateTableSchema = Joi.object({
   activa: Joi.boolean().optional()
 });
 
-// @desc    Get tables for restaurant
-// @route   GET /api/tables
-// @access  Private (Admin)
+/**
+ * @swagger
+ * /api/tables:
+ *   get:
+ *     summary: Obtener todas las mesas del restaurante
+ *     description: Recupera la lista completa de mesas con información de sesiones activas y órdenes pendientes
+ *     tags: [Tables]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Lista de mesas obtenida exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     mesas:
+ *                       type: array
+ *                       items:
+ *                         allOf:
+ *                           - $ref: '#/components/schemas/Table'
+ *                           - type: object
+ *                             properties:
+ *                               estaActiva:
+ *                                 type: boolean
+ *                                 description: Si la mesa tiene sesiones activas
+ *                                 example: true
+ *                               ordenesActivas:
+ *                                 type: integer
+ *                                 description: Número de órdenes activas en la mesa
+ *                                 example: 2
+ *                     total:
+ *                       type: integer
+ *                       description: Número total de mesas
+ *                       example: 15
+ *             example:
+ *               success: true
+ *               data:
+ *                 mesas:
+ *                   - id: 1
+ *                     numero: 1
+ *                     nombre: "Mesa Principal"
+ *                     capacidad: 4
+ *                     qrCodeUrl: "table-1-1-1671234567890"
+ *                     activa: true
+ *                     estaActiva: true
+ *                     ordenesActivas: 2
+ *                     restauranteId: 1
+ *                     creadoEn: "2023-12-17T10:00:00.000Z"
+ *                     actualizadoEn: "2023-12-17T10:00:00.000Z"
+ *                 total: 15
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       500:
+ *         $ref: '#/components/responses/InternalServerError'
+ */
 const getTables = async (req, res) => {
   try {
     const { restauranteId } = req.user;
@@ -77,9 +137,100 @@ const getTables = async (req, res) => {
   }
 };
 
-// @desc    Create new table
-// @route   POST /api/tables
-// @access  Private (Admin)
+/**
+ * @swagger
+ * /api/tables:
+ *   post:
+ *     summary: Crear nueva mesa
+ *     description: Crea una nueva mesa en el restaurante con código QR automático
+ *     tags: [Tables]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - numero
+ *             properties:
+ *               numero:
+ *                 type: integer
+ *                 minimum: 1
+ *                 maximum: 999
+ *                 description: Número de la mesa
+ *                 example: 5
+ *               nombre:
+ *                 type: string
+ *                 maxLength: 50
+ *                 description: Nombre personalizado de la mesa (opcional)
+ *                 example: "Mesa VIP"
+ *               capacidad:
+ *                 type: integer
+ *                 minimum: 1
+ *                 maximum: 20
+ *                 default: 4
+ *                 description: Capacidad de personas de la mesa
+ *                 example: 6
+ *           example:
+ *             numero: 5
+ *             nombre: "Mesa VIP"
+ *             capacidad: 6
+ *     responses:
+ *       200:
+ *         description: Mesa creada exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     mesa:
+ *                       $ref: '#/components/schemas/Table'
+ *                     qrUrl:
+ *                       type: string
+ *                       description: URL pública del menú con mesa específica
+ *                       example: "https://menuview.app/menu/bella-vista?mesa=5"
+ *                     qrCodeImage:
+ *                       type: string
+ *                       description: Imagen del código QR en formato data URL
+ *                       example: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA..."
+ *                 message:
+ *                   type: string
+ *                   example: "Mesa creada exitosamente"
+ *       400:
+ *         description: Error de validación o mesa duplicada
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             examples:
+ *               numeroRequerido:
+ *                 summary: Número requerido
+ *                 value:
+ *                   success: false
+ *                   error: "\"numero\" is required"
+ *               mesaDuplicada:
+ *                 summary: Mesa duplicada
+ *                 value:
+ *                   success: false
+ *                   error: "Ya existe una mesa con este número"
+ *               limitePlan:
+ *                 summary: Límite del plan alcanzado
+ *                 value:
+ *                   success: false
+ *                   error: "Has alcanzado el límite de 10 mesas para el plan Básico"
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       500:
+ *         $ref: '#/components/responses/InternalServerError'
+ */
 const createTable = async (req, res) => {
   try {
     const { error, value } = tableSchema.validate(req.body);
