@@ -37,6 +37,7 @@ const staffRoutes = require('./routes/staff');
 const superAdminAuthRoutes = require('./routes/superAdminAuth');
 const superAdminSubscriptionsRoutes = require('./routes/superAdminSubscriptions');
 const notificationRoutes = require('./routes/notifications');
+const aiMenuGeneratorRoutes = require('./routes/aiMenuGenerator');
 
 const app = express();
 
@@ -155,6 +156,7 @@ app.use('/api/menu-import', menuImportRoutes);
 app.use('/api/staff', staffRoutes);
 app.use('/api/super-admin/auth', superAdminAuthRoutes);
 app.use('/api/super-admin/subscriptions', superAdminSubscriptionsRoutes);
+app.use('/api/super-admin/ai-menu-generator', aiMenuGeneratorRoutes);
 app.use('/api/notifications', notificationRoutes);
 
 // Setup Swagger documentation
@@ -180,7 +182,8 @@ app.get('/api', (req, res) => {
       upload: '/api/upload',
       menuImport: '/api/menu-import',
       staff: '/api/staff',
-      superAdmin: '/api/super-admin'
+      superAdmin: '/api/super-admin',
+      aiMenuGenerator: '/api/super-admin/ai-menu-generator'
     },
     health: '/health',
     documentation: '/api/docs'
@@ -198,7 +201,8 @@ app.listen(PORT, () => {
   console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
   console.log(`📱 Entorno: ${process.env.NODE_ENV || 'development'}`);
   console.log(`🔗 Health check: http://localhost:${PORT}/health`);
-  console.log(`📖 API docs: http://localhost:${PORT}/api`);
+  console.log(`🔗 API Docs: http://localhost:${PORT}/api/docs`);
+  console.log(`🤖 AI Menu Generator: http://localhost:${PORT}/api/super-admin/ai-menu-generator`);
 });
 
 module.exports = app; 

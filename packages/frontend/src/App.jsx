@@ -26,6 +26,7 @@ import ExpiringSubscriptionsPage from './pages/ExpiringSubscriptionsPage'
 import SendNotificationsPage from './pages/SendNotificationsPage'
 import RenewSubscriptionPage from './pages/RenewSubscriptionPage'
 import PlansManagementPage from './pages/PlansManagementPage'
+import AIMenuGeneratorPage from './pages/AIMenuGeneratorPage'
 
 function App() {
   return (
@@ -57,6 +58,7 @@ function App() {
           <Route path="/super-admin/notifications" element={<SendNotificationsPage />} />
           <Route path="/super-admin/subscriptions/:id/renew" element={<RenewSubscriptionPage />} />
           <Route path="/super-admin/plans" element={<PlansManagementPage />} />
+          <Route path="/super-admin/ai-menu-generator" element={<AIMenuGeneratorPage />} />
           
           {/* Admin panel routes */}
           <Route path="/admin" element={<AdminLayout />}>

@@ -13,6 +13,17 @@
 
 ## ⭐ **ACTUALIZACIONES CRÍTICAS RECIENTES (Junio 26 2025)**
 
+### **🎨 Mejoras de UX y Drag & Drop - COMPLETADAS v1.0.2**
+- ✅ **Drag & Drop para Categorías**: Implementado reordenamiento visual con @dnd-kit
+- ✅ **Nuevo Endpoint**: `PUT /api/categories/reorder` para actualización de orden
+- ✅ **Componente DraggableCategoryList**: Interfaz completa con handles visuales (≡)
+- ✅ **Servicio categoryService.js**: Operaciones centralizadas de categorías
+- ✅ **UX Móvil Mejorada**: Pestañas horizontales en menú público reemplazando sidebar vertical
+- ✅ **Scroll Horizontal Suave**: Optimización para dispositivos móviles sin scrollbars visibles
+- ✅ **Auto-scroll Inteligente**: Centrado automático de categoría seleccionada
+- ✅ **Indicadores de Cantidad**: Contador de productos por categoría en pestañas
+- ✅ **Efectos Visuales**: Escalado y sombras en pestañas activas para mejor feedback
+
 ### **📚 Documentación Swagger de Mesas - COMPLETADA**
 - ✅ **Cumplimiento Regla 9.1**: Swagger es la Fuente de Verdad - Todos los endpoints de mesas documentados
 - ✅ **Cumplimiento Regla 9.7**: Cambios actualizados inmediatamente en Swagger tras refactorización
@@ -98,7 +109,30 @@ activo: boolean          // ✅ Estado de la mesa
   - [x] Estadísticas de uso por plan
   - [x] Contadores de restaurantes y suscripciones por plan
 
-### Sistema Multi-Moneda ⭐ **NUEVO COMPLETADO**
+### Mejoras de UX y Drag & Drop ⭐ **NUEVO COMPLETADO v1.0.2**
+- [x] **Drag & Drop para Categorías**
+  - [x] Implementación con @dnd-kit (core, sortable, utilities)
+  - [x] Componente DraggableCategoryList reutilizable
+  - [x] Handles visuales (≡) para elementos arrastrables
+  - [x] Feedback visual durante arrastre (opacidad, sombras)
+  - [x] Validación de permisos (solo categorías del restaurante)
+  - [x] Estados de loading y manejo de errores
+
+- [x] **Nuevo Endpoint de Reordenamiento**
+  - [x] PUT /api/categories/reorder con validación Joi
+  - [x] Transacciones Prisma para atomicidad
+  - [x] Documentación Swagger completa con ejemplos
+  - [x] Servicio categoryService.js centralizado
+
+- [x] **Optimización UX Móvil**
+  - [x] Pestañas horizontales en menú público (reemplaza sidebar vertical)
+  - [x] Scroll horizontal suave sin scrollbars visibles
+  - [x] Auto-scroll inteligente para centrar categoría seleccionada
+  - [x] Indicadores de cantidad de productos por categoría
+  - [x] Efectos visuales sutiles (escalado, sombras en pestañas activas)
+  - [x] Distribución responsive mejorada (contenido 2/3, carrito 1/3)
+
+### Sistema Multi-Moneda ⭐ **COMPLETADO**
 - [x] **Soporte para 7 Monedas Centroamericanas**
   - [x] Dólar Estadounidense (USD) - $
   - [x] Córdoba Nicaragüense (NIO) - C$

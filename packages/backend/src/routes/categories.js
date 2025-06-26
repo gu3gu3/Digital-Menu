@@ -126,6 +126,18 @@ const updateCategorySchema = Joi.object({
   activa: Joi.boolean().optional()
 });
 
+const reorderCategoriesSchema = Joi.object({
+  categorias: Joi.array().items(
+    Joi.object({
+      id: Joi.string().required(),
+      orden: Joi.number().integer().min(0).required()
+    })
+  ).min(1).required().messages({
+    'array.min': 'Debe proporcionar al menos una categoría',
+    'any.required': 'La lista de categorías es requerida'
+  })
+});
+
 /**
  * @swagger
  * /api/categories:
@@ -598,6 +610,89 @@ const deleteCategory = async (req, res) => {
   }
 };
 
+/**
+ * Reordenar categorías
+ */
+const reorderCategories = async (req, res) => {
+  try {
+    console.log('🔄 Reorder request received:', {
+      body: req.body,
+      bodyType: typeof req.body,
+      keys: Object.keys(req.body || {}),
+      categorias: req.body?.categorias
+    });
+
+    const { error } = reorderCategoriesSchema.validate(req.body);
+    if (error) {
+      console.error('❌ Validation error:', error.details[0].message);
+      return res.status(400).json({
+        success: false,
+        error: error.details[0].message
+      });
+    }
+
+    const { categorias } = req.body;
+    const restauranteId = req.user.restauranteId;
+
+    // Verificar que todas las categorías pertenecen al restaurante
+    const categoryIds = categorias.map(cat => cat.id);
+    const existingCategories = await prisma.categoria.findMany({
+      where: {
+        id: { in: categoryIds },
+        restauranteId
+      },
+      select: { id: true }
+    });
+
+    if (existingCategories.length !== categorias.length) {
+      return res.status(400).json({
+        success: false,
+        error: 'Una o más categorías no pertenecen a este restaurante'
+      });
+    }
+
+    // Actualizar el orden de cada categoría usando transacción
+    await prisma.$transaction(
+      categorias.map(categoria => 
+        prisma.categoria.update({
+          where: { id: categoria.id },
+          data: { orden: categoria.orden }
+        })
+      )
+    );
+
+    // Obtener las categorías actualizadas
+    const updatedCategories = await prisma.categoria.findMany({
+      where: { restauranteId },
+      include: {
+        productos: {
+          select: {
+            id: true,
+            nombre: true,
+            disponible: true
+          }
+        }
+      },
+      orderBy: { orden: 'asc' }
+    });
+
+    res.json({
+      success: true,
+      message: 'Orden de categorías actualizado exitosamente',
+      data: {
+        categorias: updatedCategories
+      }
+    });
+
+  } catch (error) {
+    console.error('Error reordenando categorías:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error interno del servidor'
+    });
+  }
+};
+
 // Routes with Swagger documentation
 
 /**
@@ -719,6 +814,154 @@ router.get('/', authenticate, getCategories);
  *         description: Acceso denegado - solo administradores
  */
 router.post('/', authenticate, requireAdmin, createCategory);
+
+/**
+ * @swagger
+ * /api/categories/{id}:
+ *   put:
+ *     summary: Actualizar categoría
+ *     description: Actualiza una categoría existente del restaurante
+ *     tags: [Categories]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID de la categoría
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               nombre:
+ *                 type: string
+ *                 minLength: 2
+ *                 maxLength: 100
+ *                 description: Nombre de la categoría
+ *               descripcion:
+ *                 type: string
+ *                 maxLength: 500
+ *                 description: Descripción de la categoría
+ *               activo:
+ *                 type: boolean
+ *                 description: Estado activo de la categoría
+ *               ordenVisualizacion:
+ *                 type: integer
+ *                 minimum: 0
+ *                 description: Orden de visualización
+ *     responses:
+ *       200:
+ *         description: Categoría actualizada exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Categoría actualizada exitosamente"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     categoria:
+ *                       $ref: '#/components/schemas/Category'
+ *       400:
+ *         description: Datos inválidos
+ *       404:
+ *         description: Categoría no encontrada
+ *       409:
+ *         description: Ya existe una categoría con ese nombre
+ *       401:
+ *         description: Token inválido
+ *       403:
+ *         description: Acceso denegado - solo administradores
+ */
+/**
+ * @swagger
+ * /api/categories/reorder:
+ *   put:
+ *     summary: Reordenar categorías
+ *     description: Actualiza el orden de visualización de múltiples categorías mediante drag & drop
+ *     tags: [Categories]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - categorias
+ *             properties:
+ *               categorias:
+ *                 type: array
+ *                 description: Lista de categorías con su nuevo orden
+ *                 items:
+ *                   type: object
+ *                   required:
+ *                     - id
+ *                     - orden
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                       description: ID de la categoría
+ *                       example: "clm123abc456"
+ *                     orden:
+ *                       type: integer
+ *                       minimum: 0
+ *                       description: Nuevo orden de visualización
+ *                       example: 1
+ *           examples:
+ *             reorder_example:
+ *               summary: Reordenar 3 categorías
+ *               value:
+ *                 categorias:
+ *                   - id: "clm123abc456"
+ *                     orden: 1
+ *                   - id: "clm789def012"
+ *                     orden: 2
+ *                   - id: "clm345ghi678"
+ *                     orden: 3
+ *     responses:
+ *       200:
+ *         description: Orden actualizado exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Orden de categorías actualizado exitosamente"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     categorias:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/Categoria'
+ *       400:
+ *         description: Datos inválidos o categorías no pertenecen al restaurante
+ *       401:
+ *         description: Token inválido
+ *       403:
+ *         description: Acceso denegado - solo administradores
+ *       500:
+ *         description: Error interno del servidor
+ */
+router.put('/reorder', authenticate, requireAdmin, reorderCategories);
 
 /**
  * @swagger

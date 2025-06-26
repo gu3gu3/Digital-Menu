@@ -6,13 +6,21 @@ const options = {
     openapi: '3.0.0',
     info: {
       title: 'Digital Menu QR API',
-      version: '1.0.1',
-      description: 'API para el sistema de menús digitales QR - Documentación completa post-refactorización 2025 con correcciones de endpoints de suscripciones',
+      version: '1.0.2',
+      description: 'API para el sistema de menús digitales QR - Documentación completa post-refactorización 2025 con correcciones de endpoints de suscripciones y mejoras de UX',
       contact: {
         name: 'Digital Menu QR',
         email: 'support@menuview.app'
       },
       changelog: {
+        'v1.0.2': [
+          'Implementación de drag & drop para reordenamiento de categorías',
+          'Nuevo endpoint PUT /api/categories/reorder para actualización de orden',
+          'Mejora de UX en menú público: pestañas horizontales en lugar de sidebar vertical',
+          'Optimización para dispositivos móviles con scroll horizontal suave',
+          'Componente DraggableCategoryList con @dnd-kit para administración',
+          'Servicio categoryService.js para operaciones de categorías'
+        ],
         'v1.0.1': [
           'Corrección de include statements en endpoints de suscripciones',
           'Mejora en búsqueda de planes por precio en lugar de nombre hardcodeado',
@@ -636,6 +644,120 @@ const options = {
               description: 'Hora de fin de la sesión'
             }
           }
+        },
+
+        // === SCHEMAS DE AI MENU GENERATOR ===
+        AIMenuGenerateRequest: {
+          type: 'object',
+          required: ['restauranteId'],
+          properties: {
+            restauranteId: {
+              type: 'string',
+              description: 'ID del restaurante donde crear el menú'
+            },
+            replaceExistingMenu: {
+              type: 'boolean',
+              default: false,
+              description: 'Si reemplazar el menú existente'
+            },
+            generateDescriptions: {
+              type: 'boolean',
+              default: true,
+              description: 'Si generar descripciones mejoradas con IA'
+            }
+          }
+        },
+        AIMenuGenerateResponse: {
+          type: 'object',
+          properties: {
+            success: {
+              type: 'boolean',
+              description: 'Indica si la operación fue exitosa'
+            },
+            message: {
+              type: 'string',
+              description: 'Mensaje descriptivo del resultado'
+            },
+            data: {
+              type: 'object',
+              properties: {
+                restaurante: {
+                  type: 'string',
+                  description: 'Nombre del restaurante'
+                },
+                categoriasCreadas: {
+                  type: 'integer',
+                  description: 'Número de categorías creadas'
+                },
+                productosCreados: {
+                  type: 'integer',
+                  description: 'Número de productos creados'
+                }
+              }
+            }
+          }
+        },
+        BulkTablesRequest: {
+          type: 'object',
+          required: ['restauranteId', 'baseName', 'count'],
+          properties: {
+            restauranteId: {
+              type: 'string',
+              description: 'ID del restaurante donde crear las mesas'
+            },
+            baseName: {
+              type: 'string',
+              description: 'Nombre base para las mesas (ej: Mesa, Habitación, Salón)'
+            },
+            count: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 50,
+              description: 'Cantidad de mesas a crear'
+            },
+            startNumber: {
+              type: 'integer',
+              minimum: 1,
+              default: 1,
+              description: 'Número inicial para la numeración consecutiva'
+            },
+            capacity: {
+              type: 'integer',
+              minimum: 1,
+              default: 4,
+              description: 'Capacidad de personas por mesa'
+            }
+          }
+        },
+        BulkTablesResponse: {
+          type: 'object',
+          properties: {
+            success: {
+              type: 'boolean',
+              description: 'Indica si la operación fue exitosa'
+            },
+            message: {
+              type: 'string',
+              description: 'Mensaje descriptivo del resultado'
+            },
+            data: {
+              type: 'object',
+              properties: {
+                restaurante: {
+                  type: 'string',
+                  description: 'Nombre del restaurante'
+                },
+                mesasCreadas: {
+                  type: 'integer',
+                  description: 'Número de mesas creadas'
+                },
+                rangoNumeros: {
+                  type: 'string',
+                  description: 'Rango de números de las mesas creadas'
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -703,6 +825,10 @@ const options = {
       {
         name: 'Import/Export',
         description: 'Importación y exportación de menús'
+      },
+      {
+        name: 'AI Menu Generator',
+        description: 'Generación automática de menús usando IA y creación masiva de mesas'
       }
     ]
   },

@@ -315,7 +315,7 @@ const SuperAdminDashboard = () => {
         {/* Quick Actions */}
         <div className="bg-white shadow rounded-lg p-6 mb-6">
           <h2 className="text-lg font-medium text-gray-900 mb-4">Acciones Rápidas</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <Link
               key="subscriptions-link"
               to="/super-admin/subscriptions"
@@ -336,6 +336,13 @@ const SuperAdminDashboard = () => {
               className="bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-md text-center font-medium transition-colors"
             >
               Enviar Notificaciones
+            </Link>
+            <Link
+              key="ai-menu-generator-link"
+              to="/super-admin/ai-menu-generator"
+              className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-3 rounded-md text-center font-medium transition-colors"
+            >
+              🤖 Generador de Menús IA
             </Link>
           </div>
 

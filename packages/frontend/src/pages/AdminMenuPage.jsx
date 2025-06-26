@@ -9,7 +9,9 @@ import {
   ArrowDownTrayIcon
 } from '@heroicons/react/24/outline'
 import MenuImportModal from '../components/MenuImportModal'
+import DraggableCategoryList from '../components/DraggableCategoryList'
 import apiClient from '../lib/apiClient'
+import categoryService from '../services/categoryService'
 
 const AdminMenuPage = () => {
   const [categorias, setCategorias] = useState([])
@@ -23,6 +25,7 @@ const AdminMenuPage = () => {
   const [showImportModal, setShowImportModal] = useState(false)
   const [editingCategory, setEditingCategory] = useState(null)
   const [editingProduct, setEditingProduct] = useState(null)
+  const [isReordering, setIsReordering] = useState(false)
 
   // Category form state
   const [categoryForm, setCategoryForm] = useState({
@@ -238,6 +241,34 @@ const AdminMenuPage = () => {
     }
   }
 
+  const handleCategoryReorder = async (reorderData, newOrderedCategories) => {
+    setIsReordering(true)
+    setError('')
+    
+    try {
+      // Actualizar el estado local inmediatamente para feedback visual
+      setCategorias(newOrderedCategories)
+      
+      // Enviar al backend
+      await categoryService.reorderCategories(reorderData)
+      
+      setSuccess('Orden de categorías actualizado exitosamente')
+      
+      // Recargar para asegurar sincronización
+      setTimeout(() => {
+        loadCategories()
+      }, 500)
+      
+    } catch (error) {
+      console.error('Error reordering categories:', error)
+      setError(error.error || 'Error al reordenar categorías')
+      // Revertir cambios en caso de error
+      loadCategories()
+    } finally {
+      setIsReordering(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -299,67 +330,18 @@ const AdminMenuPage = () => {
             <div className="px-4 py-5 sm:p-6">
               <h3 className="text-lg font-medium text-gray-900 mb-4">Categorías</h3>
               
-              {categorias.length === 0 ? (
-                <div className="text-center py-6">
-                  <FolderIcon className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-500">No hay categorías</p>
-                  <button
-                    onClick={() => openCategoryModal()}
-                    className="mt-2 text-primary-600 hover:text-primary-700"
-                  >
-                    Crear la primera categoría
-                  </button>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {categorias.map((categoria) => (
-                    <div
-                      key={categoria.id}
-                      className={`p-3 rounded-lg cursor-pointer border ${
-                        selectedCategoria?.id === categoria.id
-                          ? 'bg-primary-50 border-primary-200'
-                          : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
-                      }`}
-                      onClick={() => {
-                        setSelectedCategoria(categoria)
-                        loadProducts(categoria.id)
-                      }}
-                    >
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <h4 className="font-medium text-gray-900">{categoria.nombre}</h4>
-                          {categoria.descripcion && (
-                            <p className="text-sm text-gray-500 mt-1">{categoria.descripcion}</p>
-                          )}
-                          <p className="text-xs text-gray-400 mt-1">
-                            {categoria.productos?.length || 0} productos
-                          </p>
-                        </div>
-                        <div className="flex space-x-1">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              openCategoryModal(categoria)
-                            }}
-                            className="p-1 text-gray-400 hover:text-gray-600"
-                          >
-                            <PencilIcon className="h-4 w-4" />
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              handleDeleteCategory(categoria)
-                            }}
-                            className="p-1 text-red-400 hover:text-red-600"
-                          >
-                            <TrashIcon className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <DraggableCategoryList
+                categorias={categorias}
+                selectedCategoria={selectedCategoria}
+                onCategoriaSelect={(categoria) => {
+                  setSelectedCategoria(categoria)
+                  loadProducts(categoria.id)
+                }}
+                onCategoriaEdit={openCategoryModal}
+                onCategoriaDelete={handleDeleteCategory}
+                onReorder={handleCategoryReorder}
+                isReordering={isReordering}
+              />
             </div>
           </div>
         </div>

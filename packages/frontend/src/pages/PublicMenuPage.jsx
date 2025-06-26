@@ -49,6 +49,18 @@ const PublicMenuPage = () => {
   const [isNameModalOpen, setIsNameModalOpen] = useState(false)
   const [orderNotes, setOrderNotes] = useState('')
 
+  // Función para hacer scroll suave a la categoría seleccionada
+  const scrollToSelectedCategory = (categoryId) => {
+    const button = document.querySelector(`[data-category-id="${categoryId}"]`);
+    if (button) {
+      button.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+        inline: 'center'
+      });
+    }
+  };
+
   useEffect(() => {
     if (slug) {
       loadMenu()
@@ -289,6 +301,17 @@ const PublicMenuPage = () => {
 
   return (
     <div className="min-h-screen" style={pageStyle}>
+      {/* CSS para ocultar scrollbar */}
+      <style jsx>{`
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
+      
       <NamePromptModal 
         isOpen={isNameModalOpen}
         onSubmit={handleNameSubmit}
@@ -328,39 +351,51 @@ const PublicMenuPage = () => {
         </div>
       </header>
 
-      {/* Contenido del menú (resto del JSX) */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex flex-col lg:flex-row gap-6">
-            {/* Sidebar de categorías */}
-            <div className="lg:w-1/4">
-              <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-sm p-4 sticky top-4">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">Categorías</h2>
-                <div className="space-y-2">
-                  {categorias.map((categoria) => (
-                    <button
-                      key={categoria.id}
-                      onClick={() => setSelectedCategory(categoria.id)}
-                      className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${
-                        selectedCategory === categoria.id
-                          ? 'bg-primary-600 text-white'
-                          : 'text-gray-700 hover:bg-gray-100'
-                      }`}
-                    >
-                      <div>
-                        <div className="font-medium">{categoria.nombre}</div>
-                        <div className="text-sm opacity-75">{categoria.descripcion}</div>
-                        <div className="text-xs mt-1">
-                          {categoria.productos?.length || 0} productos
-                        </div>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
+      {/* Pestañas de categorías horizontales */}
+      <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-sm mb-6 sticky top-0 z-10 border-b border-gray-200">
+        <div className="px-4 py-4">
+          <div className="flex overflow-x-auto scrollbar-hide space-x-3 pb-2" 
+               style={{
+                 scrollbarWidth: 'none', 
+                 msOverflowStyle: 'none',
+                 scrollBehavior: 'smooth'
+               }}>
+            {categorias.map((categoria) => (
+              <button
+                key={categoria.id}
+                data-category-id={categoria.id}
+                onClick={() => {
+                  setSelectedCategory(categoria.id);
+                  setTimeout(() => scrollToSelectedCategory(categoria.id), 100);
+                }}
+                className={`flex-shrink-0 px-5 py-3 rounded-full text-sm font-medium transition-all duration-300 whitespace-nowrap border-2 ${
+                  selectedCategory === categoria.id
+                    ? 'bg-primary-600 text-white shadow-lg border-primary-600 scale-105'
+                    : 'bg-white text-gray-700 hover:bg-primary-50 hover:text-primary-700 border-gray-200 hover:border-primary-300'
+                }`}
+                style={{
+                  minWidth: 'fit-content'
+                }}
+              >
+                <span className="font-semibold">{categoria.nombre}</span>
+                <span className={`ml-2 text-xs px-2 py-1 rounded-full ${
+                  selectedCategory === categoria.id
+                    ? 'bg-white/20 text-white'
+                    : 'bg-gray-100 text-gray-500'
+                }`}>
+                  {categoria.productos?.length || 0}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
 
+      {/* Contenido del menú */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
+          <div className="flex flex-col lg:flex-row gap-6">
             {/* Contenido principal */}
-            <div className="lg:w-1/2">
+            <div className="lg:w-2/3">
               {selectedCategoryData && (
                 <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-sm">
                   <div className="p-6 border-b border-gray-200">
@@ -407,7 +442,7 @@ const PublicMenuPage = () => {
             </div>
 
             {/* Carrito */}
-            <div className="lg:w-1/4">
+            <div className="lg:w-1/3">
               <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-sm p-4 sticky top-4">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-semibold text-gray-900">Tu Pedido</h2>
