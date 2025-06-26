@@ -1614,4 +1614,152 @@ router.post('/auto-block-expired', authenticateSuperAdmin, async (req, res) => {
   }
 });
 
+/**
+ * GET /api/super-admin/subscriptions/:id/orders
+ * Obtener órdenes de un restaurante específico para debugging
+ */
+router.get('/:id/orders', authenticateSuperAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { 
+      limit = 50, 
+      offset = 0, 
+      fecha, 
+      estado,
+      debug = false 
+    } = req.query;
+
+    // Verificar que la suscripción existe
+    const suscripcion = await prisma.suscripcion.findUnique({
+      where: { id },
+      include: { 
+        restaurante: {
+          select: {
+            id: true,
+            nombre: true,
+            slug: true
+          }
+        }
+      }
+    });
+
+    if (!suscripcion) {
+      return res.status(404).json({
+        success: false,
+        message: 'Suscripción no encontrada'
+      });
+    }
+
+    // Build where clause para órdenes
+    const where = {
+      restauranteId: suscripcion.restaurante.id
+    };
+
+    if (estado) {
+      where.estado = estado;
+    }
+
+    if (fecha) {
+      const startDate = new Date(fecha);
+      const endDate = new Date(fecha);
+      endDate.setDate(endDate.getDate() + 1);
+      
+      where.createdAt = {
+        gte: startDate,
+        lt: endDate
+      };
+    }
+
+    // Obtener órdenes con información detallada
+    const orders = await prisma.orden.findMany({
+      where,
+      include: {
+        mesa: true,
+        sesion: true,
+        mesero: {
+          select: {
+            id: true,
+            nombre: true,
+            apellido: true,
+            email: true
+          }
+        },
+        items: {
+          include: {
+            producto: true
+          }
+        }
+      },
+      orderBy: {
+        createdAt: 'desc'
+      },
+      take: parseInt(limit),
+      skip: parseInt(offset)
+    });
+
+    const total = await prisma.orden.count({ where });
+
+    // Si debug=true, incluir información del timezone para diagnosticar
+    let debugInfo = {};
+    if (debug === 'true') {
+      const now = new Date();
+      const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const todayEnd = new Date(todayStart);
+      todayEnd.setDate(todayEnd.getDate() + 1);
+
+      debugInfo = {
+        timezone: {
+          TZ: process.env.TZ || 'No configurado',
+          serverTime: now.toISOString(),
+          serverTimeLocal: now.toLocaleString('es-NI'),
+          todayStart: todayStart.toISOString(),
+          todayEnd: todayEnd.toISOString()
+        },
+        filtros: {
+          fecha: fecha || 'No especificada',
+          fechaParseada: fecha ? new Date(fecha).toISOString() : 'N/A',
+          rangoCalculado: fecha ? {
+            inicio: new Date(fecha).toISOString(),
+            fin: (() => {
+              const end = new Date(fecha);
+              end.setDate(end.getDate() + 1);
+              return end.toISOString();
+            })()
+          } : 'N/A'
+        },
+        primerasOrdenes: orders.slice(0, 3).map(order => ({
+          id: order.id,
+          numeroOrden: order.numeroOrden,
+          createdAt: order.createdAt.toISOString(),
+          createdAtLocal: order.createdAt.toLocaleString('es-NI'),
+          fechaOrden: order.fechaOrden ? order.fechaOrden.toISOString() : null,
+          fechaOrdenLocal: order.fechaOrden ? order.fechaOrden.toLocaleString('es-NI') : null
+        }))
+      };
+    }
+
+    res.json({
+      success: true,
+      data: {
+        restaurante: suscripcion.restaurante,
+        orders,
+        pagination: {
+          total,
+          limit: parseInt(limit),
+          offset: parseInt(offset),
+          hasMore: total > parseInt(offset) + parseInt(limit)
+        },
+        ...(debug === 'true' && { debug: debugInfo })
+      }
+    });
+
+  } catch (error) {
+    console.error('Error obteniendo órdenes para debugging:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor'
+    });
+  }
+});
+
 module.exports = router; 
