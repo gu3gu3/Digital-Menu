@@ -608,8 +608,7 @@ const register = async (req, res) => {
           estado: 'ACTIVA',
           fechaInicio,
           fechaVencimiento,
-          renovacionAutomatica: false,
-          notasAdmin: 'Suscripción creada automáticamente durante el registro'
+          renovacionAutomatica: false
         }
       });
 
