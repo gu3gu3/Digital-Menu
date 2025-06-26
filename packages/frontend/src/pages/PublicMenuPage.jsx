@@ -292,9 +292,9 @@ const PublicMenuPage = () => {
     backgroundColor: restaurante?.backgroundColor || '#F9FAFB' // Un gris muy claro por defecto
   };
   
-  // Estilo para el banner (encabezado)
+  // Estilo para el banner (encabezado) - overlay más suave para mejor visibilidad
   const bannerStyle = restaurante?.bannerUrl && isValidImageUrl(restaurante.bannerUrl) ? {
-    backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url(${restaurante.bannerUrl})`,
+    backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.25)), url(${restaurante.bannerUrl})`,
   } : {
     backgroundColor: '#374151' // Un gris oscuro si no hay banner
   };
@@ -338,11 +338,11 @@ const PublicMenuPage = () => {
             
             {/* Info a la derecha */}
             <div className="flex-1 min-w-0">
-              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold leading-tight" style={{ textShadow: '1px 1px 3px rgba(0,0,0,0.8)' }}>
+              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold leading-tight" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.6), 1px 1px 2px rgba(0,0,0,0.8)' }}>
                 {restaurante?.nombre}
               </h1>
               {restaurante?.descripcion && (
-                <p className="mt-2 text-sm sm:text-base md:text-lg opacity-90 leading-relaxed" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.7)' }}>
+                <p className="mt-2 text-sm sm:text-base md:text-lg opacity-95 leading-relaxed" style={{ textShadow: '1px 1px 3px rgba(0,0,0,0.6), 0px 0px 1px rgba(0,0,0,0.8)' }}>
                   {restaurante.descripcion}
                 </p>
               )}
