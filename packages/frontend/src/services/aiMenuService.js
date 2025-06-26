@@ -114,6 +114,20 @@ export const aiMenuService = {
     return formData;
   },
 
+  // Actualizar identidad visual del restaurante
+  async updateVisualIdentity(formData) {
+    try {
+      const response = await apiClient.post(`${AI_MENU_API_URL}/visual-identity`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: 'Error de conexión' };
+    }
+  },
+
   // Funciones utilitarias
   formatFileSize(bytes) {
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];

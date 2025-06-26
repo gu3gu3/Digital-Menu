@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { superAdminAuth } from '../services/superAdminService';
 import aiMenuService from '../services/aiMenuService';
 import useDocumentTitle from '../hooks/useDocumentTitle';
+import RestaurantAutocomplete from '../components/RestaurantAutocomplete';
 
 const AIMenuGeneratorPage = () => {
   const [restaurants, setRestaurants] = useState([]);
@@ -24,6 +25,19 @@ const AIMenuGeneratorPage = () => {
   const [prompts, setPrompts] = useState(null);
   const [customPrompt, setCustomPrompt] = useState('');
   const [promptLoading, setPromptLoading] = useState(false);
+
+  // Estados para personalización visual
+  const [visualFiles, setVisualFiles] = useState({
+    logo: null,
+    banner: null,
+    backgroundImage: null
+  });
+  const [visualPreviews, setVisualPreviews] = useState({
+    logo: null,
+    banner: null,
+    backgroundImage: null
+  });
+  const [visualLoading, setVisualLoading] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [bulkTableLoading, setBulkTableLoading] = useState(false);
@@ -91,6 +105,47 @@ const AIMenuGeneratorPage = () => {
   const removeFile = (index) => {
     const newFiles = menuFiles.filter((_, i) => i !== index);
     setMenuFiles(newFiles);
+  };
+
+  // Funciones para personalización visual
+  const handleVisualFileChange = (type, file) => {
+    if (file && file.size > 5 * 1024 * 1024) {
+      setError(`El archivo ${type} es demasiado grande. Máximo 5MB.`);
+      return;
+    }
+
+    setVisualFiles(prev => ({
+      ...prev,
+      [type]: file
+    }));
+
+    // Crear vista previa
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setVisualPreviews(prev => ({
+          ...prev,
+          [type]: e.target.result
+        }));
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setVisualPreviews(prev => ({
+        ...prev,
+        [type]: null
+      }));
+    }
+  };
+
+  const removeVisualFile = (type) => {
+    setVisualFiles(prev => ({
+      ...prev,
+      [type]: null
+    }));
+    setVisualPreviews(prev => ({
+      ...prev,
+      [type]: null
+    }));
   };
 
   const handleSpecialCaseChange = (caseValue, checked) => {
@@ -242,6 +297,61 @@ const AIMenuGeneratorPage = () => {
     }
   };
 
+  const handleUpdateVisualIdentity = async (e) => {
+    e.preventDefault();
+    
+    if (!selectedRestaurant) {
+      setError('Debe seleccionar un restaurante');
+      return;
+    }
+
+    const hasFiles = Object.values(visualFiles).some(file => file !== null);
+    if (!hasFiles) {
+      setError('Debe seleccionar al menos un archivo (logo, banner o imagen de fondo)');
+      return;
+    }
+
+    setVisualLoading(true);
+    setError('');
+    setResult(null);
+
+    try {
+      const formData = new FormData();
+      formData.append('restauranteId', selectedRestaurant);
+      
+      Object.entries(visualFiles).forEach(([type, file]) => {
+        if (file) {
+          formData.append(type, file);
+        }
+      });
+
+      const response = await aiMenuService.updateVisualIdentity(formData);
+      
+      if (response.success) {
+        setResult({
+          type: 'visual',
+          data: response.data,
+          message: response.message
+        });
+        // Limpiar formulario
+        setVisualFiles({
+          logo: null,
+          banner: null,
+          backgroundImage: null
+        });
+        setVisualPreviews({
+          logo: null,
+          banner: null,
+          backgroundImage: null
+        });
+      }
+    } catch (error) {
+      setError(error.error || error.message || 'Error actualizando identidad visual');
+    } finally {
+      setVisualLoading(false);
+    }
+  };
+
   const selectedRestaurantInfo = restaurants.find(r => r.id === selectedRestaurant);
 
   return (
@@ -350,6 +460,16 @@ const AIMenuGeneratorPage = () => {
               >
                 ✏️ Editor de Prompts
               </button>
+              <button
+                onClick={() => setActiveTab('visual-identity')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'visual-identity'
+                  ? 'border-purple-500 text-purple-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                🎨 Personalización Visual
+              </button>
             </nav>
           </div>
         </div>
@@ -358,18 +478,12 @@ const AIMenuGeneratorPage = () => {
         <div className="bg-white shadow rounded-lg p-6 mb-6">
           <h3 className="text-lg font-medium text-gray-900 mb-4">Seleccionar Restaurante</h3>
           <div className="max-w-md">
-            <select
-              value={selectedRestaurant}
-              onChange={(e) => setSelectedRestaurant(e.target.value)}
-              className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
-            >
-              <option value="">Seleccione un restaurante...</option>
-              {restaurants.map((restaurant) => (
-                <option key={restaurant.id} value={restaurant.id}>
-                  {restaurant.nombre} ({restaurant._count.categorias} categorías, {restaurant._count.productos} productos, {restaurant._count.mesas} mesas)
-                </option>
-              ))}
-            </select>
+            <RestaurantAutocomplete
+              restaurants={restaurants}
+              selectedRestaurant={selectedRestaurant}
+              onRestaurantSelect={setSelectedRestaurant}
+              placeholder="Escriba el nombre del restaurante..."
+            />
           </div>
           
           {selectedRestaurantInfo && (
@@ -816,6 +930,194 @@ const AIMenuGeneratorPage = () => {
                     </>
                   ) : (
                     '✏️ Generar con Prompt Personalizado'
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {/* Visual Identity Tab */}
+        {activeTab === 'visual-identity' && (
+          <div className="bg-white shadow rounded-lg p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium text-gray-900">Personalización Visual del Restaurante</h3>
+              <div className="text-sm text-gray-500">
+                Actualiza la identidad visual de tu restaurante
+              </div>
+            </div>
+            
+            <form onSubmit={handleUpdateVisualIdentity} className="space-y-6">
+              {/* Logo Upload */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Logo del Restaurante
+                </label>
+                <p className="text-xs text-gray-500 mb-3">Formato cuadrado recomendado (ej: 512x512). Se mostrará en la cabecera del menú.</p>
+                
+                <div className="flex items-start space-x-4">
+                  <div className="flex-1">
+                    <input
+                      type="file"
+                      accept="image/png,image/jpg,image/jpeg"
+                      onChange={(e) => handleVisualFileChange('logo', e.target.files[0])}
+                      className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100"
+                    />
+                  </div>
+                  
+                  {visualPreviews.logo && (
+                    <div className="relative">
+                      <img 
+                        src={visualPreviews.logo} 
+                        alt="Logo preview" 
+                        className="w-16 h-16 object-cover rounded-md border border-gray-300"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeVisualFile('logo')}
+                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Banner Upload */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Banner del Restaurante
+                </label>
+                <p className="text-xs text-gray-500 mb-3">Recomendado: 1600x400 píxeles. Se mostrará en la cabecera del menú público.</p>
+                
+                <div className="flex items-start space-x-4">
+                  <div className="flex-1">
+                    <input
+                      type="file"
+                      accept="image/png,image/jpg,image/jpeg"
+                      onChange={(e) => handleVisualFileChange('banner', e.target.files[0])}
+                      className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100"
+                    />
+                  </div>
+                  
+                  {visualPreviews.banner && (
+                    <div className="relative">
+                      <img 
+                        src={visualPreviews.banner} 
+                        alt="Banner preview" 
+                        className="w-24 h-12 object-cover rounded-md border border-gray-300"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeVisualFile('banner')}
+                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Background Image Upload */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Imagen de Fondo
+                </label>
+                <p className="text-xs text-gray-500 mb-3">Recomendado: 1920x1080 píxeles. Se usará como fondo del menú público.</p>
+                
+                <div className="flex items-start space-x-4">
+                  <div className="flex-1">
+                    <input
+                      type="file"
+                      accept="image/png,image/jpg,image/jpeg"
+                      onChange={(e) => handleVisualFileChange('backgroundImage', e.target.files[0])}
+                      className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100"
+                    />
+                  </div>
+                  
+                  {visualPreviews.backgroundImage && (
+                    <div className="relative">
+                      <img 
+                        src={visualPreviews.backgroundImage} 
+                        alt="Background preview" 
+                        className="w-24 h-12 object-cover rounded-md border border-gray-300"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeVisualFile('backgroundImage')}
+                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Vista Previa Combinada */}
+              {(visualPreviews.logo || visualPreviews.banner || visualPreviews.backgroundImage) && (
+                <div className="border-t pt-6">
+                  <h4 className="text-sm font-medium text-gray-700 mb-3">Vista Previa del Menú</h4>
+                  <div className="relative bg-gray-100 rounded-lg overflow-hidden" style={{minHeight: '200px'}}>
+                    {/* Imagen de fondo */}
+                    {visualPreviews.backgroundImage && (
+                      <img 
+                        src={visualPreviews.backgroundImage} 
+                        alt="Background" 
+                        className="absolute inset-0 w-full h-full object-cover opacity-30"
+                      />
+                    )}
+                    
+                    {/* Banner */}
+                    {visualPreviews.banner && (
+                      <div className="relative">
+                        <img 
+                          src={visualPreviews.banner} 
+                          alt="Banner" 
+                          className="w-full h-24 object-cover"
+                        />
+                      </div>
+                    )}
+                    
+                    {/* Contenido con logo */}
+                    <div className="relative p-4 flex items-center space-x-4">
+                      {visualPreviews.logo && (
+                        <img 
+                          src={visualPreviews.logo} 
+                          alt="Logo" 
+                          className="w-12 h-12 object-cover rounded-md"
+                        />
+                      )}
+                      <div>
+                        <h3 className="font-bold text-gray-900">
+                          {selectedRestaurantInfo?.nombre || 'Nombre del Restaurante'}
+                        </h3>
+                        <p className="text-sm text-gray-600">Vista previa del menú público</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Submit Button */}
+              <div>
+                <button
+                  type="submit"
+                  disabled={visualLoading || !selectedRestaurant || !Object.values(visualFiles).some(file => file !== null)}
+                  className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {visualLoading ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Actualizando Identidad Visual...
+                    </>
+                  ) : (
+                    '🎨 Actualizar Identidad Visual'
                   )}
                 </button>
               </div>

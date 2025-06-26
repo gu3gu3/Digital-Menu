@@ -11,6 +11,7 @@ const { PrismaClient } = require('@prisma/client');
 const { authenticateSuperAdmin } = require('../middleware/superAdminAuth');
 const OpenAI = require('openai');
 const { buildMenuExtractionPrompt, buildDescriptionPrompt } = require('../config/aiPrompts');
+const { upload, handleFileUpload } = require('../config/storage');
 const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
@@ -1089,6 +1090,204 @@ router.get('/restaurants', authenticateSuperAdmin, async (req, res) => {
 
   } catch (error) {
     console.error('Error fetching restaurants:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error interno del servidor'
+    });
+  }
+});
+
+/**
+ * @swagger
+ * /api/super-admin/ai-menu-generator/visual-identity:
+ *   post:
+ *     summary: Actualizar identidad visual del restaurante
+ *     description: |
+ *       Permite al super admin actualizar la identidad visual de un restaurante específico.
+ *       Puede actualizar logo, banner e imagen de fondo. Los archivos se suben al sistema
+ *       de archivos del servidor y las URLs se guardan en la base de datos.
+ *     tags: [AI Menu Generator]
+ *     security:
+ *       - superAdminAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - restauranteId
+ *             properties:
+ *               restauranteId:
+ *                 type: string
+ *                 description: ID del restaurante a actualizar
+ *               logo:
+ *                 type: string
+ *                 format: binary
+ *                 description: Logo del restaurante (PNG, JPG, JPEG)
+ *               banner:
+ *                 type: string
+ *                 format: binary
+ *                 description: Banner del restaurante (PNG, JPG, JPEG)
+ *               backgroundImage:
+ *                 type: string
+ *                 format: binary
+ *                 description: Imagen de fondo del restaurante (PNG, JPG, JPEG)
+ *     responses:
+ *       200:
+ *         description: Identidad visual actualizada exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Identidad visual actualizada exitosamente"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     restaurante:
+ *                       type: string
+ *                       example: "Bella Vista"
+ *                     archivosActualizados:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *                       example: ["logo", "banner"]
+ *                     urls:
+ *                       type: object
+ *                       properties:
+ *                         logoUrl:
+ *                           type: string
+ *                           example: "https://backend.com/uploads/logo_1234567890.png"
+ *                         bannerUrl:
+ *                           type: string
+ *                           example: "https://backend.com/uploads/banner_1234567890.jpg"
+ *       400:
+ *         description: Error en la validación de datos o archivos
+ *       401:
+ *         description: No autorizado - Token de super admin requerido
+ *       404:
+ *         description: Restaurante no encontrado
+ *       500:
+ *         description: Error interno del servidor
+ */
+router.post('/visual-identity', authenticateSuperAdmin, upload.fields([
+  { name: 'logo', maxCount: 1 },
+  { name: 'banner', maxCount: 1 },
+  { name: 'backgroundImage', maxCount: 1 }
+]), async (req, res) => {
+  try {
+    const { restauranteId } = req.body;
+
+    if (!restauranteId) {
+      return res.status(400).json({
+        success: false,
+        error: 'El ID del restaurante es requerido'
+      });
+    }
+
+    // Verificar que el restaurante existe
+    const restaurante = await prisma.restaurante.findUnique({
+      where: { id: restauranteId }
+    });
+
+    if (!restaurante) {
+      return res.status(404).json({
+        success: false,
+        error: 'Restaurante no encontrado'
+      });
+    }
+
+    // Validar que se subió al menos un archivo
+    if (!req.files || Object.keys(req.files).length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Debe subir al menos un archivo (logo, banner o imagen de fondo)'
+      });
+    }
+
+    // Validar tipos de archivo y tamaños
+    const allowedTypes = ['image/png', 'image/jpg', 'image/jpeg'];
+    const maxSize = 5 * 1024 * 1024; // 5MB
+
+    const fileValidations = [];
+    Object.entries(req.files).forEach(([fieldName, files]) => {
+      files.forEach(file => {
+        if (!allowedTypes.includes(file.mimetype)) {
+          fileValidations.push(`${fieldName}: Tipo no válido. Solo se permiten PNG, JPG, JPEG`);
+        }
+        if (file.size > maxSize) {
+          fileValidations.push(`${fieldName}: Demasiado grande. Máximo 5MB`);
+        }
+      });
+    });
+
+    if (fileValidations.length > 0) {
+      return res.status(400).json({
+        success: false,
+        error: fileValidations.join('; ')
+      });
+    }
+
+    const updatedFields = {};
+    const uploadedFiles = [];
+    const fileUrls = {};
+
+    // Procesar cada tipo de archivo usando el sistema de storage agnóstico
+    for (const [fieldName, files] of Object.entries(req.files)) {
+      if (files && files.length > 0) {
+        const file = files[0]; // Solo tomamos el primer archivo de cada tipo
+        
+        try {
+          // Usar handleFileUpload que maneja local vs cloud automáticamente
+          const uploadResult = await handleFileUpload(file, restaurante.nombre, 'restaurant');
+          
+          // Mapear nombres de campos a nombres de base de datos
+          const fieldMapping = {
+            'logo': 'logoUrl',
+            'banner': 'bannerUrl', 
+            'backgroundImage': 'backgroundImage'
+          };
+
+          const dbFieldName = fieldMapping[fieldName];
+          if (dbFieldName) {
+            updatedFields[dbFieldName] = uploadResult.url;
+            fileUrls[dbFieldName] = uploadResult.url;
+            uploadedFiles.push(fieldName);
+          }
+        } catch (uploadError) {
+          console.error(`Error uploading ${fieldName}:`, uploadError);
+          return res.status(500).json({
+            success: false,
+            error: `Error subiendo ${fieldName}: ${uploadError.message}`
+          });
+        }
+      }
+    }
+
+    // Actualizar base de datos
+    const updatedRestaurante = await prisma.restaurante.update({
+      where: { id: restauranteId },
+      data: updatedFields
+    });
+
+    res.json({
+      success: true,
+      message: 'Identidad visual actualizada exitosamente',
+      data: {
+        restaurante: updatedRestaurante.nombre,
+        archivosActualizados: uploadedFiles,
+        urls: fileUrls
+      }
+    });
+
+  } catch (error) {
+    console.error('Error updating visual identity:', error);
     res.status(500).json({
       success: false,
       error: 'Error interno del servidor'
