@@ -19,6 +19,9 @@
   "prisma": {
     "seed": "node packages/backend/prisma/seed.js"
   },
+  "dependencies": {
+    "openai": "^4.104.0"
+  },
   "devDependencies": {
     "concurrently": "^8.2.2",
     "firebase-tools": "^14.7.0"
