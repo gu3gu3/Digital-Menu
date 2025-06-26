@@ -32,9 +32,13 @@ RUN npm run build --workspace=frontend
 # Etapa 3: Servidor de producción final
 FROM node:20-slim
 
-# Instalar Nginx y Netcat en la imagen de Debian
+# Instalar Nginx, Netcat y configurar timezone en la imagen de Debian
 USER root
-RUN apt-get update && apt-get install -y --no-install-recommends nginx netcat-openbsd && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends nginx netcat-openbsd tzdata && rm -rf /var/lib/apt/lists/*
+
+# Configurar timezone para Centroamérica (Nicaragua UTC-6)
+ENV TZ=America/Managua
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # 1. Establecer el directorio de trabajo para el backend.
 # Esta será la ubicación principal desde donde se ejecutará Node.

@@ -334,9 +334,9 @@ const AdminMenuPage = () => {
                 categorias={categorias}
                 selectedCategoria={selectedCategoria}
                 onCategoriaSelect={(categoria) => {
-                  setSelectedCategoria(categoria)
-                  loadProducts(categoria.id)
-                }}
+                        setSelectedCategoria(categoria)
+                        loadProducts(categoria.id)
+                      }}
                 onCategoriaEdit={openCategoryModal}
                 onCategoriaDelete={handleDeleteCategory}
                 onReorder={handleCategoryReorder}

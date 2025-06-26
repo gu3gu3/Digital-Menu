@@ -14,6 +14,8 @@ El sistema de despliegue (Dockerfile, cloudbuild.yaml, start.sh) es estable y no
 
 **Regla 1.3: La Versión de Node.js es Única.** La versión de Node.js debe ser la misma en el Dockerfile y en cloudbuild.yaml para evitar fallos de build.
 
+**Regla 1.4: Notificación Obligatoria de Cambios en Infraestructura.** SIEMPRE notificar al usuario antes de tocar Dockerfile, cloudbuild.yaml o start.sh. Explicar el cambio, obtener aprobación explícita, y tener plan de rollback listo. Si el cambio falla, restaurar inmediatamente a la versión anterior.
+
 ## 2. El Código es Agnóstico al Entorno (Cero "Hardcoding")
 El código no debe contener valores fijos que cambien entre tu máquina y la nube.
 

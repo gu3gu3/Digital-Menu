@@ -360,19 +360,19 @@ const PublicMenuPage = () => {
                  msOverflowStyle: 'none',
                  scrollBehavior: 'smooth'
                }}>
-            {categorias.map((categoria) => (
-              <button
-                key={categoria.id}
+                  {categorias.map((categoria) => (
+                    <button
+                      key={categoria.id}
                 data-category-id={categoria.id}
                 onClick={() => {
                   setSelectedCategory(categoria.id);
                   setTimeout(() => scrollToSelectedCategory(categoria.id), 100);
                 }}
                 className={`flex-shrink-0 px-5 py-3 rounded-full text-sm font-medium transition-all duration-300 whitespace-nowrap border-2 ${
-                  selectedCategory === categoria.id
+                        selectedCategory === categoria.id
                     ? 'bg-primary-600 text-white shadow-lg border-primary-600 scale-105'
                     : 'bg-white text-gray-700 hover:bg-primary-50 hover:text-primary-700 border-gray-200 hover:border-primary-300'
-                }`}
+                      }`}
                 style={{
                   minWidth: 'fit-content'
                 }}
@@ -385,11 +385,11 @@ const PublicMenuPage = () => {
                 }`}>
                   {categoria.productos?.length || 0}
                 </span>
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
 
       {/* Contenido del menú */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">

@@ -234,9 +234,9 @@ const StaffDashboard = () => {
               <div className="flex items-center space-x-3">
                 <img src={logo} alt="Menu View" className="h-8 w-auto" />
                 <div className="ml-3">
-                  <h1 className="text-lg font-semibold text-gray-900">
-                    Portal de Meseros
-                  </h1>
+                <h1 className="text-lg font-semibold text-gray-900">
+                  Portal de Meseros
+                </h1>
                 </div>
               </div>
             </div>

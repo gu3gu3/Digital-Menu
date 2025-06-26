@@ -561,14 +561,28 @@ router.post('/generate', authenticateSuperAdmin, aiUpload.array('menuImages', 3)
       ? await generateMissingDescriptions(menuData)
       : menuData;
 
-    // Si se debe reemplazar el menú existente, eliminar categorías y productos
+    // Si se debe reemplazar el menú existente, desactivar productos existentes
     if (replaceExistingMenu) {
-      await prisma.producto.deleteMany({
-        where: { restauranteId }
+      console.log('🔄 Reemplazando menú existente - desactivando productos...');
+      
+      // Desactivar productos existentes en lugar de eliminarlos
+      // Esto evita violaciones de clave foránea con órdenes existentes
+      await prisma.producto.updateMany({
+        where: { restauranteId },
+        data: { disponible: false }
       });
-      await prisma.categoria.deleteMany({
-        where: { restauranteId }
-      });
+      
+      console.log('✅ Productos existentes desactivados');
+      
+      // Las categorías las podemos eliminar si no tienen restricciones
+      try {
+        await prisma.categoria.deleteMany({
+          where: { restauranteId }
+        });
+        console.log('✅ Categorías existentes eliminadas');
+      } catch (error) {
+        console.log('⚠️ No se pudieron eliminar categorías (puede haber referencias), continuando...');
+      }
     }
 
     // Crear categorías y productos
@@ -642,9 +656,24 @@ router.post('/generate', authenticateSuperAdmin, aiUpload.array('menuImages', 3)
 
   } catch (error) {
     console.error('Error generating menu with AI:', error);
-    res.status(500).json({
+    
+    // Determinar el tipo de error para dar mejor feedback
+    let errorMessage = 'Error interno del servidor';
+    let statusCode = 500;
+    
+    if (error.code === 'P2003') {
+      errorMessage = 'No se puede reemplazar el menú porque tiene productos en órdenes activas. Intente sin la opción "Reemplazar menú existente".';
+      statusCode = 400;
+    } else if (error.message?.includes('OpenAI')) {
+      errorMessage = 'Error procesando imágenes con IA: ' + error.message;
+    } else if (error.message?.includes('timeout')) {
+      errorMessage = 'La operación tardó demasiado tiempo. Intente con menos imágenes o imágenes más pequeñas.';
+    }
+    
+    res.status(statusCode).json({
       success: false,
-      error: error.message || 'Error interno del servidor'
+      error: errorMessage,
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 });

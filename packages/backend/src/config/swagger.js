@@ -430,8 +430,8 @@ const options = {
                 qrCodeImage: {
                   type: 'string',
                   description: 'Imagen del código QR en formato data URL'
-                }
-              }
+            }
+          }
             }
           ]
         },
