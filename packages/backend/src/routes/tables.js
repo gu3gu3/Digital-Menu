@@ -115,10 +115,12 @@ const getTables = async (req, res) => {
     });
 
     // Transform data to include session status and active orders
+    // Una mesa está activa solo cuando tiene órdenes ENVIADAS (no solo sesiones activas)
     const mesasWithStatus = mesas.map(mesa => ({
       ...mesa,
-      estaActiva: mesa._count.sesiones > 0,
+      estaActiva: mesa._count.ordenes > 0, // Solo activa si tiene órdenes reales (no solo carrito)
       ordenesActivas: mesa._count.ordenes,
+      sesionesActivas: mesa._count.sesiones, // Mantener info de sesiones para referencia
     }));
 
     res.json({
@@ -648,10 +650,13 @@ const getAllQRCodes = async (req, res) => {
  *                             properties:
  *                               estaActiva:
  *                                 type: boolean
- *                                 description: Si la mesa tiene una sesión activa
+ *                                 description: Si la mesa tiene órdenes activas (ENVIADA, RECIBIDA, etc.)
  *                               ordenesActivas:
  *                                 type: integer
  *                                 description: Número de órdenes activas en la mesa
+ *                               sesionesActivas:
+ *                                 type: integer
+ *                                 description: Número de sesiones activas (usuarios que escanearon QR)
  *                     total:
  *                       type: integer
  *                       description: Total de mesas

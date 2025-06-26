@@ -21,9 +21,14 @@ const getOrders = async (req, res) => {
 
     // Build where clause
     const where = {
-      restauranteId: restauranteId
+      restauranteId: restauranteId,
+      // Excluir órdenes en estado CARRITO del panel de staff
+      estado: {
+        not: 'CARRITO'
+      }
     };
 
+    // Si se especifica un estado específico, sobrescribir el filtro anterior
     if (estado) {
       where.estado = estado;
     }
@@ -466,6 +471,10 @@ const getOrderStats = async (req, res) => {
       createdAt: {
         gte: startDate,
         lt: endDate
+      },
+      // Excluir órdenes en estado CARRITO de las estadísticas
+      estado: {
+        not: 'CARRITO'
       }
     };
 
@@ -537,7 +546,11 @@ const getOrdersByMesa = async (req, res) => {
     const orders = await prisma.orden.findMany({
       where: {
         restauranteId: restauranteId,
-        mesaId: mesaId
+        mesaId: mesaId,
+        // Excluir órdenes en estado CARRITO del panel de admin/staff
+        estado: {
+          not: 'CARRITO'
+        }
       },
       include: {
         mesa: true,
@@ -584,7 +597,11 @@ const getRecentOrders = async (req, res) => {
 
     const orders = await prisma.orden.findMany({
       where: {
-        restauranteId: restauranteId
+        restauranteId: restauranteId,
+        // Excluir órdenes en estado CARRITO del panel de staff
+        estado: {
+          not: 'CARRITO'
+        }
       },
       include: {
         mesa: true,

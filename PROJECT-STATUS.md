@@ -13,6 +13,33 @@
 
 ## ⭐ **ACTUALIZACIONES CRÍTICAS RECIENTES (Junio 26 2025)**
 
+### **🍽️ Lógica de Mesas y Estados de Órdenes - COMPLETADA v1.0.3**
+- ✅ **Mesa Activa Solo con Órdenes Enviadas**: Corregida lógica para mostrar mesa verde únicamente cuando tiene órdenes reales (no solo sesiones activas de escaneo QR)
+- ✅ **Filtrado de Carritos en Paneles de Staff**: Eliminadas órdenes en estado CARRITO de todos los paneles administrativos y de personal
+- ✅ **Endpoints Actualizados**: 
+  - `GET /api/orders` - Excluye carritos automáticamente
+  - `GET /api/orders/recent` - Solo órdenes enviadas
+  - `GET /api/orders/stats` - Estadísticas sin carritos
+  - `GET /api/orders/mesa/:id` - Órdenes por mesa sin carritos
+- ✅ **Documentación Swagger Actualizada**: Descripción corregida de `estaActiva` y agregado campo `sesionesActivas`
+- ✅ **Mejora UX**: Personal ve solo órdenes relevantes que requieren atención, no carritos abandonados
+
+#### **Cambios en Lógica de Negocio**
+```javascript
+// ANTES: Mesa activa solo por escanear QR
+estaActiva: mesa._count.sesiones > 0  // ❌ Confuso para staff
+
+// AHORA: Mesa activa solo con órdenes reales
+estaActiva: mesa._count.ordenes > 0   // ✅ Lógico para operación
+sesionesActivas: mesa._count.sesiones // ℹ️ Info adicional disponible
+```
+
+#### **Impacto en Paneles**
+- **Panel de Meseros**: Solo ven órdenes que requieren atención (ENVIADA, RECIBIDA, etc.)
+- **Panel de Admin**: Mismo filtrado, estadísticas más precisas
+- **Mesas**: Verde solo cuando hay trabajo real, no por escaneos fantasma
+- **Experiencia de Usuario**: Reducción significativa de confusión operacional
+
 ### **🎨 Mejoras de UX y Drag & Drop - COMPLETADAS v1.0.2**
 - ✅ **Drag & Drop para Categorías**: Implementado reordenamiento visual con @dnd-kit
 - ✅ **Nuevo Endpoint**: `PUT /api/categories/reorder` para actualización de orden

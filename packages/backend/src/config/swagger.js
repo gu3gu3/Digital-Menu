@@ -341,7 +341,11 @@ const options = {
             },
             estaActiva: {
               type: 'boolean',
-              description: 'Indica si hay una sesión activa en la mesa'
+              description: 'Indica si hay órdenes activas en la mesa (ENVIADA, RECIBIDA, etc.)'
+            },
+            sesionesActivas: {
+              type: 'integer',
+              description: 'Número de sesiones activas en la mesa (usuarios que escanearon QR)'
             },
             ordenesActivas: {
               type: 'integer',
