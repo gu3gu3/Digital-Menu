@@ -38,6 +38,7 @@ const aiUpload = multer({
 // Configurar OpenAI
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
+  timeout: 240000, // 4 minutos para procesamiento de imágenes
 });
 
 // Esquema de validación para la creación de menú con IA
@@ -165,6 +166,9 @@ async function extractMenuFromImages(imageBuffers, mimeTypes, menuType = null, s
         ? promptText
         : `Esta es una imagen adicional del mismo menú. Extrae la información y responde con el mismo formato JSON. Si hay categorías repetidas, agrega los productos nuevos a las categorías existentes.\n\n${promptText}`;
 
+      console.log(`🤖 Enviando imagen ${i + 1} a OpenAI...`);
+      const startTime = Date.now();
+      
       const response = await openai.chat.completions.create({
         model: "gpt-4o",
         messages: [
@@ -186,6 +190,9 @@ async function extractMenuFromImages(imageBuffers, mimeTypes, menuType = null, s
         ],
         max_tokens: 4000
       });
+      
+      const processingTime = Date.now() - startTime;
+      console.log(`✅ OpenAI respondió para imagen ${i + 1} en ${processingTime}ms`);
 
       const content = response.choices[0].message.content;
       
@@ -454,6 +461,14 @@ async function generateMissingDescriptions(menuData) {
 
 router.post('/generate', authenticateSuperAdmin, aiUpload.array('menuImages', 3), async (req, res) => {
   try {
+    // Verificar que OpenAI esté configurado
+    if (!process.env.OPENAI_API_KEY) {
+      return res.status(500).json({
+        success: false,
+        error: 'Generador de menú con IA no está configurado. Contacte al administrador.'
+      });
+    }
+    
     // Validar datos
     const { error, value } = aiMenuSchema.validate(req.body);
     if (error) {
