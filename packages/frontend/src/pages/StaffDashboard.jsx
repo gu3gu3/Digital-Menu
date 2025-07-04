@@ -20,10 +20,12 @@ import ordersService from '../services/ordersService';
 import { notificationService } from '../services/notificationService';
 import logo from '../assets/logo.png';
 import useDocumentTitle from '../hooks/useDocumentTitle';
+import useRestaurantCurrency from '../hooks/useRestaurantCurrency';
 
 const StaffDashboard = () => {
   // Set dynamic page title
   useDocumentTitle('MenuView.app | Panel de Staff');
+  const { formatAmount } = useRestaurantCurrency();
   const [user, setUser] = useState(null);
   const [orders, setOrders] = useState([]);
   const [stats, setStats] = useState({});
@@ -185,10 +187,6 @@ const StaffDashboard = () => {
       console.error('Error formatting time:', error);
       return 'N/A';
     }
-  };
-
-  const formatCurrency = (amount) => {
-    return `C$ ${parseFloat(amount).toFixed(2)}`;
   };
 
   const getTimeElapsed = (dateString) => {
@@ -485,7 +483,7 @@ const StaffDashboard = () => {
                           </span>
                         </div>
                         <div className="mt-1 text-sm text-gray-500">
-                          {order.items?.length || 0} productos • {formatCurrency(order.total)}
+                          {order.items?.length || 0} productos • {formatAmount(order.total)}
                           {order.mesero && (
                             <>
                               <span className="mx-2">•</span>

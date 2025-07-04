@@ -59,6 +59,38 @@ const AdminRestaurantPage = () => {
         backgroundColor: formData.backgroundColor,
       };
       await restaurantService.updateMyRestaurant(updatedData);
+      
+      // Actualizar localStorage para que useRestaurantCurrency funcione inmediatamente
+      const adminUser = localStorage.getItem('adminUser');
+      if (adminUser) {
+        try {
+          const parsedUser = JSON.parse(adminUser);
+          if (parsedUser.restaurante) {
+            parsedUser.restaurante.moneda = formData.moneda;
+            localStorage.setItem('adminUser', JSON.stringify(parsedUser));
+          }
+        } catch (error) {
+          console.error('Error updating localStorage currency:', error);
+        }
+      }
+      
+      // También actualizar staffUser si existe (para que los meseros vean la moneda actualizada)
+      const staffUser = localStorage.getItem('staffUser');
+      if (staffUser) {
+        try {
+          const parsedStaff = JSON.parse(staffUser);
+          if (parsedStaff.restaurante) {
+            parsedStaff.restaurante.moneda = formData.moneda;
+            localStorage.setItem('staffUser', JSON.stringify(parsedStaff));
+          }
+        } catch (error) {
+          console.error('Error updating staffUser currency:', error);
+        }
+      }
+      
+      // Disparar evento personalizado para notificar cambios de moneda
+      window.dispatchEvent(new CustomEvent('currencyUpdated'));
+      
       toast.success('Información del restaurante actualizada exitosamente');
       await fetchRestaurantData();
     } catch (error) {

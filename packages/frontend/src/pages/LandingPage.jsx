@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import WhatsAppButton from '../components/WhatsAppButton';
 import HeroSection from '../components/sections/HeroSection';
 import FeaturesSection from '../components/sections/FeaturesSection';
 import DemoSection from '../components/sections/DemoSection';
@@ -43,6 +44,7 @@ const LandingPage = () => {
         <RegisterSection />
       </main>
       <Footer />
+      <WhatsAppButton />
     </div>
   );
 };

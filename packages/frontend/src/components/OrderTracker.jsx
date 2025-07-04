@@ -8,11 +8,13 @@ import {
   XMarkIcon,
   CreditCardIcon
 } from '@heroicons/react/24/outline';
+import { formatOrderTotal } from '../utils/currencyUtils';
 
 const OrderTracker = ({ ordenId, restauranteSlug, onClose }) => {
   const [orden, setOrden] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [restaurantCurrency, setRestaurantCurrency] = useState('USD');
 
   // Configuración de estados con colores y iconos
   const estadosConfig = {
@@ -103,23 +105,28 @@ const OrderTracker = ({ ordenId, restauranteSlug, onClose }) => {
 
   useEffect(() => {
     const fetchOrder = async () => {
-    try {
-      setLoading(true);
+      try {
+        setLoading(true);
         const response = await fetch(`/api/public/orden/${ordenId}?restaurantSlug=${restauranteSlug}`);
         if (!response.ok) {
           const errorData = await response.json();
           throw new Error(errorData.error || 'No se pudo obtener la orden.');
         }
-      const data = await response.json();
+        const data = await response.json();
         setOrden(data.data);
+        
+        // Obtener la moneda del restaurante desde la orden
+        const currency = data.data?.restaurante?.moneda || 'USD';
+        setRestaurantCurrency(currency);
+        
         setError('');
       } catch (err) {
         console.error('Error fetching order:', err);
         setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+      } finally {
+        setLoading(false);
+      }
+    };
 
     if (ordenId && restauranteSlug) {
       fetchOrder();
@@ -141,7 +148,7 @@ const OrderTracker = ({ ordenId, restauranteSlug, onClose }) => {
   };
 
   const formatCurrency = (amount) => {
-    return `C$ ${parseFloat(amount).toFixed(2)}`;
+    return formatOrderTotal(amount, restaurantCurrency);
   };
 
   const formatTime = (dateString) => {

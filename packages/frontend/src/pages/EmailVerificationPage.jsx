@@ -150,8 +150,8 @@ const EmailVerificationPage = () => {
         <div className="mt-6 pt-6 border-t border-gray-200">
           <p className="text-xs text-gray-500">
             ¿Necesitas ayuda? Contacta nuestro soporte: 
-            <a href="mailto:soporte@menuview.app" className="text-primary-600 hover:underline ml-1">
-              soporte@menuview.app
+            <a href="mailto:ventas@menuview.app" className="text-primary-600 hover:underline ml-1">
+              ventas@menuview.app
             </a>
           </p>
         </div>

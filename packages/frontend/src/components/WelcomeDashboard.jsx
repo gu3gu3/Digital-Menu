@@ -260,7 +260,7 @@ const WelcomeDashboard = ({ userData, onContinueToDashboard }) => {
               <ArrowRightIcon className="h-5 w-5 ml-2" />
             </button>
             <button
-              onClick={() => window.open('mailto:soporte@menuview.app')}
+              onClick={() => window.open('mailto:ventas@menuview.app')}
               className="flex-1 border border-gray-300 text-gray-700 py-3 px-6 rounded-lg font-semibold hover:bg-gray-50 transition-colors"
             >
               Contactar Soporte

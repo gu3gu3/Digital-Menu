@@ -13,8 +13,10 @@ import {
 import OrderStatusBadge from './OrderStatusBadge';
 import ordersService from '../services/ordersService';
 import staffService from '../services/staffService';
+import useRestaurantCurrency from '../hooks/useRestaurantCurrency';
 
 const OrderDetailsModal = ({ isOpen, onClose, order, onOrderUpdate }) => {
+  const { formatAmount } = useRestaurantCurrency();
   const [selectedStatus, setSelectedStatus] = useState(null);
   const [notes, setNotes] = useState('');
   const [updating, setUpdating] = useState(false);
@@ -154,10 +156,6 @@ const OrderDetailsModal = ({ isOpen, onClose, order, onOrderUpdate }) => {
     }
   };
 
-  const formatCurrency = (amount) => {
-    return `C$ ${parseFloat(amount).toFixed(2)}`;
-  };
-
   if (!order) return null;
 
   return (
@@ -248,7 +246,7 @@ const OrderDetailsModal = ({ isOpen, onClose, order, onOrderUpdate }) => {
                     <div>
                       <p className="text-xs text-gray-500">Total</p>
                       <p className="text-sm font-medium text-green-600">
-                        {formatCurrency(order.total)}
+                        {formatAmount(order.total)}
                       </p>
                     </div>
                   </div>
@@ -271,7 +269,7 @@ const OrderDetailsModal = ({ isOpen, onClose, order, onOrderUpdate }) => {
                         </div>
                         <div className="text-right ml-4">
                           <p className="text-sm text-gray-600">x{item.cantidad}</p>
-                          <p className="font-medium">{formatCurrency(item.subtotal)}</p>
+                          <p className="font-medium">{formatAmount(item.subtotal)}</p>
                         </div>
                       </div>
                     ))}
@@ -281,7 +279,7 @@ const OrderDetailsModal = ({ isOpen, onClose, order, onOrderUpdate }) => {
                   <div className="mt-4 pt-4 border-t border-gray-200">
                     <div className="flex justify-between text-lg font-semibold">
                       <span>Total:</span>
-                      <span className="text-green-600">{formatCurrency(order.total)}</span>
+                      <span className="text-green-600">{formatAmount(order.total)}</span>
                     </div>
                   </div>
                 </div>

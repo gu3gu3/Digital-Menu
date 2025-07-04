@@ -284,7 +284,8 @@ const getOrdenStatus = async (req, res) => {
         restaurante: {
           select: {
             slug: true,
-            nombre: true
+            nombre: true,
+            moneda: true
           }
         },
         items: {

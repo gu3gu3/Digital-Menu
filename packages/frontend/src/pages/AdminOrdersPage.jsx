@@ -16,8 +16,10 @@ import OrderStatusBadge from '../components/OrderStatusBadge';
 import OrderDetailsModal from '../components/OrderDetailsModal';
 import ordersService from '../services/ordersService';
 import sessionsService from '../services/sessionsService';
+import useRestaurantCurrency from '../hooks/useRestaurantCurrency';
 
 const AdminOrdersPage = () => {
+  const { formatAmount } = useRestaurantCurrency();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -115,10 +117,6 @@ const AdminOrdersPage = () => {
     });
   };
 
-  const formatCurrency = (amount) => {
-    return `C$ ${parseFloat(amount).toFixed(2)}`;
-  };
-
   const getTimeElapsed = (dateString) => {
     const minutes = Math.floor((new Date() - new Date(dateString)) / (1000 * 60));
     if (minutes < 60) return `${minutes}m`;
@@ -198,7 +196,7 @@ const AdminOrdersPage = () => {
             </div>
             <div className="ml-3 lg:ml-4 min-w-0 flex-1">
               <p className="text-xs lg:text-sm font-medium text-gray-600 truncate">Ventas Hoy</p>
-              <p className="text-lg lg:text-2xl font-bold text-gray-900">{formatCurrency(stats.totalVentas || 0)}</p>
+                              <p className="text-lg lg:text-2xl font-bold text-gray-900">{formatAmount(stats.totalVentas || 0)}</p>
             </div>
           </div>
         </div>
@@ -462,7 +460,7 @@ const AdminOrdersPage = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900">
-                            {formatCurrency(order.total)}
+                            {formatAmount(order.total)}
                           </div>
                           <div className="text-sm text-gray-500">
                             {order.items?.length || 0} items
@@ -530,7 +528,7 @@ const AdminOrdersPage = () => {
                       <div>
                         <span className="text-gray-500">Total:</span>
                         <p className="font-semibold text-green-600">
-                          {formatCurrency(order.total)}
+                          {formatAmount(order.total)}
                         </p>
                       </div>
                       <div>

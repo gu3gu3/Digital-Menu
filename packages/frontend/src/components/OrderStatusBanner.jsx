@@ -13,6 +13,7 @@ import {
 } from '@heroicons/react/24/outline';
 import OrderTracker from './OrderTracker';
 import menuService from '../services/menuService';
+import { formatOrderTotal } from '../utils/currencyUtils';
 
 const OrderStatusBanner = ({ ordenId, restauranteSlug, onClearOrder, tableNumber }) => {
   const [orden, setOrden] = useState(null);
@@ -148,7 +149,9 @@ const OrderStatusBanner = ({ ordenId, restauranteSlug, onClearOrder, tableNumber
   };
 
   const formatCurrency = (amount) => {
-    return `C$ ${parseFloat(amount).toFixed(2)}`;
+    // Usar la moneda del restaurante si está disponible en la orden
+    const currency = orden?.restaurante?.moneda || 'USD';
+    return formatOrderTotal(amount, currency);
   };
 
   const formatTime = (dateString) => {
