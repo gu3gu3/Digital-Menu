@@ -211,8 +211,8 @@ const ExpiringSubscriptionsPage = () => {
                       <div className="mt-3 grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
                         <div>
                           <span className="text-gray-500">Plan:</span>
-                          <p className="font-medium">{subscription.plan.nombre}</p>
-                          <p className="text-gray-600">${subscription.plan.precio}/mes</p>
+                          <p className="font-medium">{subscription.restaurante.plan.nombre}</p>
+                          <p className="text-gray-600">${subscription.restaurante.plan.precio}/mes</p>
                         </div>
                         <div>
                           <span className="text-gray-500">Vencimiento:</span>

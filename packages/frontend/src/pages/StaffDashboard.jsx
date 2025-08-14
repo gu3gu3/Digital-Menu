@@ -18,6 +18,7 @@ import OrderStatusBadge from '../components/OrderStatusBadge';
 import NotificationBell from '../components/NotificationBell';
 import ordersService from '../services/ordersService';
 import { notificationService } from '../services/notificationService';
+import apiClient from '../lib/apiClient';
 import logo from '../assets/logo.png';
 import useDocumentTitle from '../hooks/useDocumentTitle';
 import useRestaurantCurrency from '../hooks/useRestaurantCurrency';
@@ -52,11 +53,38 @@ const StaffDashboard = () => {
     try {
       const parsedUser = JSON.parse(userData);
       setUser(parsedUser);
+      
+      // Si el staffUser no tiene información del restaurante, obtenerla del backend
+      if (!parsedUser.restaurante?.moneda) {
+        updateStaffUserInfo();
+      }
     } catch (error) {
       console.error('Error parsing user data:', error);
       navigate('/staff/login');
     }
   }, [navigate]);
+
+  // Función para actualizar la información del staff user desde el backend
+  const updateStaffUserInfo = async () => {
+    try {
+      const response = await apiClient.get('/auth/me');
+      
+      if (response.data?.data?.restaurante) {
+        const currentUser = JSON.parse(localStorage.getItem('staffUser'));
+        const updatedUser = { 
+          ...currentUser, 
+          restaurante: response.data.data.restaurante 
+        };
+        localStorage.setItem('staffUser', JSON.stringify(updatedUser));
+        setUser(updatedUser);
+        
+        // Disparar evento para notificar al hook de moneda
+        window.dispatchEvent(new CustomEvent('currencyUpdated'));
+      }
+    } catch (error) {
+      console.warn('Could not update staff user info:', error);
+    }
+  };
 
   useEffect(() => {
     if (user) {

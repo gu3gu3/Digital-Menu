@@ -262,7 +262,7 @@ const SuperAdminDashboard = () => {
                     <div key={subscription.id} className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
                       <div className="flex-1">
                         <p className="text-sm font-medium text-gray-900">{subscription.restaurante.nombre}</p>
-                        <p className="text-xs text-gray-500">{subscription.plan.nombre}</p>
+                        <p className="text-xs text-gray-500">{subscription.restaurante.plan.nombre}</p>
                       </div>
                       <div className="text-right">
                         <p className="text-sm font-medium text-yellow-600">
