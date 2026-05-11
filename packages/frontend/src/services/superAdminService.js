@@ -251,6 +251,16 @@ export const subscriptionsService = {
     }
   },
 
+  // Resetear la contraseña del administrador del restaurante
+  async resetRestaurantPassword(restauranteId) {
+    try {
+      const response = await apiClient.post(`/super-admin/subscriptions/restaurant/${restauranteId}/reset-password`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: 'Error de conexión' };
+    }
+  },
+
   // ==================== BLOQUEO AUTOMÁTICO ====================
 
   // Ejecutar bloqueo automático de suscripciones vencidas
@@ -368,6 +378,7 @@ export const superAdminService = {
   togglePlan: subscriptionsService.togglePlan.bind(subscriptionsService),
   getPlanUsage: subscriptionsService.getPlanUsage.bind(subscriptionsService),
   deleteRestaurantCompletely: subscriptionsService.deleteRestaurantCompletely.bind(subscriptionsService),
+  resetRestaurantPassword: subscriptionsService.resetRestaurantPassword.bind(subscriptionsService),
   autoBlockExpiredSubscriptions: subscriptionsService.autoBlockExpiredSubscriptions.bind(subscriptionsService),
 
   // Utility methods

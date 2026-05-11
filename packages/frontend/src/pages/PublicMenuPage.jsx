@@ -40,6 +40,7 @@ const PublicMenuPage = () => {
   const [currentOrdenId, setCurrentOrdenId] = useState(null)
   const [submittingOrder, setSubmittingOrder] = useState(false)
   const [orderSubmitted, setOrderSubmitted] = useState(false)
+  const [tableInactiveMessage, setTableInactiveMessage] = useState('')
 
   // Estados UI
   const [showCart, setShowCart] = useState(false)
@@ -48,6 +49,41 @@ const PublicMenuPage = () => {
   const [customerName, setCustomerName] = useState('')
   const [isNameModalOpen, setIsNameModalOpen] = useState(false)
   const [orderNotes, setOrderNotes] = useState('')
+
+  // Estados Swipe
+  const [touchStart, setTouchStart] = useState(null)
+  const [touchEnd, setTouchEnd] = useState(null)
+  const minSwipeDistance = 50
+
+  const onTouchStart = (e) => {
+    setTouchEnd(null)
+    setTouchStart(e.targetTouches[0].clientX)
+  }
+
+  const onTouchMove = (e) => setTouchEnd(e.targetTouches[0].clientX)
+
+  const onTouchEndHandler = () => {
+    if (!touchStart || !touchEnd) return
+    const distance = touchStart - touchEnd
+    const isLeftSwipe = distance > minSwipeDistance
+    const isRightSwipe = distance < -minSwipeDistance
+
+    if (isLeftSwipe || isRightSwipe) {
+      const currentIndex = categorias.findIndex(c => c.id === selectedCategory)
+      if (currentIndex === -1) return
+
+      if (isLeftSwipe && currentIndex < categorias.length - 1) {
+        const nextId = categorias[currentIndex + 1].id
+        setSelectedCategory(nextId)
+        setTimeout(() => scrollToSelectedCategory(nextId), 100)
+      }
+      if (isRightSwipe && currentIndex > 0) {
+        const prevId = categorias[currentIndex - 1].id
+        setSelectedCategory(prevId)
+        setTimeout(() => scrollToSelectedCategory(prevId), 100)
+      }
+    }
+  }
 
   // Función para hacer scroll suave a la categoría seleccionada
   const scrollToSelectedCategory = (categoryId) => {
@@ -113,23 +149,45 @@ const PublicMenuPage = () => {
     try {
       const sesion = await menuService.createOrResumeSession(slug, mesaNumero)
       setSesionId(sesion.id)
+      setTableInactiveMessage('') // Limpiar mensaje si tuvo éxito
       
-      // Si hay un nombre guardado y la sesión no lo tiene, actualizarla
-      const savedName = localStorage.getItem(`customerName_${slug}_${mesaNumero}`)
-      if (savedName && !sesion.clienteNombre) {
-        try {
-          await menuService.updateSession(sesion.id, { clienteNombre: savedName })
-        } catch (error) {
-          console.error('Error updating session with saved name:', error)
+      const previousSesionId = localStorage.getItem(`lastSesionId_${slug}_${mesaNumero}`)
+      
+      if (previousSesionId !== sesion.id) {
+        // La sesión cambió (el admin limpió la mesa o es una visita nueva)
+        // Purgamos los datos locales de la sesión anterior
+        localStorage.removeItem(`customerName_${slug}_${mesaNumero}`)
+        localStorage.removeItem(`orden_${slug}_${mesaNumero}`)
+        setCustomerName('')
+        setCurrentOrdenId(null)
+        setTimeout(() => setIsNameModalOpen(true), 500)
+      } else {
+        // Es la misma sesión actual, sincronizar nombre si es necesario
+        const savedName = localStorage.getItem(`customerName_${slug}_${mesaNumero}`)
+        if (savedName && !sesion.clienteNombre) {
+          try {
+            await menuService.updateSession(sesion.id, { clienteNombre: savedName })
+          } catch (error) {
+            console.error('Error updating session with saved name:', error)
+          }
         }
       }
       
-      const initialCart = await menuService.getCart(sesion.id)
-      setCart(initialCart)
+      // Guardar el nuevo id para la próxima vez
+      localStorage.setItem(`lastSesionId_${slug}_${mesaNumero}`, sesion.id)
+      
+      // Iniciar con carrito local vacío
+      setCart({ items: [], total: 0 })
 
     } catch (error) {
       console.error('Error initializing session:', error)
-      showNotification('Error al inicializar la sesión', 'error')
+      const errorMessage = error.response?.data?.error || error.message;
+      if (errorMessage && errorMessage.toLowerCase().includes('inactiva')) {
+        setTableInactiveMessage(errorMessage);
+        showNotification(errorMessage, 'error');
+      } else {
+        showNotification('Error al inicializar la sesión', 'error')
+      }
     }
   }
 
@@ -140,8 +198,33 @@ const PublicMenuPage = () => {
 
   const addToCart = async (producto) => {
     try {
-      const updatedCart = await menuService.addToCart(sesionId, producto.id, 1)
-      setCart(updatedCart)
+      setCart(prev => {
+        const currentCart = prev || { items: [], total: 0 };
+        const existingItemIndex = currentCart.items.findIndex(item => item.producto.id === producto.id);
+        
+        let newItems = [...currentCart.items];
+        
+        if (existingItemIndex >= 0) {
+          const item = newItems[existingItemIndex];
+          newItems[existingItemIndex] = {
+            ...item,
+            cantidad: item.cantidad + 1,
+            subtotal: item.producto.precio * (item.cantidad + 1)
+          };
+        } else {
+          newItems.push({
+            id: `local_${Date.now()}_${Math.random().toString(36).substring(2,9)}`,
+            productoId: producto.id,
+            producto: producto,
+            cantidad: 1,
+            precioUnitario: producto.precio,
+            subtotal: producto.precio
+          });
+        }
+        
+        const newTotal = newItems.reduce((sum, item) => sum + item.subtotal, 0);
+        return { ...currentCart, items: newItems, total: newTotal };
+      });
       showNotification(`${producto.nombre} agregado al carrito`)
     } catch (error) {
       console.error('Error adding to cart:', error)
@@ -151,8 +234,23 @@ const PublicMenuPage = () => {
 
   const updateQuantity = async (itemId, newQuantity) => {
     try {
-      const updatedCart = await menuService.updateCartItem(sesionId, itemId, newQuantity);
-      setCart(updatedCart);
+      setCart(prev => {
+        if (!prev) return prev;
+        
+        let newItems;
+        if (newQuantity <= 0) {
+          newItems = prev.items.filter(item => item.id !== itemId);
+        } else {
+          newItems = prev.items.map(item => 
+            item.id === itemId 
+              ? { ...item, cantidad: newQuantity, subtotal: item.producto.precio * newQuantity }
+              : item
+          );
+        }
+        
+        const newTotal = newItems.reduce((sum, item) => sum + item.subtotal, 0);
+        return { ...prev, items: newItems, total: newTotal };
+      });
     } catch (error) {
       console.error('Error updating quantity:', error)
       showNotification('Error al actualizar cantidad', 'error')
@@ -202,15 +300,23 @@ const PublicMenuPage = () => {
     
     try {
       setSubmittingOrder(true)
+      
+      const itemsParaBackend = cart.items.map(item => ({
+        productoId: item.productoId,
+        cantidad: item.cantidad,
+        notas: ''
+      }));
+
       const data = await menuService.confirmOrder(sesionId, {
         nombreClienteFactura: customerName,
         notas: orderNotes.trim() || undefined,
+        items: itemsParaBackend
       });
       
       setCurrentOrdenId(data.orden.id)
       localStorage.setItem(`orden_${slug}_${mesaNumero}`, data.orden.id)
       
-      setCart(null)
+      setCart({ items: [], total: 0 })
       setShowOrderModal(false)
       setOrderNotes('')
       
@@ -299,6 +405,8 @@ const PublicMenuPage = () => {
     backgroundColor: '#374151' // Un gris oscuro si no hay banner
   };
 
+  const primaryButtonColor = restaurante?.configuracion?.buttonColor || '#ea580c';
+
   return (
     <div className="min-h-screen" style={pageStyle}>
       {/* CSS para ocultar scrollbar */}
@@ -360,39 +468,47 @@ const PublicMenuPage = () => {
                  msOverflowStyle: 'none',
                  scrollBehavior: 'smooth'
                }}>
-                  {categorias.map((categoria) => (
-                    <button
-                      key={categoria.id}
-                data-category-id={categoria.id}
-                onClick={() => {
-                  setSelectedCategory(categoria.id);
-                  setTimeout(() => scrollToSelectedCategory(categoria.id), 100);
-                }}
-                className={`flex-shrink-0 px-5 py-3 rounded-full text-sm font-medium transition-all duration-300 whitespace-nowrap border-2 ${
-                        selectedCategory === categoria.id
-                    ? 'bg-primary-600 text-white shadow-lg border-primary-600 scale-105'
-                    : 'bg-white text-gray-700 hover:bg-primary-50 hover:text-primary-700 border-gray-200 hover:border-primary-300'
-                      }`}
-                style={{
-                  minWidth: 'fit-content'
-                }}
-              >
-                <span className="font-semibold">{categoria.nombre}</span>
-                <span className={`ml-2 text-xs px-2 py-1 rounded-full ${
-                  selectedCategory === categoria.id
-                    ? 'bg-white/20 text-white'
-                    : 'bg-gray-100 text-gray-500'
-                }`}>
-                  {categoria.productos?.length || 0}
-                </span>
-                    </button>
-                  ))}
+                  {categorias.map((categoria) => {
+                    const isSelected = selectedCategory === categoria.id;
+                    return (
+                      <button
+                        key={categoria.id}
+                        data-category-id={categoria.id}
+                        onClick={() => {
+                          setSelectedCategory(categoria.id);
+                          setTimeout(() => scrollToSelectedCategory(categoria.id), 100);
+                        }}
+                        className={`flex-shrink-0 px-6 py-2.5 rounded-full text-sm font-bold transition-all duration-300 whitespace-nowrap border-2 flex items-center ${
+                          isSelected 
+                            ? 'text-white shadow-md scale-105' 
+                            : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50 hover:border-gray-300'
+                        }`}
+                        style={{
+                          minWidth: 'fit-content',
+                          backgroundColor: isSelected ? primaryButtonColor : undefined,
+                          borderColor: isSelected ? primaryButtonColor : undefined,
+                        }}
+                      >
+                        <span className="tracking-wide">{categoria.nombre}</span>
+                        <span className={`ml-2 text-xs px-2.5 py-0.5 rounded-full font-bold ${
+                          isSelected ? 'bg-white/25 text-white' : 'bg-gray-100 text-gray-500'
+                        }`}>
+                          {categoria.productos?.length || 0}
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </div>
 
       {/* Contenido del menú */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
+      <main 
+        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8 overflow-hidden"
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEndHandler}
+      >
           <div className="flex flex-col lg:flex-row gap-6">
             {/* Contenido principal */}
             <div className="lg:w-2/3">
@@ -407,30 +523,39 @@ const PublicMenuPage = () => {
                     {selectedCategoryData.productos
                       ?.filter(producto => producto.disponible)
                       ?.map((producto) => (
-                      <div key={producto.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-white/80">
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <h3 className="text-lg font-semibold text-gray-900">{producto.nombre}</h3>
-                            <p className="text-gray-600 mt-1">{producto.descripcion}</p>
-                            <p className="text-xl font-bold text-primary-600 mt-2">
+                      <div key={producto.id} className="border border-gray-100 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all duration-300 bg-white group">
+                        <div className="flex justify-between items-start gap-4">
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-lg font-bold text-gray-900 leading-tight">{producto.nombre}</h3>
+                            <p className="text-gray-500 text-sm mt-1.5 line-clamp-2">{producto.descripcion}</p>
+                            <p className="text-xl font-bold mt-3" style={{ color: primaryButtonColor }}>
                               {formatCurrency(producto.precio)}
                             </p>
                           </div>
                           
                           {producto.imagenUrl && (
-                            <img
-                              src={producto.imagenUrl}
-                              alt={producto.nombre}
-                              className="w-20 h-20 object-cover rounded-lg ml-4"
-                            />
+                            <div className="flex-shrink-0 overflow-hidden rounded-xl w-24 h-24 shadow-sm">
+                              <img
+                                src={producto.imagenUrl}
+                                alt={producto.nombre}
+                                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                              />
+                            </div>
                           )}
                         </div>
                         
                         <div className="mt-4 flex justify-end">
                           <button
                             onClick={() => addToCart(producto)}
-                            className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors"
+                            disabled={!!tableInactiveMessage}
+                            style={tableInactiveMessage ? {} : { backgroundColor: primaryButtonColor }}
+                            className={`px-5 py-2.5 rounded-xl font-medium transition-all duration-200 active:scale-95 flex items-center gap-2 ${
+                              tableInactiveMessage 
+                                ? 'bg-gray-200 text-gray-400 cursor-not-allowed' 
+                                : 'text-white shadow hover:shadow-md hover:-translate-y-0.5'
+                            }`}
                           >
+                            <ShoppingCartIcon className="w-5 h-5" />
                             Agregar
                           </button>
                         </div>
@@ -446,12 +571,22 @@ const PublicMenuPage = () => {
               <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-sm p-4 sticky top-4">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-semibold text-gray-900">Tu Pedido</h2>
-                  <div className="bg-primary-600 text-white text-xs px-2 py-1 rounded-full">
+                  <div className="text-white text-xs px-2.5 py-1 rounded-full font-bold shadow-sm" style={{ backgroundColor: primaryButtonColor }}>
                     {getTotalItems()} items
                   </div>
                 </div>
 
-                {!cart || cart.items.length === 0 ? (
+                {tableInactiveMessage ? (
+                  <div className="text-center py-8">
+                    <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+                      <XMarkIcon className="h-8 w-8 text-red-600" />
+                    </div>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">Mesa Inactiva</h3>
+                    <p className="text-gray-500 text-sm">
+                      {tableInactiveMessage}
+                    </p>
+                  </div>
+                ) : !cart || cart.items.length === 0 ? (
                   <div className="text-center py-8">
                     <ShoppingCartIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                     <p className="text-gray-500">Tu carrito está vacío</p>
@@ -499,7 +634,12 @@ const PublicMenuPage = () => {
                       <button
                         onClick={showOrderConfirmation}
                         disabled={submittingOrder || !cart || cart.items.length === 0}
-                        className="w-full bg-primary-600 text-white py-3 rounded-lg hover:bg-primary-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium"
+                        style={(submittingOrder || !cart || cart.items.length === 0) ? {} : { backgroundColor: primaryButtonColor }}
+                        className={`w-full py-3.5 rounded-xl text-white font-bold transition-all duration-200 shadow-md flex justify-center items-center ${
+                          (submittingOrder || !cart || cart.items.length === 0) 
+                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed shadow-none' 
+                            : 'hover:shadow-lg hover:-translate-y-0.5 active:scale-95'
+                        }`}
                       >
                         {submittingOrder ? 'Enviando...' : 'Confirmar Pedido'}
                       </button>
@@ -515,6 +655,7 @@ const PublicMenuPage = () => {
       <OrderStatusBanner 
         ordenId={currentOrdenId}
         restauranteSlug={slug}
+        primaryButtonColor={primaryButtonColor}
       />
 
       {/* Notificaciones */}

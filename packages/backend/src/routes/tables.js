@@ -115,12 +115,12 @@ const getTables = async (req, res) => {
     });
 
     // Transform data to include session status and active orders
-    // Una mesa está activa solo cuando tiene órdenes ENVIADAS (no solo sesiones activas)
+    // Bajo la nueva lógica de Opción A, una mesa está activa si tiene al menos una sesión abierta por el staff.
     const mesasWithStatus = mesas.map(mesa => ({
       ...mesa,
-      estaActiva: mesa._count.ordenes > 0, // Solo activa si tiene órdenes reales (no solo carrito)
+      estaActiva: mesa._count.sesiones > 0, // Activa si hay una sesión activa en la base de datos
       ordenesActivas: mesa._count.ordenes,
-      sesionesActivas: mesa._count.sesiones, // Mantener info de sesiones para referencia
+      sesionesActivas: mesa._count.sesiones,
     }));
 
     res.json({

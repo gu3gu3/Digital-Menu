@@ -27,6 +27,12 @@ const SubscriptionsListPage = () => {
   const [selectedRestaurant, setSelectedRestaurant] = useState(null);
   const [deleting, setDeleting] = useState(false);
 
+  // Estados para Reset Password
+  const [showResetPasswordModal, setShowResetPasswordModal] = useState(false);
+  const [resettingPassword, setResettingPassword] = useState(false);
+  const [generatedPassword, setGeneratedPassword] = useState('');
+  const [adminEmail, setAdminEmail] = useState('');
+
   useEffect(() => {
     fetchPlans();
     fetchSubscriptions();
@@ -112,6 +118,32 @@ const SubscriptionsListPage = () => {
     } finally {
       setDeleting(false);
     }
+  };
+
+  const handleResetPassword = async () => {
+    if (!selectedRestaurant) return;
+
+    try {
+      setResettingPassword(true);
+      const response = await superAdminService.resetRestaurantPassword(selectedRestaurant.id);
+      
+      if (response.success) {
+        setGeneratedPassword(response.data.newPassword);
+        setAdminEmail(response.data.email);
+        // No cerramos el modal, mostramos la contraseña en él
+      }
+    } catch (error) {
+      alert('Error al resetear la contraseña: ' + (error.message || 'Error desconocido'));
+      setShowResetPasswordModal(false);
+      setSelectedRestaurant(null);
+    } finally {
+      setResettingPassword(false);
+    }
+  };
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(generatedPassword);
+    alert('Contraseña copiada al portapapeles');
   };
 
   if (loading && subscriptions.length === 0) {
@@ -335,7 +367,22 @@ const SubscriptionsListPage = () => {
                           }}
                           className="text-red-600 hover:text-red-900 text-sm font-medium"
                         >
-                          Eliminar Restaurante
+                          Eliminar
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSelectedRestaurant({
+                              id: suscripcion.restauranteId,
+                              nombre: suscripcion.restaurante.nombre,
+                              email: suscripcion.restaurante.email
+                            });
+                            setGeneratedPassword('');
+                            setAdminEmail('');
+                            setShowResetPasswordModal(true);
+                          }}
+                          className="text-orange-600 hover:text-orange-900 text-sm font-medium"
+                        >
+                          Reset Pass
                         </button>
                       </div>
                     </td>
@@ -477,6 +524,103 @@ const SubscriptionsListPage = () => {
                     {deleting ? 'Eliminando...' : 'Eliminar Definitivamente'}
                   </button>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Confirmación / Éxito para Reset Password */}
+      {showResetPasswordModal && selectedRestaurant && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <div className={`mx-auto flex items-center justify-center h-12 w-12 rounded-full ${generatedPassword ? 'bg-green-100' : 'bg-orange-100'}`}>
+                {generatedPassword ? (
+                  <svg className="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                ) : (
+                  <svg className="h-6 w-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                  </svg>
+                )}
+              </div>
+              <div className="mt-2 text-center">
+                <h3 className="text-lg leading-6 font-medium text-gray-900">
+                  {generatedPassword ? 'Contraseña Reseteada' : 'Resetear Contraseña'}
+                </h3>
+                
+                {!generatedPassword ? (
+                  <>
+                    <div className="mt-2 px-7 py-3">
+                      <p className="text-sm text-gray-500 mb-3">
+                        ¿Seguro que desea resetear la contraseña del administrador principal del restaurante:
+                      </p>
+                      <div className="bg-gray-50 p-3 rounded-md mb-3">
+                        <p className="font-medium text-gray-900">{selectedRestaurant.nombre}</p>
+                      </div>
+                      <p className="text-xs text-orange-600">
+                        Se generará una nueva contraseña segura aleatoriamente.
+                      </p>
+                    </div>
+                    <div className="flex justify-center space-x-3 mt-4">
+                      <button
+                        onClick={() => {
+                          setShowResetPasswordModal(false);
+                          setSelectedRestaurant(null);
+                        }}
+                        className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        onClick={handleResetPassword}
+                        disabled={resettingPassword}
+                        className="px-4 py-2 bg-orange-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-orange-700 disabled:opacity-50"
+                      >
+                        {resettingPassword ? 'Generando...' : 'Confirmar Reseteo'}
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="mt-2 px-4 py-3">
+                      <p className="text-sm text-gray-500 mb-2">
+                        La nueva contraseña para <strong>{adminEmail}</strong> es:
+                      </p>
+                      <div className="bg-gray-100 p-4 rounded-md mb-4 flex items-center justify-between border-2 border-gray-200">
+                        <code className="text-lg font-bold text-gray-800 tracking-wider">
+                          {generatedPassword}
+                        </code>
+                        <button
+                          onClick={copyToClipboard}
+                          className="ml-2 text-indigo-600 hover:text-indigo-800"
+                          title="Copiar"
+                        >
+                          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                          </svg>
+                        </button>
+                      </div>
+                      <p className="text-xs text-red-500 font-medium">
+                        Por favor, copie la contraseña ahora. No se volverá a mostrar.
+                      </p>
+                    </div>
+                    <div className="flex justify-center mt-4">
+                      <button
+                        onClick={() => {
+                          setShowResetPasswordModal(false);
+                          setSelectedRestaurant(null);
+                          setGeneratedPassword('');
+                        }}
+                        className="px-4 py-2 bg-indigo-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-indigo-700"
+                      >
+                        Cerrar
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>

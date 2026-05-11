@@ -51,10 +51,22 @@ const AdminLayout = () => {
 
   const loadPlanInfo = async () => {
     try {
+      // 1. Refrescar información de usuario y restaurante
+      const userRes = await apiClient.get('/auth/me')
+      if (userRes.data?.data?.user) {
+        const freshUser = userRes.data.data.user;
+        const currentUser = JSON.parse(localStorage.getItem('adminUser'));
+        const updatedUser = { ...currentUser, ...freshUser };
+        localStorage.setItem('adminUser', JSON.stringify(updatedUser));
+        setUser(updatedUser);
+        setRestaurant(freshUser.restaurante);
+      }
+
+      // 2. Cargar info del plan
       const response = await apiClient.get('/admin/stats')
       setPlanInfo(response.data.data.plan)
     } catch (error) {
-      console.error('Error loading plan info:', error)
+      console.error('Error loading plan info or refreshing user:', error)
       setPlanInfo({ nombre: 'Plan Gratuito' }) // fallback
     }
   }
@@ -84,6 +96,52 @@ const AdminLayout = () => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+      </div>
+    )
+  }
+
+  // Soft Block: Si el restaurante está inactivo, ocultar el panel
+  if (restaurant && restaurant.activo === false) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+        <div className="sm:mx-auto sm:w-full sm:max-w-md">
+          <img src={logo} alt="Menu View" className="mx-auto h-16 w-auto grayscale" />
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+            Cuenta Suspendida
+          </h2>
+          <p className="mt-2 text-center text-sm text-gray-600">
+            Su cuenta se encuentra inactiva por falta de pago o por decisión administrativa.
+          </p>
+        </div>
+
+        <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+          <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10 text-center">
+            <div className="rounded-md bg-red-50 p-4 mb-6">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <XMarkIcon className="h-5 w-5 text-red-400" aria-hidden="true" />
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-red-800">Acceso Restringido</h3>
+                  <div className="mt-2 text-sm text-red-700">
+                    <p>No puede acceder al panel de administración ni recibir órdenes en este momento.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <p className="text-sm text-gray-500 mb-6">
+              Por favor, contacte a soporte o regularice su situación de facturación para restaurar el acceso.
+            </p>
+            
+            <button
+              onClick={handleLogout}
+              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+            >
+              Cerrar Sesión
+            </button>
+          </div>
+        </div>
       </div>
     )
   }

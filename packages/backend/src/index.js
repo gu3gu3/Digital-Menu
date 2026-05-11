@@ -60,7 +60,8 @@ app.use((req, res, next) => {
 });
 
 // 1. CORS Configuration (Apply First!)
-const allowedOriginsRegex = /(^https:\/\/(.*\.)?menuview\.app$)|(^https:\/\/(.*\.)?run\.app$)|(^http:\/\/localhost:)/;
+// Permitimos localhost, dominios de producción y direcciones IP de red local para pruebas desde dispositivos móviles
+const allowedOriginsRegex = /(^https:\/\/(.*\.)?menuview\.app$)|(^https:\/\/(.*\.)?run\.app$)|(^http:\/\/localhost:)|(^http:\/\/127\.0\.0\.1:)|(^http:\/\/192\.168\.)|(^http:\/\/10\.)/;
 
 console.log('Checkpoint 1: Configurando CORS...');
 app.use(cors({

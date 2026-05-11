@@ -237,21 +237,7 @@ const updateOrderStatus = async (req, res) => {
       }
     });
 
-    // Si la orden se marca como COMPLETADA o CANCELADA, cerrar la sesión
-    if ((status === 'COMPLETADA' || status === 'CANCELADA') && updatedOrder.sesion) {
-      console.log(`🔄 Cerrando sesión ${updatedOrder.sesion.id} porque orden cambió a ${status}`);
-      await prisma.sesion.update({
-        where: { id: updatedOrder.sesion.id },
-        data: {
-          activa: false,
-          finSesion: new Date(),
-          ultimaActividad: new Date()
-        }
-      });
-      console.log(`✅ Sesión ${updatedOrder.sesion.id} cerrada exitosamente`);
-    } else {
-      console.log(`ℹ️ No se cerró sesión: status=${status}, sesion=${!!updatedOrder.sesion}`);
-    }
+
 
     res.json({
       success: true,
@@ -690,6 +676,7 @@ const deleteOrder = async (req, res) => {
 const callWaiter = async (req, res) => {
   try {
     const { id } = req.params;
+    const { type = 'CALL' } = req.body;
 
     // 1. Obtener la orden para saber la mesa y el restaurante
     const order = await prisma.orden.findUnique({
@@ -702,7 +689,7 @@ const callWaiter = async (req, res) => {
     }
 
     const { restauranteId, mesa } = order;
-    const notificationKey = `call-waiter-mesa-${mesa.id}`;
+    const notificationKey = type === 'BILL' ? `bill-waiter-mesa-${mesa.id}` : `call-waiter-mesa-${mesa.id}`;
 
     // 2. Crear (o actualizar) una notificación usando upsert
     await prisma.notificacionUsuario.upsert({
@@ -710,13 +697,15 @@ const callWaiter = async (req, res) => {
       update: {
         createdAt: new Date(), // Actualiza la fecha para que aparezca como nueva
         leida: false,
+        titulo: type === 'BILL' ? `${mesa.nombre} pide la cuenta` : `${mesa.nombre} solicita atención`,
+        mensaje: type === 'BILL' ? `El cliente de ${mesa.nombre} (#${mesa.numero}) ha pedido la cuenta.` : `Un cliente en ${mesa.nombre} (#${mesa.numero}) ha solicitado la presencia de un mesero.`,
       },
       create: {
         restauranteId,
         notificationKey,
-        tipo: 'CALL', // Un nuevo tipo para identificar estas llamadas
-        titulo: `Mesa ${mesa.numero} solicita atención`,
-        mensaje: `Un cliente en la mesa ${mesa.nombre} (#${mesa.numero}) ha solicitado la presencia de un mesero.`,
+        tipo: type, // CALL o BILL
+        titulo: type === 'BILL' ? `${mesa.nombre} pide la cuenta` : `${mesa.nombre} solicita atención`,
+        mensaje: type === 'BILL' ? `El cliente de ${mesa.nombre} (#${mesa.numero}) ha pedido la cuenta.` : `Un cliente en ${mesa.nombre} (#${mesa.numero}) ha solicitado la presencia de un mesero.`,
       },
     });
 

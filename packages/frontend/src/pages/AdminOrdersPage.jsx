@@ -34,7 +34,7 @@ const AdminOrdersPage = () => {
   const [filters, setFilters] = useState({
     estado: '',
     mesa: '',
-    fecha: new Date().toISOString().split('T')[0] // Fecha de hoy por defecto
+    fecha: (new Date(Date.now() - (new Date()).getTimezoneOffset() * 60000)).toISOString().split('T')[0] // Fecha de hoy local por defecto
   });
 
   const tabs = [
@@ -129,7 +129,7 @@ const AdminOrdersPage = () => {
     setFilters({ 
       estado: '', 
       mesa: '', 
-      fecha: new Date().toISOString().split('T')[0] // Mantener fecha de hoy
+      fecha: (new Date(Date.now() - (new Date()).getTimezoneOffset() * 60000)).toISOString().split('T')[0] // Mantener fecha de hoy local
     });
     setSearchTerm('');
     setActiveTab('all');
@@ -306,7 +306,7 @@ const AdminOrdersPage = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">Accesos rápidos</label>
                 <div className="flex space-x-2">
                   <button
-                    onClick={() => setFilters({ ...filters, fecha: new Date().toISOString().split('T')[0] })}
+                    onClick={() => setFilters({ ...filters, fecha: (new Date(Date.now() - (new Date()).getTimezoneOffset() * 60000)).toISOString().split('T')[0] })}
                     className="px-3 py-2 text-xs bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
                   >
                     Hoy
@@ -315,7 +315,8 @@ const AdminOrdersPage = () => {
                     onClick={() => {
                       const yesterday = new Date();
                       yesterday.setDate(yesterday.getDate() - 1);
-                      setFilters({ ...filters, fecha: yesterday.toISOString().split('T')[0] });
+                      const offsetMs = yesterday.getTimezoneOffset() * 60000;
+                      setFilters({ ...filters, fecha: (new Date(yesterday.getTime() - offsetMs)).toISOString().split('T')[0] });
                     }}
                     className="px-3 py-2 text-xs bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
                   >

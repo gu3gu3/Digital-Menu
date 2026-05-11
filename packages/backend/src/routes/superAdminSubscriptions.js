@@ -482,6 +482,15 @@ router.put('/:id', authenticateSuperAdmin, async (req, res) => {
         });
       }
 
+      // Si se cambia el estado, sincronizar Restaurante.activo
+      if (value.estado) {
+        const isActivo = value.estado === 'ACTIVA';
+        await tx.restaurante.update({
+          where: { id: suscripcionExistente.restauranteId },
+          data: { activo: isActivo }
+        });
+      }
+
       // Si se cambió el estado a SUSPENDIDA o BLOQUEADA, enviar notificación
       if (value.estado && ['SUSPENDIDA', 'BLOQUEADA'].includes(value.estado)) {
         await tx.notificacionUsuario.create({
@@ -585,6 +594,12 @@ router.post('/:id/process-payment', authenticateSuperAdmin, async (req, res) => 
             }
           }
         }
+      });
+
+      // Asegurar que el restaurante esté activo al procesar el pago
+      await tx.restaurante.update({
+        where: { id: suscripcion.restauranteId },
+        data: { activo: true }
       });
 
       // Crear notificación de pago confirmado
@@ -775,6 +790,12 @@ router.post('/:id/renew', authenticateSuperAdmin, async (req, res) => {
           data: { planId: planId }
         });
       }
+
+      // Asegurar que el restaurante esté activo al renovar
+      await tx.restaurante.update({
+        where: { id: suscripcion.restauranteId },
+        data: { activo: true }
+      });
 
       // Crear registro de pago
       const pago = await tx.historialPago.create({
@@ -1234,6 +1255,79 @@ router.get('/plans/:id/usage', authenticateSuperAdmin, async (req, res) => {
     });
   }
 });
+
+/**
+ * POST /api/super-admin/subscriptions/restaurant/:id/reset-password
+ * Resetea la contraseña del administrador principal del restaurante
+ */
+router.post('/restaurant/:id/reset-password', authenticateSuperAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Buscar el restaurante y sus administradores
+    const restaurante = await prisma.restaurante.findUnique({
+      where: { id },
+      include: {
+        usuariosAdmin: true
+      }
+    });
+
+    if (!restaurante) {
+      return res.status(404).json({
+        success: false,
+        message: 'Restaurante no encontrado'
+      });
+    }
+
+    if (!restaurante.usuariosAdmin || restaurante.usuariosAdmin.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'No se encontraron usuarios administradores para este restaurante'
+      });
+    }
+
+    // Tomamos el primer administrador (principal)
+    const adminUser = restaurante.usuariosAdmin[0];
+
+    // Generar contraseña aleatoria
+    const generateRandomPassword = () => {
+      const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
+      let password = '';
+      for (let i = 0; i < 12; i++) {
+        password += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return password;
+    };
+
+    const newPassword = generateRandomPassword();
+    const bcrypt = require('bcryptjs');
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+    // Actualizar contraseña
+    await prisma.usuarioAdmin.update({
+      where: { id: adminUser.id },
+      data: { password: hashedPassword }
+    });
+
+    res.json({
+      success: true,
+      message: 'Contraseña reseteada exitosamente',
+      data: {
+        newPassword,
+        email: adminUser.email
+      }
+    });
+
+  } catch (error) {
+    console.error('Error al resetear contraseña:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al resetear la contraseña del restaurante'
+    });
+  }
+});
+
 
 /**
  * DELETE /api/super-admin/subscriptions/restaurant/:id/complete

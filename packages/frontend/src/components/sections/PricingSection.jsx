@@ -4,80 +4,81 @@ import { StarIcon, SparklesIcon, RocketLaunchIcon, CurrencyDollarIcon } from '@h
 const PricingSection = () => {
   const plans = [
     {
-      name: 'Plan Gratuito',
+      name: 'Plan Emprendedor',
       icon: StarIcon,
-      price: 0,
-      description: 'Ideal para comenzar tu digitalización - ¡Gratis para siempre!',
+      price: 6.00,
+      description: 'Ideal para comenzar tu digitalización',
       color: 'border-gray-200',
       buttonColor: 'btn-secondary',
       popular: false,
       features: [
-        { text: 'Hasta 25 productos', included: true },
-        { text: 'Hasta 300 órdenes/mes', included: true, highlight: false },
-        { text: 'Hasta 5 mesas con QR únicos', included: true },
-        { text: 'Hasta 1 mesero con panel dedicado', included: true },
+        { text: 'Hasta 30 productos', included: true },
+        { text: 'Hasta 5 categorías', included: true },
+        { text: 'Hasta 10 mesas con QR únicos', included: true },
+        { text: 'Hasta 2 meseros con panel dedicado', included: true },
+        { text: 'Hasta 400 órdenes/mes', included: true },
         { text: '🤖 Digitalización de menú con IA*', included: true, highlight: true },
-        { text: '💱 7 monedas centroamericanas', included: true, highlight: true },
-        { text: '📱 Menú digital responsivo', included: true },
-        { text: '⚡ Actualizaciones en tiempo real', included: true },
-        { text: '📧 Soporte por email', included: true },
-        { text: '📊 Estadísticas básicas', included: false },
-        { text: '🎨 Personalización avanzada', included: false },
-        { text: '🔔 Notificaciones push', included: false }
+        { text: '💱 7 monedas centroamericanas', included: true },
+        { text: '📱 Menú digital responsivo', included: true }
       ]
     },
     {
-      name: 'Plan Básico',
+      name: 'Plan Crecimiento',
       icon: SparklesIcon,
-      price: 10,
-      description: '67% más barato que la competencia - ¡Valor increíble!',
+      price: 20.00,
+      description: 'Para restaurantes en expansión',
       color: 'border-primary-200 ring-2 ring-primary-500',
       buttonColor: 'btn-primary',
       popular: true,
       badge: 'MÁS POPULAR',
       features: [
-        { text: 'Hasta 75 productos', included: true },
-        { text: 'Hasta 700 órdenes/mes', included: true },
-        { text: 'Hasta 15 mesas con QR únicos', included: true },
-        { text: 'Hasta 2 meseros con gestión completa', included: true, highlight: true },
+        { text: 'Hasta 150 productos', included: true },
+        { text: 'Hasta 15 categorías', included: true },
+        { text: 'Hasta 20 mesas con QR únicos', included: true },
+        { text: 'Hasta 6 meseros con gestión completa', included: true },
+        { text: 'Hasta 1,500 órdenes/mes', included: true },
         { text: '🤖 Digitalización de menú con IA*', included: true, highlight: true },
-        { text: '💱 7 monedas centroamericanas', included: true, highlight: true },
-        { text: '📱 Menú digital responsivo', included: true },
-        { text: '⚡ Actualizaciones en tiempo real', included: true },
-        { text: '📊 Dashboard con estadísticas avanzadas', included: true, highlight: true },
-        { text: '🎨 Personalización de marca completa', included: true, highlight: true },
-        { text: '🔔 Sistema de notificaciones en tiempo real', included: true, highlight: true },
-        { text: '📋 Gestión de personal integrada', included: true, highlight: true },
-        { text: '📈 Reportes de ventas', included: true },
-        { text: '💳 Soporte prioritario', included: true }
+        { text: '💱 7 monedas centroamericanas', included: true },
+        { text: '📊 Dashboard con estadísticas', included: true, highlight: true }
+      ]
+    },
+    {
+      name: 'Plan Pro',
+      icon: RocketLaunchIcon,
+      price: 40.00,
+      description: 'Operación completa y avanzada',
+      color: 'border-blue-200 ring-2 ring-blue-400',
+      buttonColor: 'bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow-lg hover:bg-blue-700 transition-all duration-300',
+      popular: false,
+      features: [
+        { text: 'Hasta 200 productos', included: true },
+        { text: 'Hasta 30 categorías', included: true },
+        { text: 'Hasta 50 mesas con QR únicos', included: true },
+        { text: 'Meseros ilimitados', included: true, highlight: true },
+        { text: 'Hasta 4,000 órdenes/mes', included: true },
+        { text: '🤖 Digitalización de menú con IA*', included: true, highlight: true },
+        { text: '🎨 Personalización avanzada', included: true, highlight: true },
+        { text: '🔔 Notificaciones en tiempo real', included: true, highlight: true }
       ]
     },
     {
       name: 'Plan Platinum',
-      icon: RocketLaunchIcon,
-      price: 25,
-      description: '17% más barato que la competencia - ¡Funcionalidad empresarial!',
+      icon: StarIcon,
+      price: 'Contactanos',
+      description: 'Sin límites para franquicias y cadenas',
       color: 'border-yellow-200 ring-2 ring-yellow-400',
       buttonColor: 'bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-semibold py-3 px-6 rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 ease-out',
       popular: false,
       badge: 'MÁXIMO VALOR',
       features: [
-        { text: 'Hasta 125 productos', included: true },
-        { text: 'Hasta 1,000 órdenes/mes', included: true },
-        { text: 'Hasta 30 mesas con QR únicos', included: true },
-        { text: 'Hasta 4 meseros con roles personalizados', included: true, highlight: true },
+        { text: 'Productos ilimitados', included: true, highlight: true },
+        { text: 'Categorías ilimitadas', included: true, highlight: true },
+        { text: 'Mesas ilimitadas', included: true, highlight: true },
+        { text: 'Meseros ilimitados', included: true, highlight: true },
+        { text: 'Órdenes ilimitadas', included: true, highlight: true },
         { text: '🤖 Digitalización de menú con IA*', included: true, highlight: true },
-        { text: '💱 7 monedas centroamericanas', included: true, highlight: true },
-        { text: '📱 Menú digital responsivo', included: true },
-        { text: '⚡ Actualizaciones en tiempo real', included: true },
-        { text: '📊 Analytics empresariales completos', included: true, highlight: true },
-        { text: '🎨 Personalización completa + temas', included: true, highlight: true },
-        { text: '🔔 Notificaciones push + email automático', included: true, highlight: true },
-        { text: '👥 Gestión avanzada de personal', included: true, highlight: true },
-        { text: '📋 Importación/Exportación CSV', included: true, highlight: true },
-        { text: '🛒 Sistema de carrito avanzado', included: true, highlight: true },
-        { text: '📱 Panel de meseros dedicado', included: true, highlight: true },
-        { text: '🆘 Soporte 24/7 dedicado', included: true }
+        { text: '📊 Analytics empresariales', included: true, highlight: true },
+        { text: '🆘 Soporte 24/7 dedicado', included: true, highlight: true }
       ]
     }
   ]
@@ -134,7 +135,7 @@ const PricingSection = () => {
         </div>
 
         {/* Plans Grid */}
-        <div className="grid lg:grid-cols-3 gap-8 mb-16">
+        <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-8 mb-16">
           {plans.map((plan, index) => (
             <div key={index} className={`relative bg-white rounded-2xl shadow-lg p-8 ${plan.color} hover:shadow-xl transition-all duration-300 ${plan.popular ? 'scale-105' : ''}`}>
               {plan.badge && (
@@ -148,9 +149,15 @@ const PricingSection = () => {
               <div className="text-center mb-8">
                 <plan.icon className="w-12 h-12 mx-auto mb-4 text-primary-600" />
                 <h3 className="text-2xl font-bold text-gray-900 mb-2">{plan.name}</h3>
-                <div className="mb-4">
-                  <span className="text-4xl font-bold text-gray-900">${plan.price}</span>
-                  <span className="text-gray-600">/mes</span>
+                <div className="mb-4 h-12 flex items-center justify-center">
+                  {typeof plan.price === 'number' ? (
+                    <>
+                      <span className="text-4xl font-bold text-gray-900">${plan.price.toFixed(2)}</span>
+                      <span className="text-gray-600 ml-1">/mes</span>
+                    </>
+                  ) : (
+                    <span className="text-3xl font-bold text-gray-900">{plan.price}</span>
+                  )}
                 </div>
                 <p className="text-gray-600 text-sm leading-relaxed">{plan.description}</p>
               </div>
@@ -171,7 +178,7 @@ const PricingSection = () => {
               </ul>
 
               <button className={`w-full py-3 px-6 rounded-lg font-semibold transition-all duration-300 ${plan.buttonColor === 'btn-primary' ? 'bg-primary-600 text-white hover:bg-primary-700 shadow-lg hover:shadow-xl transform hover:-translate-y-1' : plan.buttonColor === 'btn-secondary' ? 'bg-gray-100 text-gray-700 hover:bg-gray-200' : plan.buttonColor}`}>
-                {plan.price === 0 ? 'Comenzar Gratis' : 'Elegir Plan'}
+                {typeof plan.price === 'string' ? 'Contáctanos' : 'Elegir Plan'}
               </button>
             </div>
           ))}

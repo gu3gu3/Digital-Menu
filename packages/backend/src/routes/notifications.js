@@ -14,10 +14,10 @@ router.get('/', authenticate, requireStaff, async (req, res) => {
     const { restauranteId, role } = req.user;
     const { limit = 10, offset = 0 } = req.query;
 
-    // Los meseros solo ven notificaciones de tipo CALL
+    // Los meseros ven notificaciones de tipo CALL y BILL
     const whereClause = { restauranteId };
     if (role === 'MESERO') {
-      whereClause.tipo = 'CALL';
+      whereClause.tipo = { in: ['CALL', 'BILL'] };
     }
 
     const notifications = await prisma.notificacionUsuario.findMany({
@@ -68,10 +68,10 @@ router.post('/:id/read', authenticate, requireStaff, async (req, res) => {
         const { restauranteId, role } = req.user;
         const { id } = req.params;
 
-        // Los meseros solo pueden marcar como leídas las notificaciones de tipo CALL
+        // Los meseros pueden marcar como leídas las notificaciones de tipo CALL y BILL
         const whereClause = { id, restauranteId };
         if (role === 'MESERO') {
-            whereClause.tipo = 'CALL';
+            whereClause.tipo = { in: ['CALL', 'BILL'] };
         }
 
         const notification = await prisma.notificacionUsuario.findFirst({
@@ -105,13 +105,13 @@ router.post('/read-all', authenticate, requireStaff, async (req, res) => {
     try {
         const { restauranteId, role } = req.user;
 
-        // Los meseros solo pueden marcar como leídas las notificaciones de tipo CALL
+        // Los meseros pueden marcar como leídas las notificaciones de tipo CALL y BILL
         const whereClause = { 
             restauranteId,
             leida: false
         };
         if (role === 'MESERO') {
-            whereClause.tipo = 'CALL';
+            whereClause.tipo = { in: ['CALL', 'BILL'] };
         }
 
         await prisma.notificacionUsuario.updateMany({

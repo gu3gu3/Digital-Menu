@@ -90,8 +90,8 @@ class MenuService {
     return response.data.data;
   }
 
-  async callWaiter(orderId) {
-    const response = await apiClient.post(`/orders/${orderId}/call`);
+  async callWaiter(orderId, type = 'CALL') {
+    const response = await apiClient.post(`/orders/${orderId}/call`, { type });
     return response.data;
   }
 }

@@ -21,11 +21,10 @@ const findOrCreateCart = async (sesionId) => {
     throw new Error('La sesión está cerrada. No se pueden realizar nuevos pedidos.');
   }
 
-  // Look for any active order in this MESA (not just this session)
+  // Look for any active order in this SESION
   const activeOrder = await prisma.orden.findFirst({
     where: {
-      mesaId: sesion.mesaId,
-      restauranteId: sesion.restauranteId,
+      sesionId: sesion.id,
       estado: {
         in: ['CARRITO', 'ENVIADA', 'RECIBIDA', 'CONFIRMADA', 'EN_PREPARACION', 'LISTA']
       }
@@ -52,7 +51,7 @@ const findOrCreateCart = async (sesionId) => {
       return activeOrder;
     }
     // If it's beyond CARRITO state, check if we can still add items
-    if (['ENVIADA', 'RECIBIDA', 'CONFIRMADA'].includes(activeOrder.estado)) {
+    if (['ENVIADA', 'RECIBIDA', 'CONFIRMADA', 'EN_PREPARACION', 'LISTA'].includes(activeOrder.estado)) {
       // Update the order to link it to the current active session for tracking
       if (!activeOrder.sesionId || (activeOrder.sesion && !activeOrder.sesion.activa)) {
         await prisma.orden.update({
@@ -62,8 +61,6 @@ const findOrCreateCart = async (sesionId) => {
       }
       return activeOrder;
     }
-    // If it's in preparation or later stages, don't allow new items
-    throw new Error('Ya hay una orden en preparación en esta mesa. Por favor espera a que se complete antes de realizar un nuevo pedido.');
   }
 
   // Retry logic to handle race conditions on order creation
@@ -292,10 +289,54 @@ router.put('/:sesionId/item/:itemId', async (req, res) => {
  */
 router.post('/:sesionId/confirm', async (req, res) => {
   const { sesionId } = req.params;
-  const { notas, nombreCliente, nombreClienteFactura } = req.body;
+  const { notas, nombreCliente, nombreClienteFactura, items } = req.body;
   try {
     const cart = await findOrCreateCart(sesionId);
-    if (cart.items.length === 0) throw new Error('El carrito está vacío');
+    
+    // Procesar items si vienen en el request (Local Cart)
+    if (items && Array.isArray(items) && items.length > 0) {
+      const clienteActual = nombreClienteFactura || nombreCliente || 'Anónimo';
+      
+      for (const item of items) {
+        const producto = await prisma.producto.findUnique({ where: { id: item.productoId } });
+        if (!producto) continue;
+
+        const existingItem = cart.items.find(i => i.productoId === item.productoId);
+        
+        // Hacemos el binding del usuario que pidió el producto
+        const itemNotasStr = item.notas ? `${item.notas} (Por: ${clienteActual})` : `(Por: ${clienteActual})`;
+
+        if (existingItem) {
+          await prisma.itemOrden.update({
+            where: { id: existingItem.id },
+            data: {
+              cantidad: existingItem.cantidad + item.cantidad,
+              subtotal: producto.precio * (existingItem.cantidad + item.cantidad),
+              notas: existingItem.notas ? `${existingItem.notas} | ${itemNotasStr}` : itemNotasStr
+            },
+          });
+        } else {
+          await prisma.itemOrden.create({
+            data: {
+              ordenId: cart.id,
+              productoId: item.productoId,
+              cantidad: item.cantidad,
+              notas: itemNotasStr,
+              precioUnitario: producto.precio,
+              subtotal: producto.precio * item.cantidad,
+            },
+          });
+        }
+      }
+      
+      // Actualizamos los items del carrito para calcular totales correctamente
+      const updatedCartItems = await prisma.itemOrden.findMany({ where: { ordenId: cart.id } });
+      cart.items = updatedCartItems;
+    }
+
+    if (!cart.items || cart.items.length === 0) throw new Error('El carrito está vacío');
+    
+    const newTotals = calculateTotals(cart.items);
     
     // Append customer name and notes to existing ones if any
     let finalNotas = cart.notas || '';
@@ -306,8 +347,11 @@ router.post('/:sesionId/confirm', async (req, res) => {
     let finalNombreCliente = cart.nombreClienteFactura || '';
     const clienteName = nombreClienteFactura || nombreCliente;
     if (clienteName) {
-      finalNombreCliente = finalNombreCliente ? 
-        `${finalNombreCliente}, ${clienteName}` : clienteName;
+      // Evitar duplicar el nombre si el mismo cliente confirma 2 veces
+      if (!finalNombreCliente.includes(clienteName)) {
+        finalNombreCliente = finalNombreCliente ? 
+          `${finalNombreCliente}, ${clienteName}` : clienteName;
+      }
     }
     
     const confirmedOrder = await prisma.orden.update({
@@ -315,7 +359,9 @@ router.post('/:sesionId/confirm', async (req, res) => {
       data: { 
         estado: 'ENVIADA', 
         notas: finalNotas,
-        nombreClienteFactura: finalNombreCliente
+        nombreClienteFactura: finalNombreCliente,
+        subtotal: newTotals.subtotal,
+        total: newTotals.total
       },
       include: { 
         items: { include: { producto: true } },

@@ -95,8 +95,8 @@ const getRestaurantBySlug = async (req, res) => {
           orderBy: { orden: 'asc' }
         },
         mesas: {
-          where: { activa: true },
-          select: { id: true, numero: true, nombre: true, qrCode: true }
+          where: { activo: true },
+          select: { id: true, numero: true, nombre: true, qrCodeUrl: true }
         }
       }
     });
@@ -120,7 +120,7 @@ const getRestaurantBySlug = async (req, res) => {
     });
 
     restaurante.mesas.forEach(mesa => {
-      mesa.qrCode = buildAbsoluteUrl(mesa.qrCode);
+      mesa.qrCodeUrl = buildAbsoluteUrl(mesa.qrCodeUrl);
     });
 
     res.json({
@@ -137,7 +137,8 @@ const getRestaurantBySlug = async (req, res) => {
           bannerUrl: restaurante.bannerUrl,
           backgroundImage: restaurante.backgroundImage,
           backgroundColor: restaurante.backgroundColor,
-          moneda: restaurante.moneda
+          moneda: restaurante.moneda,
+          configuracion: restaurante.configuracion
         },
         categorias: restaurante.categorias,
         mesas: restaurante.mesas
@@ -177,6 +178,7 @@ const getMenuBySlug = async (req, res) => {
         backgroundColor: true,
         backgroundImage: true,
         moneda: true,
+        configuracion: true,
         categorias: {
           where: { activa: true },
           include: {
@@ -223,7 +225,8 @@ const getMenuBySlug = async (req, res) => {
           bannerUrl: restaurante.bannerUrl,
           backgroundColor: restaurante.backgroundColor,
           backgroundImage: restaurante.backgroundImage,
-          moneda: restaurante.moneda
+          moneda: restaurante.moneda,
+          configuracion: restaurante.configuracion
         },
         categorias: restaurante.categorias
       }

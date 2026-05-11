@@ -54,10 +54,8 @@ const StaffDashboard = () => {
       const parsedUser = JSON.parse(userData);
       setUser(parsedUser);
       
-      // Si el staffUser no tiene información del restaurante, obtenerla del backend
-      if (!parsedUser.restaurante?.moneda) {
-        updateStaffUserInfo();
-      }
+      // Obtener siempre la información más reciente del restaurante (incluyendo moneda) del backend
+      updateStaffUserInfo();
     } catch (error) {
       console.error('Error parsing user data:', error);
       navigate('/staff/login');
@@ -69,11 +67,11 @@ const StaffDashboard = () => {
     try {
       const response = await apiClient.get('/auth/me');
       
-      if (response.data?.data?.restaurante) {
+      if (response.data?.data?.user?.restaurante) {
         const currentUser = JSON.parse(localStorage.getItem('staffUser'));
         const updatedUser = { 
           ...currentUser, 
-          restaurante: response.data.data.restaurante 
+          restaurante: response.data.data.user.restaurante 
         };
         localStorage.setItem('staffUser', JSON.stringify(updatedUser));
         setUser(updatedUser);
@@ -120,8 +118,9 @@ const StaffDashboard = () => {
         params.estado = activeFilter;
       }
 
-      // Solo mostrar órdenes de hoy por defecto para meseros
-      params.fecha = new Date().toISOString().split('T')[0];
+      // Solo mostrar órdenes de hoy por defecto para meseros (usando zona horaria local)
+      const tzoffset = (new Date()).getTimezoneOffset() * 60000;
+      params.fecha = (new Date(Date.now() - tzoffset)).toISOString().split('T')[0];
 
       const response = await ordersService.getOrders(params);
       setOrders(response.data?.orders || response.orders || []);
@@ -154,8 +153,8 @@ const StaffDashboard = () => {
     try {
       const response = await notificationService.getNotifications(5, 0);
       if (response.success) {
-        // Solo mostrar notificaciones no leídas de tipo CALL
-        const callNotifs = response.data.notifications.filter(n => n.tipo === 'CALL' && !n.leida);
+        // Mostrar notificaciones no leídas de tipo CALL o BILL
+        const callNotifs = response.data.notifications.filter(n => ['CALL', 'BILL'].includes(n.tipo) && !n.leida);
         setCallNotifications(callNotifs);
       }
     } catch (error) {
@@ -250,6 +249,35 @@ const StaffDashboard = () => {
     );
   }
 
+  // Hard Block: Si el restaurante está inactivo, mostrar pantalla bloqueante
+  if (user?.restaurante && user.restaurante.activo === false) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+        <div className="sm:mx-auto sm:w-full sm:max-w-md">
+          <img src={logo} alt="Menu View" className="mx-auto h-16 w-auto grayscale" />
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+            Sistema Fuera de Servicio
+          </h2>
+          <div className="mt-8 bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10 text-center">
+            <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+              <XMarkIcon className="h-6 w-6 text-red-600" aria-hidden="true" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Acceso Restringido</h3>
+            <p className="text-sm text-gray-500 mb-6">
+              El sistema de órdenes se encuentra temporalmente suspendido. Por favor, contacte a la administración del restaurante para más información.
+            </p>
+            <button
+              onClick={handleLogout}
+              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700"
+            >
+              Cerrar Sesión
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Top Navigation */}
@@ -278,15 +306,6 @@ const StaffDashboard = () => {
                   autoRefresh ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'
                 }`}
                 title={autoRefresh ? 'Auto-actualización activa' : 'Auto-actualización pausada'}
-              >
-                <ArrowPathIcon className="h-5 w-5" />
-              </button>
-
-              {/* Manual refresh */}
-              <button
-                onClick={() => { loadOrders(); loadStats(); }}
-                className="p-2 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
-                title="Actualizar ahora"
               >
                 <ArrowPathIcon className="h-5 w-5" />
               </button>

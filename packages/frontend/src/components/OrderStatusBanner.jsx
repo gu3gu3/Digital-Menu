@@ -9,19 +9,22 @@ import {
   CreditCardIcon,
   ChevronRightIcon,
   ArrowPathIcon,
-  BellIcon
+  BellIcon,
+  BanknotesIcon
 } from '@heroicons/react/24/outline';
 import OrderTracker from './OrderTracker';
 import menuService from '../services/menuService';
 import { formatOrderTotal } from '../utils/currencyUtils';
 
-const OrderStatusBanner = ({ ordenId, restauranteSlug, onClearOrder, tableNumber }) => {
+const OrderStatusBanner = ({ ordenId, restauranteSlug, onClearOrder, tableNumber, primaryButtonColor }) => {
   const [orden, setOrden] = useState(null);
   const [showTracker, setShowTracker] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [isCalling, setIsCalling] = useState(false);
   const [callSuccess, setCallSuccess] = useState(false);
+  const [isRequestingBill, setIsRequestingBill] = useState(false);
+  const [billSuccess, setBillSuccess] = useState(false);
 
   // Configuración de estados con colores
   const estadosConfig = {
@@ -175,6 +178,19 @@ const OrderStatusBanner = ({ ordenId, restauranteSlug, onClearOrder, tableNumber
     }
   };
 
+  const handleRequestBill = async () => {
+    setIsRequestingBill(true);
+    try {
+      await menuService.callWaiter(ordenId, 'BILL'); 
+      setBillSuccess(true);
+      setTimeout(() => setBillSuccess(false), 3000);
+    } catch (err) {
+      console.error('Error requesting bill', err);
+    } finally {
+      setTimeout(() => setIsRequestingBill(false), 15000);
+    }
+  };
+
   if (!ordenId || loading || !orden) return null;
 
   const estadoActual = estadosConfig[orden.estado];
@@ -227,17 +243,37 @@ const OrderStatusBanner = ({ ordenId, restauranteSlug, onClearOrder, tableNumber
               <button 
                 onClick={handleCallWaiter}
                 disabled={isCalling}
-                className={`p-2 rounded-full transition-all duration-300 ${
+                style={(isCalling || callSuccess) ? undefined : { backgroundColor: primaryButtonColor || '#ea580c' }}
+                className={`p-2.5 rounded-xl shadow-sm transition-all duration-300 active:scale-90 ${
                   isCalling 
                     ? 'bg-gray-200 cursor-not-allowed' 
                     : callSuccess 
-                    ? 'bg-green-500 text-white transform scale-110'
-                    : 'bg-primary-500 text-white hover:bg-primary-600 hover:scale-110'
+                    ? 'bg-green-500 text-white shadow-md'
+                    : 'text-white hover:shadow-md hover:-translate-y-0.5'
                 }`}
                 title="Llamar al mesero"
               >
                 {callSuccess ? <CheckCircleIcon className="h-5 w-5" /> : <BellIcon className="h-5 w-5" />}
               </button>
+              
+              {orden.estado !== 'COMPLETADA' && orden.estado !== 'CANCELADA' && (
+                <button 
+                  onClick={handleRequestBill}
+                  disabled={isRequestingBill}
+                  className={`flex items-center space-x-1 px-4 py-2.5 rounded-xl font-medium transition-all duration-300 active:scale-95 shadow-sm ${
+                    isRequestingBill 
+                      ? 'bg-gray-200 cursor-not-allowed text-gray-500 shadow-none' 
+                      : billSuccess 
+                      ? 'bg-green-500 text-white shadow-md'
+                      : 'bg-green-600 text-white hover:bg-green-700 hover:shadow-md hover:-translate-y-0.5'
+                  }`}
+                  title="Pedir la cuenta"
+                >
+                  {billSuccess ? <CheckCircleIcon className="h-4 w-4" /> : <BanknotesIcon className="h-4 w-4" />}
+                  <span className="text-sm font-medium hidden sm:inline">{billSuccess ? '¡En camino!' : 'La Cuenta'}</span>
+                </button>
+              )}
+
               <button onClick={fetchOrden} className="p-2 text-gray-500 hover:text-gray-800" title="Actualizar">
                 <ArrowPathIcon className={`h-5 w-5 ${loading ? 'animate-spin' : ''}`} />
               </button>

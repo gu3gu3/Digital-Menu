@@ -22,6 +22,7 @@ const AdminRestaurantPage = () => {
   const [menuUrl, setMenuUrl] = useState('');
   const [copySuccess, setCopySuccess] = useState(false);
   const backgroundColor = watch("backgroundColor");
+  const buttonColor = watch("buttonColor");
 
   const fetchRestaurantData = useCallback(async () => {
     try {
@@ -29,10 +30,15 @@ const AdminRestaurantPage = () => {
       setRestaurantData(restaurante);
       // Populate form with fetched data
       Object.keys(restaurante).forEach(key => {
-        if (key in restaurante && restaurante[key] !== null) {
+        if (key in restaurante && restaurante[key] !== null && key !== 'configuracion') {
           setValue(key, restaurante[key]);
-    }
+        }
       });
+      if (restaurante.configuracion?.buttonColor) {
+        setValue('buttonColor', restaurante.configuracion.buttonColor);
+      } else {
+        setValue('buttonColor', '#ea580c'); // Default orange
+      }
       setMenuUrl(`${window.location.origin}/menu/${restaurante.slug}`);
     } catch (error) {
       console.error('Error loading restaurant data:', error);
@@ -57,6 +63,9 @@ const AdminRestaurantPage = () => {
         email: formData.email,
         moneda: formData.moneda,
         backgroundColor: formData.backgroundColor,
+        configuracion: {
+          buttonColor: formData.buttonColor || '#ea580c'
+        }
       };
       await restaurantService.updateMyRestaurant(updatedData);
       
@@ -243,6 +252,7 @@ const AdminRestaurantPage = () => {
         <div className="bg-white shadow-lg rounded-xl overflow-hidden">
           <div className="p-6"><h3 className="text-xl font-bold text-gray-900">Apariencia del Menú Público</h3><p className="mt-1 text-sm text-gray-500">Personaliza los colores e imágenes que verán tus clientes.</p></div>
           <div className="px-6 pb-6 border-b border-gray-200">
+             <div className="mb-6"><label className="block text-sm font-medium text-gray-700 mb-3">Color de Botones y Elementos Principales</label><div className="flex items-center gap-4"><input type="color" id="buttonColor" {...register("buttonColor")} className="h-10 w-20 p-1 rounded border border-gray-300 cursor-pointer" /><p className="text-sm text-gray-500">Selecciona el color que combine con el logo de tu restaurante.</p></div></div>
              <div><label className="block text-sm font-medium text-gray-700 mb-3">Color de Fondo</label><div className='flex items-center gap-2'>
               {['#FFFFFF', '#111827', '#FEE2E2', '#DBEAFE', '#F3F4F6', '#F5F5F4', '#D1FAE5', '#FEF3C7'].map((color) => (
                     <button

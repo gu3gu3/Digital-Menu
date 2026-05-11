@@ -12,8 +12,10 @@ import MenuImportModal from '../components/MenuImportModal'
 import DraggableCategoryList from '../components/DraggableCategoryList'
 import apiClient from '../lib/apiClient'
 import categoryService from '../services/categoryService'
+import { useRestaurantCurrency } from '../hooks/useRestaurantCurrency'
 
 const AdminMenuPage = () => {
+  const { formatAmount } = useRestaurantCurrency()
   const [categorias, setCategorias] = useState([])
   const [productos, setProductos] = useState([])
   const [loading, setLoading] = useState(false)
@@ -395,7 +397,7 @@ const AdminMenuPage = () => {
                             {producto.nombre}
                           </h4>
                           <p className={`text-lg font-bold ${producto.disponible ? 'text-primary-600' : 'text-gray-500'}`}>
-                            ${producto.precio}
+                            {formatAmount(producto.precio)}
                           </p>
                           {producto.descripcion && (
                             <p className={`text-sm mt-1 ${producto.disponible ? 'text-gray-500' : 'text-gray-400'}`}>

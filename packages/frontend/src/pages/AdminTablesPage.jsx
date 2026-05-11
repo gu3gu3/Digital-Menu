@@ -8,7 +8,8 @@ import {
   EyeIcon,
   TableCellsIcon,
   UsersIcon,
-  XMarkIcon
+  XMarkIcon,
+  PlayIcon
 } from '@heroicons/react/24/outline'
 import { Toaster, toast } from 'sonner'
 import apiClient from '../lib/apiClient'
@@ -64,9 +65,7 @@ const AdminTablesPage = () => {
     }
   }
 
-  useEffect(() => {
-    loadTables()
-  }, [])
+
 
   const loadTables = useCallback(async () => {
     setLoading(true)
@@ -84,6 +83,17 @@ const AdminTablesPage = () => {
       setLoading(false)
     }
   }, []);
+
+  useEffect(() => {
+    loadTables();
+    
+    // Auto-actualizar las mesas cada 15 segundos para mantener sincronizados los contadores
+    const interval = setInterval(() => {
+      loadTables();
+    }, 15000);
+    
+    return () => clearInterval(interval);
+  }, [loadTables]);
 
   const handleTableSubmit = async (e) => {
     e.preventDefault()
@@ -284,6 +294,42 @@ const AdminTablesPage = () => {
     setShowTableModal(true)
   }
 
+  const [openingTable, setOpeningTable] = useState(null)
+
+  const handleOpenTable = async (mesa) => {
+    if (mesa.estaActiva) {
+      setError('Esta mesa ya está activa')
+      return
+    }
+
+    setOpeningTable(mesa.id)
+    setError('')
+    setSuccess('')
+
+    try {
+      const response = await apiClient.post('/sessions/open', { 
+        mesaId: mesa.id,
+        numeroPersonas: 1 
+      })
+
+      if (response.data.success) {
+        setSuccess(`Mesa ${mesa.numero} abierta exitosamente.`)
+        await loadTables()
+      } else {
+        setError(response.data.error || `Error al abrir la Mesa ${mesa.numero}`)
+      }
+    } catch (error) {
+      console.error('Error opening table:', error)
+      setError(error.response?.data?.error || `Error al abrir la Mesa ${mesa.numero}: ${error.message}`)
+    } finally {
+      setOpeningTable(null)
+      setTimeout(() => {
+        setError('')
+        setSuccess('')
+      }, 8000)
+    }
+  }
+
   const handleClearTable = async (mesa) => {
     if (!mesa.estaActiva) {
       setError('Esta mesa no tiene sesiones activas')
@@ -415,7 +461,7 @@ const AdminTablesPage = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Mesas Activas</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {mesas.filter(mesa => mesa.activa).length}
+                {mesas.filter(mesa => mesa.estaActiva).length}
               </p>
             </div>
           </div>
@@ -481,7 +527,7 @@ const AdminTablesPage = () => {
                   Ver QR
                 </button>
                 
-                {mesa.estaActiva && (
+                {mesa.estaActiva ? (
                   <button
                     onClick={() => handleClearTable(mesa)}
                     disabled={clearingSession === mesa.id}
@@ -494,6 +540,22 @@ const AdminTablesPage = () => {
                       <>
                         <XMarkIcon className="h-4 w-4" />
                         <span className="sr-only">Limpiar mesa</span>
+                      </>
+                    )}
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => handleOpenTable(mesa)}
+                    disabled={openingTable === mesa.id}
+                    className="inline-flex items-center px-3 py-2 border border-green-300 rounded-lg text-sm font-medium text-green-700 bg-white hover:bg-green-50 disabled:opacity-50 disabled:cursor-not-allowed ml-2 transition-colors duration-200"
+                    title={`Abrir Mesa ${mesa.numero}`}
+                  >
+                    {openingTable === mesa.id ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
+                    ) : (
+                      <>
+                        <PlayIcon className="h-4 w-4" />
+                        <span className="sr-only">Abrir mesa</span>
                       </>
                     )}
                   </button>

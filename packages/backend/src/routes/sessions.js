@@ -107,38 +107,84 @@ const createSession = async (req, res) => {
       });
     }
 
+    // Si no hay una sesión activa existente, retornamos error (Opción A)
+    return res.status(403).json({
+      success: false,
+      error: 'Mesa inactiva. Por favor, solicite a un mesero que abra su mesa.'
+    });
+
+  } catch (error) {
+    console.error('Error creando sesión:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error interno del servidor'
+    });
+  }
+};
+
+// @desc    Open table (Create new session) (Admin/Staff endpoint)
+// @route   POST /api/sessions/open
+// @access  Private (Staff/Admin)
+const openSession = async (req, res) => {
+  try {
+    // Validamos que venga mesaId
+    const { mesaId, numeroPersonas } = req.body;
+    
+    // Obtener la mesa del restaurante del usuario actual
+    const mesa = await prisma.mesa.findFirst({
+      where: {
+        id: mesaId,
+        restauranteId: req.user.restauranteId,
+        activo: true
+      }
+    });
+
+    if (!mesa) {
+      return res.status(404).json({
+        success: false,
+        error: 'Mesa no encontrada o inactiva'
+      });
+    }
+
+    // Check for existing active session
+    const existingSession = await prisma.sesion.findFirst({
+      where: {
+        mesaId: mesa.id,
+        activa: true
+      }
+    });
+
+    if (existingSession) {
+      return res.status(400).json({
+        success: false,
+        error: 'La mesa ya está abierta'
+      });
+    }
+
     // Create new session
     const nuevaSesion = await prisma.sesion.create({
       data: {
         mesaId: mesa.id,
-        restauranteId: restaurante.id,
-        clienteNombre,
-        clienteTelefono,
-        numeroPersonas,
+        restauranteId: req.user.restauranteId,
+        numeroPersonas: numeroPersonas || 1,
         activa: true,
         ultimaActividad: new Date()
       },
       include: {
         mesa: {
           select: { numero: true, nombre: true, capacidad: true }
-        },
-        restaurante: {
-          select: { nombre: true, slug: true }
         }
       }
     });
 
     res.json({
       success: true,
-      data: { 
-        sesion: nuevaSesion,
-        isExisting: false 
-      },
-      message: 'Sesión creada exitosamente'
+      data: { sesion: nuevaSesion },
+      message: 'Mesa abierta exitosamente'
     });
 
   } catch (error) {
-    console.error('Error creando sesión:', error);
+    console.error('Error abriendo mesa:', error);
     res.status(500).json({
       success: false,
       error: 'Error interno del servidor'
@@ -440,17 +486,20 @@ const getSessionStats = async (req, res) => {
   }
 };
 
-// Import authentication middleware only for admin routes
-const { authenticate, requireAdmin } = require('../middleware/authMiddleware');
+// Import authentication middleware
+const { authenticate, requireAdmin, requireStaff } = require('../middleware/authMiddleware');
 
 // Public routes (for customers scanning QR)
 router.post('/', createSession);
 router.get('/:id', getSession);
 router.put('/:id', updateSession);
-router.post('/:id/close', closeSession);
+
+// Staff/Admin routes
+router.post('/open', authenticate, requireStaff, openSession);
+router.post('/:id/close', authenticate, requireStaff, closeSession);
 
 // Admin routes (for restaurant management)
-router.get('/restaurant/all', authenticate, requireAdmin, getRestaurantSessions);
-router.get('/restaurant/stats', authenticate, requireAdmin, getSessionStats);
+router.get('/restaurant/all', authenticate, requireStaff, getRestaurantSessions);
+router.get('/restaurant/stats', authenticate, requireStaff, getSessionStats);
 
 module.exports = router; 
