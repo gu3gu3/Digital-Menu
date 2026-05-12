@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-const WhatsAppButton = ({ phoneNumber = '+50582049323', message = 'Hola, estoy interesado en conocer más sobre MenuView para mi restaurante. ¿Podrían darme más información?' }) => {
+const WhatsAppButton = ({ phoneNumber = '+50577483492', message = 'Hola, estoy interesado en conocer más sobre MenuView para mi restaurante. ¿Podrían darme más información?' }) => {
   const [isHovered, setIsHovered] = useState(false);
 
   const handleWhatsAppClick = () => {
@@ -11,11 +11,14 @@ const WhatsAppButton = ({ phoneNumber = '+50582049323', message = 'Hola, estoy i
 
   return (
     <div className="fixed bottom-6 right-6 z-50">
+      {/* Pulse Animation */}
+      <div className="absolute inset-0 bg-green-500 rounded-full animate-ping opacity-75 pointer-events-none"></div>
+
       <button
         onClick={handleWhatsAppClick}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        className="bg-green-500 hover:bg-green-600 text-white p-4 rounded-full shadow-lg hover:shadow-xl transform hover:scale-110 transition-all duration-300 ease-out flex items-center"
+        className="relative bg-green-500 hover:bg-green-600 text-white p-4 rounded-full shadow-lg hover:shadow-xl transform hover:scale-110 transition-all duration-300 ease-out flex items-center z-10"
         aria-label="Contactar por WhatsApp"
       >
         <svg 
@@ -35,9 +38,6 @@ const WhatsAppButton = ({ phoneNumber = '+50582049323', message = 'Hola, estoy i
           <div className="absolute top-1/2 left-full transform -translate-y-1/2 w-0 h-0 border-l-4 border-l-gray-900 border-t-4 border-t-transparent border-b-4 border-b-transparent"></div>
         </div>
       </button>
-
-      {/* Pulse Animation */}
-      <div className="absolute inset-0 bg-green-500 rounded-full animate-ping opacity-75"></div>
     </div>
   );
 };

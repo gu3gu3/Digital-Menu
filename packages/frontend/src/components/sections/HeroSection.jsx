@@ -12,7 +12,7 @@ const HeroSection = () => {
   }
 
   const whatsappMessage = encodeURIComponent("Me interesa conocer más sobre el Plan Pro");
-  const whatsappUrl = `https://wa.me/50588888888?text=${whatsappMessage}`; // Placeholder número, el usuario lo ajustará luego
+  const whatsappUrl = `https://wa.me/50577483492?text=${whatsappMessage}`;
 
   return (
     <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">

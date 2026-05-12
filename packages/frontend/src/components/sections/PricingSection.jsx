@@ -177,7 +177,10 @@ const PricingSection = () => {
                 ))}
               </ul>
 
-              <button className={`w-full py-3 px-6 rounded-lg font-semibold transition-all duration-300 ${plan.buttonColor === 'btn-primary' ? 'bg-primary-600 text-white hover:bg-primary-700 shadow-lg hover:shadow-xl transform hover:-translate-y-1' : plan.buttonColor === 'btn-secondary' ? 'bg-gray-100 text-gray-700 hover:bg-gray-200' : plan.buttonColor}`}>
+              <button 
+                onClick={() => document.getElementById('register').scrollIntoView({ behavior: 'smooth' })}
+                className={`w-full py-3 px-6 rounded-lg font-semibold transition-all duration-300 ${plan.buttonColor === 'btn-primary' ? 'bg-primary-600 text-white hover:bg-primary-700 shadow-lg hover:shadow-xl transform hover:-translate-y-1' : plan.buttonColor === 'btn-secondary' ? 'bg-gray-100 text-gray-700 hover:bg-gray-200' : plan.buttonColor}`}
+              >
                 {typeof plan.price === 'string' ? 'Contáctanos' : 'Elegir Plan'}
               </button>
             </div>

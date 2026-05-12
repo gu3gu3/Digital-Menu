@@ -32,8 +32,8 @@ const Footer = () => {
               </div>
               <div className="flex items-center space-x-3">
                 <PhoneIcon className="h-5 w-5 text-primary-400 flex-shrink-0" />
-                <a href="tel:+50582049323" className="text-gray-300 hover:text-primary-400 transition-colors">
-                  +505 8204 9323
+                <a href="tel:+50577483492" className="text-gray-300 hover:text-primary-400 transition-colors">
+                  +505 7748 3492
                 </a>
               </div>
               <div className="flex items-center space-x-3">
@@ -51,7 +51,7 @@ const Footer = () => {
               {/* WhatsApp Button */}
               <div className="pt-3">
                 <a 
-                  href="https://wa.me/50582049323?text=Hola%2C%20estoy%20interesado%20en%20conocer%20más%20sobre%20MenuView%20para%20mi%20restaurante.%20¿Podrían%20darme%20más%20información%3F"
+                  href="https://wa.me/50577483492?text=Hola%2C%20estoy%20interesado%20en%20conocer%20más%20sobre%20MenuView%20para%20mi%20restaurante.%20¿Podrían%20darme%20más%20información%3F"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center space-x-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 shadow-lg hover:shadow-xl"
