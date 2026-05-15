@@ -20,28 +20,28 @@ async function seedUnified() {
     // ========================================
     console.log('\n📋 Creando planes del sistema...');
     
-    const planGratuito = await prisma.plan.upsert({
-      where: { nombre: 'Plan Gratuito' },
+    const planEmprendedor = await prisma.plan.upsert({
+      where: { nombre: 'Plan Emprendedor' },
       update: {
-        precio: 0,
-        limiteProductos: 25,
+        precio: 6.00,
+        limiteProductos: 30,
         limiteCategorias: 5,
-        limiteMeseros: 1,
-        limiteMesas: 5,
-        limiteOrdenes: 300,
+        limiteMeseros: 2,
+        limiteMesas: 10,
+        limiteOrdenes: 400,
         soporteEmail: true,
         soporteChat: false,
         analiticas: false,
         activo: true
       },
       create: {
-        nombre: 'Plan Gratuito',
-        precio: 0,
-        limiteProductos: 25,
+        nombre: 'Plan Emprendedor',
+        precio: 6.00,
+        limiteProductos: 30,
         limiteCategorias: 5,
-        limiteMeseros: 1,
-        limiteMesas: 5,
-        limiteOrdenes: 300,
+        limiteMeseros: 2,
+        limiteMesas: 10,
+        limiteOrdenes: 400,
         soporteEmail: true,
         soporteChat: false,
         analiticas: false,
@@ -49,30 +49,59 @@ async function seedUnified() {
       }
     });
 
-    const planBasico = await prisma.plan.upsert({
-      where: { nombre: 'Plan Básico' },
+    const planCrecimiento = await prisma.plan.upsert({
+      where: { nombre: 'Plan Crecimiento' },
       update: {
-        precio: 10,
-        limiteProductos: 75,
+        precio: 20.00,
+        limiteProductos: 150,
         limiteCategorias: 15,
-        limiteMeseros: 2,
-        limiteMesas: 10,
-        limiteOrdenes: 700,
+        limiteMeseros: 6,
+        limiteMesas: 20,
+        limiteOrdenes: 1500,
         soporteEmail: true,
         soporteChat: false,
         analiticas: true,
         activo: true
       },
       create: {
-        nombre: 'Plan Básico',
-        precio: 10,
-        limiteProductos: 75,
+        nombre: 'Plan Crecimiento',
+        precio: 20.00,
+        limiteProductos: 150,
         limiteCategorias: 15,
-        limiteMeseros: 2,
-        limiteMesas: 10,
-        limiteOrdenes: 700,
+        limiteMeseros: 6,
+        limiteMesas: 20,
+        limiteOrdenes: 1500,
         soporteEmail: true,
         soporteChat: false,
+        analiticas: true,
+        activo: true
+      }
+    });
+
+    const planPro = await prisma.plan.upsert({
+      where: { nombre: 'Plan Pro' },
+      update: {
+        precio: 40.00,
+        limiteProductos: 200,
+        limiteCategorias: 30,
+        limiteMeseros: 9999, // Ilimitado
+        limiteMesas: 50,
+        limiteOrdenes: 4000,
+        soporteEmail: true,
+        soporteChat: true,
+        analiticas: true,
+        activo: true
+      },
+      create: {
+        nombre: 'Plan Pro',
+        precio: 40.00,
+        limiteProductos: 200,
+        limiteCategorias: 30,
+        limiteMeseros: 9999,
+        limiteMesas: 50,
+        limiteOrdenes: 4000,
+        soporteEmail: true,
+        soporteChat: true,
         analiticas: true,
         activo: true
       }
@@ -81,12 +110,12 @@ async function seedUnified() {
     const planPlatinum = await prisma.plan.upsert({
       where: { nombre: 'Plan Platinum' },
       update: {
-        precio: 25,
-        limiteProductos: 125,
-        limiteCategorias: 25,
-        limiteMeseros: 4,
-        limiteMesas: 20,
-        limiteOrdenes: 1000,
+        precio: 80.00,
+        limiteProductos: 9999,
+        limiteCategorias: 9999,
+        limiteMeseros: 9999,
+        limiteMesas: 9999,
+        limiteOrdenes: 9999,
         soporteEmail: true,
         soporteChat: true,
         analiticas: true,
@@ -94,41 +123,12 @@ async function seedUnified() {
       },
       create: {
         nombre: 'Plan Platinum',
-        precio: 25,
-        limiteProductos: 125,
-        limiteCategorias: 25,
-        limiteMeseros: 4,
-        limiteMesas: 20,
-        limiteOrdenes: 1000,
-        soporteEmail: true,
-        soporteChat: true,
-        analiticas: true,
-        activo: true
-      }
-    });
-
-    const planGold = await prisma.plan.upsert({
-      where: { nombre: 'Plan Gold' },
-      update: {
-        precio: 50,
-        limiteProductos: 200,
-        limiteCategorias: 50,
-        limiteMeseros: 8,
-        limiteMesas: 40,
-        limiteOrdenes: 3000,
-        soporteEmail: true,
-        soporteChat: true,
-        analiticas: true,
-        activo: true
-      },
-      create: {
-        nombre: 'Plan Gold',
-        precio: 50,
-        limiteProductos: 200,
-        limiteCategorias: 50,
-        limiteMeseros: 8,
-        limiteMesas: 40,
-        limiteOrdenes: 3000,
+        precio: 80.00,
+        limiteProductos: 9999,
+        limiteCategorias: 9999,
+        limiteMeseros: 9999,
+        limiteMesas: 9999,
+        limiteOrdenes: 9999,
         soporteEmail: true,
         soporteChat: true,
         analiticas: true,
@@ -137,10 +137,10 @@ async function seedUnified() {
     });
 
     console.log('✅ Planes creados exitosamente:');
-    console.log(`   - ${planGratuito.nombre}: ${planGratuito.limiteProductos} productos, ${planGratuito.limiteOrdenes} órdenes, ${planGratuito.limiteMesas} mesas, ${planGratuito.limiteMeseros} meseros.`);
-    console.log(`   - ${planBasico.nombre}: ${planBasico.limiteProductos} productos, ${planBasico.limiteOrdenes} órdenes, ${planBasico.limiteMesas} mesas, ${planBasico.limiteMeseros} meseros.`);
-    console.log(`   - ${planPlatinum.nombre}: ${planPlatinum.limiteProductos} productos, ${planPlatinum.limiteOrdenes} órdenes, ${planPlatinum.limiteMesas} mesas, ${planPlatinum.limiteMeseros} meseros.`);
-    console.log(`   - ${planGold.nombre}: ${planGold.limiteProductos} productos, ${planGold.limiteOrdenes} órdenes, ${planGold.limiteMesas} mesas, ${planGold.limiteMeseros} meseros.`);
+    console.log(`   - ${planEmprendedor.nombre}: ${planEmprendedor.limiteProductos} productos, ${planEmprendedor.limiteOrdenes} órdenes, ${planEmprendedor.limiteMesas} mesas, ${planEmprendedor.limiteMeseros} meseros.`);
+    console.log(`   - ${planCrecimiento.nombre}: ${planCrecimiento.limiteProductos} productos, ${planCrecimiento.limiteOrdenes} órdenes, ${planCrecimiento.limiteMesas} mesas, ${planCrecimiento.limiteMeseros} meseros.`);
+    console.log(`   - ${planPro.nombre}: ${planPro.limiteProductos} productos, ${planPro.limiteOrdenes} órdenes, ${planPro.limiteMesas} mesas, ${planPro.limiteMeseros} meseros.`);
+    console.log(`   - ${planPlatinum.nombre}: Ilimitado.`);
 
     // ========================================
     // 2. CREAR SUPER USUARIO ADMINISTRADOR
@@ -191,7 +191,7 @@ async function seedUnified() {
         telefono: '+51 987 654 321',
         direccion: 'Av. Arequipa 1234, Miraflores, Lima',
         email: 'info@laparrillacriolla.com',
-        planId: planBasico.id,
+        planId: planCrecimiento.id,
         moneda: 'USD',
         backgroundColor: '#fef3c7', // Amarillo claro para comida criolla
         activo: true
@@ -209,7 +209,7 @@ async function seedUnified() {
         telefono: '+51 955 444 333',
         direccion: 'Malecón de la Reserva 456, Miraflores, Lima',
         email: 'admin@donceviche.com',
-        planId: planPlatinum.id,
+        planId: planPro.id,
         moneda: 'NIO',
         backgroundColor: '#f0f9ff', // Azul claro para mariscos
         activo: true
@@ -227,7 +227,7 @@ async function seedUnified() {
         telefono: '+51 922 111 999',
         direccion: 'Jr. de la Unión 789, Centro de Lima',
         email: 'admin@bellavista.com',
-        planId: planGratuito.id,
+        planId: planEmprendedor.id,
         moneda: 'CRC',
         backgroundColor: '#ecfdf5', // Verde claro para cocina internacional
         activo: true
@@ -253,9 +253,9 @@ async function seedUnified() {
     });
 
     console.log('✅ Restaurantes demo creados:');
-    console.log(`   - ${restaurante1.nombre} (${restaurante1.moneda}) - Plan: ${planBasico.nombre}`);
-    console.log(`   - ${restaurante2.nombre} (${restaurante2.moneda}) - Plan: ${planPlatinum.nombre}`);
-    console.log(`   - ${restaurante3.nombre} (${restaurante3.moneda}) - Plan: ${planGratuito.nombre}`);
+    console.log(`   - ${restaurante1.nombre} (${restaurante1.moneda}) - Plan: ${planCrecimiento.nombre}`);
+    console.log(`   - ${restaurante2.nombre} (${restaurante2.moneda}) - Plan: ${planPro.nombre}`);
+    console.log(`   - ${restaurante3.nombre} (${restaurante3.moneda}) - Plan: ${planEmprendedor.nombre}`);
     console.log(`   - ${restauranteDemo.nombre} (${restauranteDemo.moneda}) - Plan: ${planPlatinum.nombre} (DEMO)`);
 
     // ========================================
@@ -381,7 +381,7 @@ async function seedUnified() {
     console.log('\n💳 Creando suscripciones...');
     
     const restaurantes = [restaurante1, restaurante2, restaurante3, restauranteDemo];
-    const planes = [planBasico, planPlatinum, planGratuito, planPlatinum];
+    const planes = [planCrecimiento, planPro, planEmprendedor, planPlatinum];
     
     for (let i = 0; i < restaurantes.length; i++) {
       const restaurante = restaurantes[i];
