@@ -18,7 +18,7 @@ const PricingSection = () => {
         { text: 'Hasta 2 meseros con panel dedicado', included: true },
         { text: 'Hasta 400 órdenes/mes', included: true },
         { text: '🤖 Digitalización de menú con IA*', included: true, highlight: true },
-        { text: '💱 7 monedas centroamericanas', included: true },
+        { text: '💱 Soporte Multimoneda', included: true },
         { text: '📱 Menú digital responsivo', included: true }
       ]
     },
@@ -38,7 +38,7 @@ const PricingSection = () => {
         { text: 'Hasta 6 meseros con gestión completa', included: true },
         { text: 'Hasta 1,500 órdenes/mes', included: true },
         { text: '🤖 Digitalización de menú con IA*', included: true, highlight: true },
-        { text: '💱 7 monedas centroamericanas', included: true },
+        { text: '💱 Soporte Multimoneda', included: true },
         { text: '📊 Dashboard con estadísticas', included: true, highlight: true }
       ]
     },
@@ -112,7 +112,7 @@ const PricingSection = () => {
                 <h4 className="font-semibold mb-2">✨ Características Exclusivas:</h4>
                 <ul className="space-y-1 text-sm">
                   <li>🤖 Digitalización automática con IA</li>
-                  <li>💱 Soporte para 7 monedas centroamericanas</li>
+                  <li>💱 Soporte Multimoneda</li>
                   <li>👥 Gestión completa de personal integrada</li>
                   <li>📱 Panel dedicado para meseros</li>
                   <li>🔔 Notificaciones en tiempo real</li>

@@ -293,7 +293,16 @@ const updateOrderStatus = async (req, res) => {
 // @access  Private (Staff)
 const assignMeseroToOrder = async (req, res) => {
   try {
-    const { restauranteId } = req.user;
+    const { restauranteId, role } = req.user;
+
+    // Solo administradores pueden reasignar órdenes
+    if (role !== 'ADMINISTRADOR' && role !== 'SUPER_ADMIN') {
+      return res.status(403).json({
+        success: false,
+        error: 'No tienes permisos para reasignar órdenes'
+      });
+    }
+
     const { id } = req.params;
     const { meseroId } = req.body;
 

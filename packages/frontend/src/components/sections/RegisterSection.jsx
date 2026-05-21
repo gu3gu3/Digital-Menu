@@ -300,7 +300,7 @@ const RegisterSection = () => {
                   <div>• Hasta 300 órdenes mensuales</div>
                   <div>• Soporte por comunidad</div>
                   <div>• 🤖 Digitalización de menú con IA*</div>
-                  <div>• 💱 7 monedas centroamericanas</div>
+                  <div>• 💱 Soporte Multimoneda</div>
                   <div>• 📱 Menú digital responsivo</div>
                 </div>
                 <p className="text-xs text-green-600 mt-3">

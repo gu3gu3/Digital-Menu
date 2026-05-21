@@ -368,7 +368,7 @@ const AdminRegisterPage = () => {
                 <li>• Hasta 1 cuenta de meseros</li>
                 <li>• Hasta 300 órdenes mensuales</li>
                 <li>• 🤖 Digitalización de menú con IA*</li>
-                <li>• 💱 7 monedas centroamericanas</li>
+                <li>• 💱 Soporte Multimoneda</li>
                 <li>• 📱 Menú digital responsivo</li>
                 <li>• Soporte por email</li>
               </ul>

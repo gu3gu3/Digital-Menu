@@ -542,10 +542,9 @@ const register = async (req, res) => {
     // Get default free plan (buscar por precio 0 para mayor flexibilidad)
     const planGratuito = await prisma.plan.findFirst({
       where: { 
-        precio: 0,
         activo: true
       },
-      orderBy: { createdAt: 'asc' } // Tomar el más antiguo si hay varios
+      orderBy: { precio: 'asc' } // Tomar el más barato
     });
 
     if (!planGratuito) {
