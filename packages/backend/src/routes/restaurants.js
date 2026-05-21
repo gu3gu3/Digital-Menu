@@ -15,7 +15,7 @@ const updateRestaurantSchema = Joi.object({
   telefono: Joi.string().allow('').optional(),
   direccion: Joi.string().allow('').optional(),
   email: Joi.string().email().allow('').optional(), // Permitir cadena vacía
-  moneda: Joi.string().valid('USD', 'NIO', 'CRC', 'HNL', 'GTQ', 'PAB', 'SVC').optional(),
+  moneda: Joi.string().valid('USD', 'NIO', 'CRC', 'HNL', 'GTQ', 'PAB', 'SVC', 'EUR').optional(),
   backgroundColor: Joi.string().pattern(/^#[0-9A-Fa-f]{6}$/).optional(),
   backgroundImage: Joi.string().allow('').optional(),
   configuracion: Joi.object({
