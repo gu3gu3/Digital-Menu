@@ -521,6 +521,7 @@ router.post('/generate', authenticateSuperAdmin, aiUpload.array('menuImages', 3)
     const restaurante = await prisma.restaurante.findUnique({
       where: { id: restauranteId },
       include: {
+        plan: true,
         categorias: {
           include: {
             productos: true
@@ -586,11 +587,28 @@ router.post('/generate', authenticateSuperAdmin, aiUpload.array('menuImages', 3)
       }
     }
 
+    // Determinar recuentos actuales para límites
+    const limiteCategorias = restaurante.plan.limiteCategorias;
+    const limiteProductos = restaurante.plan.limiteProductos;
+    
+    let currentCategoryCount = replaceExistingMenu ? 0 : restaurante.categorias.length;
+    let currentProductCount = replaceExistingMenu ? 0 : restaurante.categorias.reduce((total, cat) => total + cat.productos.length, 0);
+    let reachedLimit = false;
+
     // Crear categorías y productos
     const createdCategories = [];
     const createdProducts = [];
 
     for (const categoriaData of finalMenuData.categorias) {
+      if (currentCategoryCount >= limiteCategorias) {
+        reachedLimit = true;
+        break;
+      }
+      
+      // Buscar si la categoría ya existía en la base de datos (para no doble-contar si es un update)
+      const existingCategory = replaceExistingMenu ? null : restaurante.categorias.find(c => c.nombre.toLowerCase() === categoriaData.nombre.toLowerCase());
+      if (!existingCategory) currentCategoryCount++;
+
       // Crear o encontrar categoría
       let categoria = await prisma.categoria.upsert({
         where: {
@@ -615,6 +633,14 @@ router.post('/generate', authenticateSuperAdmin, aiUpload.array('menuImages', 3)
 
       // Crear productos de la categoría
       for (const productoData of categoriaData.productos) {
+        if (currentProductCount >= limiteProductos) {
+          reachedLimit = true;
+          break;
+        }
+
+        const existingProduct = existingCategory ? existingCategory.productos.find(p => p.nombre.toLowerCase() === productoData.nombre.toLowerCase()) : null;
+        if (!existingProduct) currentProductCount++;
+
         const producto = await prisma.producto.upsert({
           where: {
             restauranteId_nombre: {
@@ -646,11 +672,14 @@ router.post('/generate', authenticateSuperAdmin, aiUpload.array('menuImages', 3)
 
     res.json({
       success: true,
-      message: 'Menú generado exitosamente con IA',
+      message: reachedLimit 
+        ? 'Menú generado parcialmente con IA. Se alcanzó el límite de su plan actual.' 
+        : 'Menú generado exitosamente con IA',
       data: {
         restaurante: restaurante.nombre,
         categoriasCreadas: createdCategories.length,
         productosCreados: createdProducts.length,
+        reachedLimit: reachedLimit,
         menuData: finalMenuData
       }
     });

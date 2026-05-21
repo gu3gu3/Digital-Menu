@@ -60,6 +60,14 @@ const CURRENCY_CONFIG = {
     country: 'El Salvador',
     locale: 'es-SV',
     decimals: 2
+  },
+  EUR: {
+    code: 'EUR',
+    name: 'Euro',
+    symbol: '€',
+    country: 'España',
+    locale: 'es-ES',
+    decimals: 2
   }
 };
 
@@ -160,7 +168,8 @@ const getCurrencySymbol = (currencyCode = 'USD') => {
 const getCurrenciesByRegion = () => {
   return {
     'América del Norte': ['USD'],
-    'Centroamérica': ['NIO', 'CRC', 'HNL', 'GTQ', 'PAB', 'SVC']
+    'Centroamérica': ['NIO', 'CRC', 'HNL', 'GTQ', 'PAB', 'SVC'],
+    'Europa': ['EUR']
   };
 };
 

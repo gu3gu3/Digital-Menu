@@ -530,7 +530,7 @@ const StaffDashboard = () => {
                           </span>
                         </div>
                         <div className="mt-1 text-sm text-gray-500">
-                          {order.items?.length || 0} productos • {formatAmount(order.total)}
+                          {order.items?.length || 0} productos • <span translate="no">{formatAmount(order.total)}</span>
                           {order.mesero && (
                             <>
                               <span className="mx-2">•</span>

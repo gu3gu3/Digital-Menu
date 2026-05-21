@@ -529,7 +529,7 @@ const PublicMenuPage = () => {
                             <h3 className="text-lg font-bold text-gray-900 leading-tight">{producto.nombre}</h3>
                             <p className="text-gray-500 text-sm mt-1.5 line-clamp-2">{producto.descripcion}</p>
                             <p className="text-xl font-bold mt-3" style={{ color: primaryButtonColor }}>
-                              {formatCurrency(producto.precio)}
+                              <span translate="no">{formatCurrency(producto.precio)}</span>
                             </p>
                           </div>
                           
@@ -598,7 +598,7 @@ const PublicMenuPage = () => {
                       <div key={item.id} className="flex items-center justify-between py-2 border-b border-gray-200">
                         <div className="flex-1">
                           <h4 className="font-medium text-gray-900">{item.producto.nombre}</h4>
-                          <p className="text-sm text-gray-600">{formatCurrency(item.producto.precio)}</p>
+                          <p className="text-sm text-gray-600"><span translate="no">{formatCurrency(item.producto.precio)}</span></p>
                         </div>
                         
                         <div className="flex items-center space-x-2">
@@ -626,7 +626,7 @@ const PublicMenuPage = () => {
                     <div className="pt-4 border-t border-gray-200">
                       <div className="flex justify-between items-center mb-4">
                         <span className="text-lg font-semibold text-gray-900">Total:</span>
-                        <span className="text-xl font-bold text-primary-600">
+                        <span className="text-xl font-bold text-primary-600" translate="no">
                           {formatCurrency(getTotalPrice())}
                         </span>
                       </div>

@@ -185,7 +185,7 @@ const getOrder = async (req, res) => {
 // @access  Private (Staff)
 const updateOrderStatus = async (req, res) => {
   try {
-    const { restauranteId } = req.user;
+    const { restauranteId, role } = req.user;
     const { id } = req.params;
     const { status, notas } = req.body;
 
@@ -210,6 +210,42 @@ const updateOrderStatus = async (req, res) => {
         success: false,
         error: 'Orden no encontrada'
       });
+    }
+
+    // Validación de Transiciones de Estado
+    const currentStatusIndex = validStatuses.indexOf(order.estado);
+    const newStatusIndex = validStatuses.indexOf(status);
+
+    // 1. Estados finales (No se pueden modificar)
+    if (order.estado === 'COMPLETADA' || order.estado === 'CANCELADA') {
+      return res.status(400).json({ 
+        success: false, 
+        error: `No se puede modificar una orden que ya está ${order.estado}` 
+      });
+    }
+
+    // 2. Punto de no retorno (SERVIDA)
+    if (order.estado === 'SERVIDA' && !['COMPLETADA', 'CANCELADA'].includes(status)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Una orden servida solo puede ser Completada o Cancelada'
+      });
+    }
+
+    // 3. Reglas de reversión (ir hacia atrás en el flujo)
+    if (newStatusIndex < currentStatusIndex) {
+      // Excepción: Revertir de LISTA a EN_PREPARACION (error del personal)
+      const isListaToPreparacion = order.estado === 'LISTA' && status === 'EN_PREPARACION';
+      const isAuthorizedToRevert = role === 'ADMINISTRADOR' || role === 'SUPER_ADMIN';
+
+      if (isListaToPreparacion && isAuthorizedToRevert) {
+        // Permitido, continuar
+      } else {
+        return res.status(403).json({
+          success: false,
+          error: 'No tienes permisos para revertir el estado o la acción no está permitida'
+        });
+      }
     }
 
     const updatedOrder = await prisma.orden.update({

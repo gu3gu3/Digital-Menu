@@ -60,6 +60,14 @@ export const CURRENCY_CONFIG = {
     country: 'El Salvador',
     locale: 'es-SV',
     decimals: 2
+  },
+  EUR: {
+    code: 'EUR',
+    name: 'Euro',
+    symbol: '€',
+    country: 'España',
+    locale: 'es-ES',
+    decimals: 2
   }
 };
 
@@ -169,6 +177,9 @@ export const getCurrenciesByRegion = () => {
       { code: 'GTQ', ...CURRENCY_CONFIG.GTQ },
       { code: 'PAB', ...CURRENCY_CONFIG.PAB },
       { code: 'SVC', ...CURRENCY_CONFIG.SVC }
+    ],
+    'Europa': [
+      { code: 'EUR', ...CURRENCY_CONFIG.EUR }
     ]
   };
 };

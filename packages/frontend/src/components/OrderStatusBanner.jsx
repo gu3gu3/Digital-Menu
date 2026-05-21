@@ -235,7 +235,7 @@ const OrderStatusBanner = ({ ordenId, restauranteSlug, onClearOrder, tableNumber
                   </span>
                 </div>
                 <p className="text-sm text-gray-600 mt-1">
-                  {estadoActual.description} • {formatCurrency(orden.total)} • {formatTime(orden.updatedAt)}
+                  {estadoActual.description} • <span translate="no">{formatCurrency(orden.total)}</span> • {formatTime(orden.updatedAt)}
                 </p>
               </div>
             </div>

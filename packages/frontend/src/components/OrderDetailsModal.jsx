@@ -246,7 +246,7 @@ const OrderDetailsModal = ({ isOpen, onClose, order, onOrderUpdate }) => {
                     <div>
                       <p className="text-xs text-gray-500">Total</p>
                       <p className="text-sm font-medium text-green-600">
-                        {formatAmount(order.total)}
+                        <span translate="no">{formatAmount(order.total)}</span>
                       </p>
                     </div>
                   </div>
@@ -269,7 +269,7 @@ const OrderDetailsModal = ({ isOpen, onClose, order, onOrderUpdate }) => {
                         </div>
                         <div className="text-right ml-4">
                           <p className="text-sm text-gray-600">x{item.cantidad}</p>
-                          <p className="font-medium">{formatAmount(item.subtotal)}</p>
+                          <p className="font-medium"><span translate="no">{formatAmount(item.subtotal)}</span></p>
                         </div>
                       </div>
                     ))}
@@ -279,7 +279,7 @@ const OrderDetailsModal = ({ isOpen, onClose, order, onOrderUpdate }) => {
                   <div className="mt-4 pt-4 border-t border-gray-200">
                     <div className="flex justify-between text-lg font-semibold">
                       <span>Total:</span>
-                      <span className="text-green-600">{formatAmount(order.total)}</span>
+                      <span className="text-green-600" translate="no">{formatAmount(order.total)}</span>
                     </div>
                   </div>
                 </div>

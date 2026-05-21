@@ -298,7 +298,7 @@ const OrderTracker = ({ ordenId, restauranteSlug, onClose }) => {
             </div>
             <div>
               <p className="text-sm text-gray-600">Total</p>
-              <p className="font-medium text-lg">{formatCurrency(orden.total)}</p>
+              <p className="font-medium text-lg"><span translate="no">{formatCurrency(orden.total)}</span></p>
             </div>
             <div>
               <p className="text-sm text-gray-600">Hora de pedido</p>
@@ -319,7 +319,7 @@ const OrderTracker = ({ ordenId, restauranteSlug, onClose }) => {
                   <p className="font-medium">{item.producto?.nombre}</p>
                   <p className="text-sm text-gray-600">Cantidad: {item.cantidad}</p>
                 </div>
-                <p className="font-medium">{formatCurrency(item.subtotal)}</p>
+                <p className="font-medium"><span translate="no">{formatCurrency(item.subtotal)}</span></p>
               </div>
             ))}
           </div>
