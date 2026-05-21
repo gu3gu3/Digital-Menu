@@ -51,12 +51,12 @@ steps:
     echo "Generando Prisma Client para el entorno de migración..."
     npx prisma generate --schema=./packages/backend/prisma/schema.prisma
     
-    # Ejecutar migraciones y seed
+    # Ejecutar migraciones (sin seed para no sobrescribir datos de producción)
     echo "Aplicando migraciones..."
     npx prisma migrate deploy --schema=./packages/backend/prisma/schema.prisma
     
-    echo "Poblando la base de datos..."
-    npx prisma db seed --schema=./packages/backend/prisma/schema.prisma
+    # echo "Poblando la base de datos..."
+    # npx prisma db seed --schema=./packages/backend/prisma/schema.prisma
 
   secretEnv: ['DATABASE_URL_FOR_MIGRATION']
 

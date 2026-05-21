@@ -101,7 +101,7 @@ if (process.env.NODE_ENV !== 'development') {
   console.log('Checkpoint 5: Configurando Rate Limiter...');
   const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutos
-    max: 200, // Límite de 200 solicitudes por IP por ventana
+    max: process.env.RATE_LIMIT_MAX_REQUESTS ? parseInt(process.env.RATE_LIMIT_MAX_REQUESTS, 10) : 3000, // Aumentado significativamente para permitir polling de los dashboards
     standardHeaders: true,
     legacyHeaders: false,
     message: 'Demasiadas solicitudes desde esta IP, intenta de nuevo más tarde.'
