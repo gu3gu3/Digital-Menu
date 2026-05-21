@@ -1,8 +1,10 @@
 import { SparklesIcon } from '@heroicons/react/24/solid'
 import { ArrowRightIcon } from '@heroicons/react/24/outline'
 import bannerImg from '../../assets/banner-menuviewapp.jpeg'
+import useUserLocation from '../../hooks/useUserLocation'
 
 const HeroSection = () => {
+  const { countryCode } = useUserLocation();
   const scrollToRegister = (e) => {
     e.preventDefault();
     const element = document.getElementById('register')
@@ -12,7 +14,8 @@ const HeroSection = () => {
   }
 
   const whatsappMessage = encodeURIComponent("Me interesa conocer más sobre el Plan Pro");
-  const whatsappUrl = `https://wa.me/50577483492?text=${whatsappMessage}`;
+  const whatsappNumber = countryCode === 'ES' ? '34664107092' : '50577483492';
+  const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${whatsappMessage}`;
 
   return (
     <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
@@ -47,7 +50,7 @@ const HeroSection = () => {
 
         {/* Sub-headline */}
         <p className="animate-fade-in-up animation-delay-200 text-lg md:text-xl text-gray-300 max-w-3xl mb-12 leading-relaxed">
-          Olvídate de transcribir. <strong className="text-white">MenuView.app</strong> es la única plataforma en Centroamérica que usa Inteligencia Artificial para digitalizar tu menú físico al instante. Más rápido, más higiénico y más inteligente. <br className="hidden md:block" /><span className="text-blue-300 font-medium mt-2 inline-block">Powered by Google Cloud.</span>
+          Olvídate de transcribir. <strong className="text-white">MenuView.app</strong> es la plataforma líder que usa Inteligencia Artificial para digitalizar tu menú físico al instante. Más rápido, más higiénico y más inteligente. <br className="hidden md:block" /><span className="text-blue-300 font-medium mt-2 inline-block">Powered by Google Cloud.</span>
         </p>
 
         {/* CTAs */}

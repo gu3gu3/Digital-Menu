@@ -1,7 +1,10 @@
 import { CheckIcon, XMarkIcon } from '@heroicons/react/24/solid'
 import { StarIcon, SparklesIcon, RocketLaunchIcon, CurrencyDollarIcon } from '@heroicons/react/24/outline'
+import useUserLocation from '../../hooks/useUserLocation'
 
 const PricingSection = () => {
+  const { countryCode } = useUserLocation();
+  const currencySymbol = countryCode === 'ES' ? '€' : '$';
   const plans = [
     {
       name: 'Plan Emprendedor',
@@ -122,7 +125,7 @@ const PricingSection = () => {
               <div>
                 <h4 className="font-semibold mb-2">💰 Ventaja Competitiva:</h4>
                 <ul className="space-y-1 text-sm">
-                  <li>📉 Plan Básico: $6 vs $10 la competencia</li>
+                  <li>📉 Plan Básico: {currencySymbol}6 vs {currencySymbol}10 la competencia</li>
                   <li>🎯 Mejor relación precio-funcionalidad</li>
                   <li>🚀 Tecnología más moderna y rápida</li>
                   <li>🌎 Alcance y soporte global</li>
@@ -151,7 +154,7 @@ const PricingSection = () => {
                 <div className="mb-4 h-12 flex items-center justify-center">
                   {typeof plan.price === 'number' ? (
                     <>
-                      <span className="text-4xl font-bold text-gray-900">${plan.price.toFixed(2)}</span>
+                      <span className="text-4xl font-bold text-gray-900">{currencySymbol}{plan.price.toFixed(2)}</span>
                       <span className="text-gray-600 ml-1">/mes</span>
                     </>
                   ) : (

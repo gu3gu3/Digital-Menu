@@ -16,7 +16,7 @@ const ProblemsSection = () => {
     {
       icon: ExclamationTriangleIcon,
       title: 'Falta de Higiene',
-      description: 'Los menús físicos pasan de mano en mano, creando puntos de contacto innecesarios especialmente críticos en la era post-COVID.',
+      description: 'Los menús físicos pasan de mano en mano, creando puntos de contacto innecesarios, además del constante desperdicio de papel al actualizar precios.',
       color: 'text-orange-600 bg-orange-100'
     },
     {
