@@ -122,11 +122,10 @@ const PricingSection = () => {
               <div>
                 <h4 className="font-semibold mb-2">💰 Ventaja Competitiva:</h4>
                 <ul className="space-y-1 text-sm">
-                  <li>📉 Plan Básico: $10 vs $29.99 competencia</li>
+                  <li>📉 Plan Básico: $6 vs $10 la competencia</li>
                   <li>🎯 Mejor relación precio-funcionalidad</li>
-                  <li>🆓 Plan gratuito sin limitaciones ocultas</li>
                   <li>🚀 Tecnología más moderna y rápida</li>
-                  <li>🌎 Diseñado específicamente para Centroamérica</li>
+                  <li>🌎 Alcance y soporte global</li>
                   <li>🔧 Soporte técnico en español</li>
                 </ul>
               </div>

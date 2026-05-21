@@ -290,15 +290,15 @@ const RegisterSection = () => {
                 </div>
               </div>
 
-              {/* Plan Gratuito Info */}
+              {/* Plan Emprendedor Info */}
               <div className="bg-green-50 border border-green-200 rounded-lg p-6">
-                <h4 className="text-lg font-semibold text-green-800 mb-3">Plan Gratuito Incluye:</h4>
+                <h4 className="text-lg font-semibold text-green-800 mb-3">Plan Emprendedor Incluye:</h4>
                 <div className="grid md:grid-cols-2 gap-2 text-sm text-green-700">
-                  <div>• Hasta 25 productos en el menú</div>
-                  <div>• Hasta 5 mesas con código QR</div>
-                  <div>• Hasta 1 cuenta de meseros</div>
-                  <div>• Hasta 300 órdenes mensuales</div>
-                  <div>• Soporte por comunidad</div>
+                  <div>• Hasta 30 productos en el menú</div>
+                  <div>• Hasta 5 categorías</div>
+                  <div>• Hasta 10 mesas con código QR</div>
+                  <div>• Hasta 2 meseros con panel dedicado</div>
+                  <div>• Hasta 400 órdenes mensuales</div>
                   <div>• 🤖 Digitalización de menú con IA*</div>
                   <div>• 💱 Soporte Multimoneda</div>
                   <div>• 📱 Menú digital responsivo</div>

@@ -361,16 +361,16 @@ const AdminRegisterPage = () => {
 
             {/* Plan Information - CORREGIDO */}
             <div className="bg-primary-50 p-4 rounded-lg">
-              <h4 className="text-sm font-medium text-primary-800 mb-2">Plan Gratuito Incluye:</h4>
+              <h4 className="text-sm font-medium text-primary-800 mb-2">Plan Emprendedor Incluye:</h4>
               <ul className="text-sm text-primary-700 space-y-1">
-                <li>• Hasta 25 productos en el menú</li>
-                <li>• Hasta 5 mesas con código QR</li>
-                <li>• Hasta 1 cuenta de meseros</li>
-                <li>• Hasta 300 órdenes mensuales</li>
+                <li>• Hasta 30 productos en el menú</li>
+                <li>• Hasta 5 categorías</li>
+                <li>• Hasta 10 mesas con código QR</li>
+                <li>• Hasta 2 meseros con panel dedicado</li>
+                <li>• Hasta 400 órdenes mensuales</li>
                 <li>• 🤖 Digitalización de menú con IA*</li>
                 <li>• 💱 Soporte Multimoneda</li>
                 <li>• 📱 Menú digital responsivo</li>
-                <li>• Soporte por email</li>
               </ul>
               <p className="text-xs text-primary-600 mt-2">
                 * Servicio de digitalización disponible como servicio adicional para clientes activos
