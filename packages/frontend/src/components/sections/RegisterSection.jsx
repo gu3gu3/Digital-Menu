@@ -338,7 +338,7 @@ const RegisterSection = () => {
                 </button>
 
                 <p className="text-center text-sm text-gray-500">
-                  ✨ 30 días gratis • Sin tarjeta de crédito • Cancelación en cualquier momento
+                  ✨ 15 días gratis • Sin tarjeta de crédito • Cancelación en cualquier momento
                 </p>
               </div>
             </form>

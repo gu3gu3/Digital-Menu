@@ -599,7 +599,7 @@ const register = async (req, res) => {
       // Create subscription for the restaurant
       const fechaInicio = new Date();
       const fechaVencimiento = new Date();
-      fechaVencimiento.setDate(fechaInicio.getDate() + 30); // 30 días gratis
+      fechaVencimiento.setDate(fechaInicio.getDate() + 15); // 15 días gratis
 
       await tx.suscripcion.create({
         data: {

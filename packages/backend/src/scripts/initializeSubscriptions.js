@@ -45,11 +45,11 @@ async function initializeSubscriptions() {
 
     // 3. Crear suscripciones para restaurantes existentes
     for (const restaurante of restaurantesSinSuscripcion) {
-      // Calcular fecha de vencimiento (30 días desde hoy para plan gratuito, 1 mes para otros)
+      // Calcular fecha de vencimiento (15 días desde hoy para plan gratuito, 1 mes para otros)
       const fechaVencimiento = new Date();
       
-      if (restaurante.plan.nombre === 'GRATUITO') {
-        fechaVencimiento.setDate(fechaVencimiento.getDate() + 30); // 30 días
+      if (restaurante.plan.precio === 0) {
+        fechaVencimiento.setDate(fechaVencimiento.getDate() + 15); // 15 días
       } else {
         fechaVencimiento.setMonth(fechaVencimiento.getMonth() + 1); // 1 mes
       }

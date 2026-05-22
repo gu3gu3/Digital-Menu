@@ -141,7 +141,7 @@ const FeaturesSection = () => {
               <div className="relative">
                 <div className="bg-gradient-to-br from-primary-100 to-secondary-100 rounded-xl p-8">
                   <div className="text-center space-y-4">
-                    <div className="text-4xl font-bold text-primary-600">30 días</div>
+                    <div className="text-4xl font-bold text-primary-600">15 días</div>
                     <p className="text-lg font-medium text-gray-900">Prueba gratuita</p>
                     <p className="text-gray-600">Sin compromisos, sin tarjeta de crédito</p>
                     <button 

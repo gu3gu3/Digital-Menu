@@ -67,7 +67,7 @@ const WelcomeDashboard = ({ userData, onContinueToDashboard }) => {
               <div>
                 <p className="text-sm text-gray-600">Plan</p>
                 <p className="font-semibold text-primary-600">
-                  {userData.restaurante?.plan?.nombre} (30 días gratis)
+                  {userData.restaurante?.plan?.nombre} (15 días gratis)
                 </p>
               </div>
             </div>

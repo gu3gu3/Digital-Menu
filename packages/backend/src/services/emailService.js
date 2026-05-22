@@ -186,7 +186,7 @@ class EmailService {
               <div style="background: linear-gradient(135deg, #edf2f7 0%, #e2e8f0 100%); border-radius: 8px; padding: 25px; margin: 30px 0;">
                 <h3 style="color: #2d3748; margin: 0 0 15px 0; font-size: 18px;">📊 Tu Plan Actual</h3>
                 <p style="color: #4a5568; margin: 0; font-size: 15px;">
-                  <strong>✨ Plan Gratuito</strong> - 30 días gratis<br>
+                  <strong>✨ Plan Gratuito</strong> - 15 días gratis<br>
                   • Hasta 25 productos<br>
                   • Hasta 5 mesas<br>
                   • Hasta 1 mesero<br>

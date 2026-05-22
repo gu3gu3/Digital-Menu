@@ -212,7 +212,7 @@ const PricingSection = () => {
             🎯 Oferta Especial de Lanzamiento
           </h3>
           <p className="text-xl text-gray-600 mb-8">
-            Digitaliza tu menú con IA <strong className="text-primary-600">GRATIS</strong> + 30 días de prueba sin compromiso
+            Digitaliza tu menú con IA <strong className="text-primary-600">GRATIS</strong> + 15 días de prueba sin compromiso
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button 
