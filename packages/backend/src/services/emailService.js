@@ -58,9 +58,9 @@ class EmailService {
           <div style="max-width: 600px; margin: 0 auto; background-color: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
             
             <!-- Header -->
-            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 20px; text-align: center;">
-              <h1 style="color: white; margin: 0; font-size: 28px; font-weight: bold;">🍽️ Digital Menu</h1>
-              <p style="color: #e2e8f0; margin: 10px 0 0 0; font-size: 16px;">Tu sistema de menú digital</p>
+            <div style="background-color: #ffffff; padding: 30px 20px 20px; text-align: center; border-bottom: 3px solid #667eea;">
+              <img src="${baseUrl}/logo.png" alt="Digital Menu" style="max-height: 80px; width: auto; margin-bottom: 15px;" />
+              <h1 style="color: #2d3748; margin: 0; font-size: 24px; font-weight: bold;">Tu sistema de menú digital</h1>
             </div>
 
             <!-- Content -->
@@ -171,9 +171,10 @@ class EmailService {
           <div style="max-width: 600px; margin: 0 auto; background-color: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
             
             <!-- Header -->
-            <div style="background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); padding: 40px 20px; text-align: center;">
-              <h1 style="color: white; margin: 0; font-size: 28px; font-weight: bold;">🎉 ¡Felicitaciones!</h1>
-              <p style="color: #c6f6d5; margin: 10px 0 0 0; font-size: 16px;">Tu restaurante está listo</p>
+            <div style="background-color: #ffffff; padding: 30px 20px 20px; text-align: center; border-bottom: 3px solid #48bb78;">
+              <img src="${baseUrl}/logo.png" alt="Digital Menu" style="max-height: 80px; width: auto; margin-bottom: 15px;" />
+              <h1 style="color: #2d3748; margin: 0; font-size: 28px; font-weight: bold;">🎉 ¡Felicitaciones!</h1>
+              <p style="color: #4a5568; margin: 10px 0 0 0; font-size: 16px;">Tu restaurante está listo</p>
             </div>
 
             <!-- Content -->
@@ -320,9 +321,10 @@ class EmailService {
           <div style="max-width: 600px; margin: 0 auto; background-color: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
             
             <!-- Header -->
-            <div style="background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%); padding: 40px 20px; text-align: center;">
-              <h1 style="color: white; margin: 0; font-size: 28px; font-weight: bold;">🔐 Recuperar Contraseña</h1>
-              <p style="color: #fed7d7; margin: 10px 0 0 0; font-size: 16px;">Solicitud de restablecimiento</p>
+            <div style="background-color: #ffffff; padding: 30px 20px 20px; text-align: center; border-bottom: 3px solid #f56565;">
+              <img src="${baseUrl}/logo.png" alt="Digital Menu" style="max-height: 80px; width: auto; margin-bottom: 15px;" />
+              <h1 style="color: #2d3748; margin: 0; font-size: 28px; font-weight: bold;">🔐 Recuperar Contraseña</h1>
+              <p style="color: #4a5568; margin: 10px 0 0 0; font-size: 16px;">Solicitud de restablecimiento</p>
             </div>
 
             <!-- Content -->
