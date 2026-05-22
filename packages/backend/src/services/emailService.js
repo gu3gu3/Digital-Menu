@@ -36,7 +36,8 @@ class EmailService {
   }
 
   async sendVerificationEmail(email, verificationToken, userName) {
-    const verificationUrl = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
+    const baseUrl = process.env.FRONTEND_URL || 'https://menuview.app';
+    const verificationUrl = `${baseUrl}/verify-email?token=${verificationToken}`;
     
     const emailContent = {
       from: {
@@ -114,7 +115,7 @@ class EmailService {
               </p>
               <p style="color: #718096; margin: 0; font-size: 14px;">
                 📧 <a href="mailto:soporte@menuview.app" style="color: #667eea; text-decoration: none;">soporte@menuview.app</a>
-                | 🌐 <a href="${process.env.FRONTEND_URL}" style="color: #667eea; text-decoration: none;">Digital Menu</a>
+                | 🌐 <a href="${baseUrl}" style="color: #667eea; text-decoration: none;">Digital Menu</a>
               </p>
               
               <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
@@ -147,8 +148,9 @@ class EmailService {
   }
 
   async sendWelcomeEmail(email, userName, restaurantName) {
-    const dashboardUrl = `${process.env.FRONTEND_URL}/admin/dashboard`;
-    const staffUrl = `${process.env.FRONTEND_URL}/staff/login`;
+    const baseUrl = process.env.FRONTEND_URL || 'https://menuview.app';
+    const dashboardUrl = `${baseUrl}/admin/dashboard`;
+    const staffUrl = `${baseUrl}/staff/login`;
     
     const emailContent = {
       from: {
@@ -186,11 +188,12 @@ class EmailService {
               <div style="background: linear-gradient(135deg, #edf2f7 0%, #e2e8f0 100%); border-radius: 8px; padding: 25px; margin: 30px 0;">
                 <h3 style="color: #2d3748; margin: 0 0 15px 0; font-size: 18px;">📊 Tu Plan Actual</h3>
                 <p style="color: #4a5568; margin: 0; font-size: 15px;">
-                  <strong>✨ Plan Gratuito</strong> - 15 días gratis<br>
-                  • Hasta 25 productos<br>
-                  • Hasta 5 mesas<br>
-                  • Hasta 1 mesero<br>
-                  • 300 órdenes por mes
+                  <strong>✨ Plan Emprendedor</strong> - 15 días gratis<br>
+                  • Hasta 30 productos<br>
+                  • Hasta 5 categorías<br>
+                  • Hasta 10 mesas<br>
+                  • Hasta 2 meseros<br>
+                  • 400 órdenes por mes
                 </p>
               </div>
 
@@ -257,7 +260,7 @@ class EmailService {
               </p>
               <p style="color: #718096; margin: 0; font-size: 14px;">
                 📧 <a href="mailto:soporte@menuview.app" style="color: #48bb78; text-decoration: none;">soporte@menuview.app</a>
-                | 🌐 <a href="${process.env.FRONTEND_URL}" style="color: #48bb78; text-decoration: none;">Digital Menu</a>
+                | 🌐 <a href="${baseUrl}" style="color: #48bb78; text-decoration: none;">Digital Menu</a>
               </p>
               
               <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
@@ -295,7 +298,8 @@ class EmailService {
   }
 
   async sendPasswordResetEmail(email, resetToken, userName, restaurantName) {
-    const resetUrl = `${process.env.FRONTEND_URL}/admin/reset-password?token=${resetToken}`;
+    const baseUrl = process.env.FRONTEND_URL || 'https://menuview.app';
+    const resetUrl = `${baseUrl}/admin/reset-password?token=${resetToken}`;
     
     const emailContent = {
       from: {
@@ -384,7 +388,7 @@ class EmailService {
               </p>
               <p style="color: #718096; margin: 0; font-size: 14px;">
                 📧 <a href="mailto:soporte@menuview.app" style="color: #f56565; text-decoration: none;">soporte@menuview.app</a>
-                | 🌐 <a href="${process.env.FRONTEND_URL}" style="color: #f56565; text-decoration: none;">Digital Menu</a>
+                | 🌐 <a href="${baseUrl}" style="color: #f56565; text-decoration: none;">Digital Menu</a>
               </p>
               
               <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
