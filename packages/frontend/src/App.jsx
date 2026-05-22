@@ -16,6 +16,8 @@ import AdminOrdersPage from './pages/AdminOrdersPage'
 import AdminStaffPage from './pages/AdminStaffPage'
 import AdminSettingsPage from './pages/AdminSettingsPage'
 import NotificationsPage from './pages/NotificationsPage'
+import AdminFeedbackPage from './pages/AdminFeedbackPage'
+import AdminChangelogPage from './pages/AdminChangelogPage'
 import StaffLoginPage from './pages/StaffLoginPage'
 import StaffDashboard from './pages/StaffDashboard'
 import SuperAdminLoginPage from './pages/SuperAdminLoginPage'
@@ -68,6 +70,8 @@ function App() {
             <Route path="tables" element={<AdminTablesPage />} />
             <Route path="orders" element={<AdminOrdersPage />} />
             <Route path="staff" element={<AdminStaffPage />} />
+            <Route path="feedback" element={<AdminFeedbackPage />} />
+            <Route path="changelog" element={<AdminChangelogPage />} />
             <Route path="settings" element={<AdminSettingsPage />} />
             <Route path="notifications" element={<NotificationsPage />} />
           </Route>

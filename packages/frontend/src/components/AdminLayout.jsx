@@ -12,7 +12,9 @@ import {
   Bars3Icon,
   XMarkIcon,
   LinkIcon,
-  BellIcon as BellIconOutline
+  BellIcon as BellIconOutline,
+  ChatBubbleBottomCenterTextIcon,
+  SparklesIcon
 } from '@heroicons/react/24/outline'
 import logo from '../assets/logo.png'
 import NotificationBell from './NotificationBell'
@@ -85,6 +87,8 @@ const AdminLayout = () => {
     { name: 'Notificaciones', href: '/admin/notifications', icon: BellIconOutline },
     { name: 'Mesas & QR', href: '/admin/tables', icon: QrCodeIcon },
     { name: 'Meseros', href: '/admin/staff', icon: UsersIcon },
+    { name: 'Danos tu opinión', href: '/admin/feedback', icon: ChatBubbleBottomCenterTextIcon },
+    { name: 'Novedades y Mejoras', href: '/admin/changelog', icon: SparklesIcon },
     { name: 'Configuración', href: '/admin/settings', icon: Cog6ToothIcon },
   ]
 

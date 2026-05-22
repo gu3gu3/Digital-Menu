@@ -61,6 +61,7 @@ model Restaurante {
   notificaciones    NotificacionUsuario[]
 
   suscripcion       Suscripcion?
+  sugerencias       Sugerencia[]
   @@map("restaurantes")
 }
 
@@ -293,3 +294,14 @@ model NotificacionUsuario {
 
   @@map("notificaciones_usuario")
 } 
+
+model Sugerencia {
+  id                String       @id @default(cuid())
+  mensaje           String       @db.Text
+  createdAt         DateTime     @default(now())
+
+  restauranteId     String
+  restaurante       Restaurante  @relation(fields: [restauranteId], references: [id], onDelete: Cascade)
+  
+  @@map("sugerencias")
+}

@@ -426,6 +426,46 @@ class EmailService {
     return this.sendEmail(emailContent);
   }
 
+  async sendFeedbackEmail(restaurantName, restaurantEmail, message) {
+    const emailContent = {
+      from: {
+        name: 'Digital Menu Feedback',
+        address: process.env.EMAIL_USER || 'registro@menuview.app'
+      },
+      to: 'comentarios@menuview.app',
+      subject: `Nueva Sugerencia de: ${restaurantName}`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Nueva Sugerencia</title>
+        </head>
+        <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f7fafc;">
+          <div style="max-width: 600px; margin: 0 auto; background-color: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+            <div style="background-color: #ffffff; padding: 30px 20px 20px; text-align: center; border-bottom: 3px solid #ecc94b;">
+              <h1 style="color: #2d3748; margin: 0; font-size: 24px; font-weight: bold;">💡 Nueva Sugerencia Recibida</h1>
+            </div>
+            <div style="padding: 40px 20px;">
+              <p style="color: #4a5568; line-height: 1.6; margin: 0 0 20px 0; font-size: 16px;">
+                <strong>Restaurante:</strong> ${restaurantName}<br>
+                <strong>Email:</strong> ${restaurantEmail}
+              </p>
+              <div style="background-color: #f7fafc; padding: 15px; border-radius: 6px; border-left: 4px solid #ecc94b; margin: 20px 0;">
+                <p style="color: #4a5568; font-size: 15px; margin: 0; white-space: pre-wrap;">${message}</p>
+              </div>
+            </div>
+          </div>
+        </body>
+        </html>
+      `,
+      text: `Nueva sugerencia de ${restaurantName} (${restaurantEmail}):\n\n${message}`
+    };
+
+    return this.sendEmail(emailContent);
+  }
+
   async sendEmail(emailOptions) {
     try {
       if (!this.transporter) {
