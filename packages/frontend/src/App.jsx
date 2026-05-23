@@ -20,6 +20,7 @@ import AdminFeedbackPage from './pages/AdminFeedbackPage'
 import AdminChangelogPage from './pages/AdminChangelogPage'
 import StaffLoginPage from './pages/StaffLoginPage'
 import StaffDashboard from './pages/StaffDashboard'
+import KitchenDashboard from './pages/KitchenDashboard'
 import SuperAdminLoginPage from './pages/SuperAdminLoginPage'
 import SuperAdminDashboard from './pages/SuperAdminDashboard'
 import SuperAdminSettingsPage from './pages/SuperAdminSettingsPage'
@@ -50,6 +51,7 @@ function App() {
           {/* Staff authentication routes */}
           <Route path="/staff/login" element={<StaffLoginPage />} />
           <Route path="/staff/dashboard" element={<StaffDashboard />} />
+          <Route path="/staff/kitchen" element={<KitchenDashboard />} />
           
           {/* Super Admin routes */}
           <Route path="/super-admin/login" element={<SuperAdminLoginPage />} />

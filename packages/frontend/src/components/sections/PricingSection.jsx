@@ -9,7 +9,7 @@ const PricingSection = () => {
     {
       name: 'Plan Emprendedor',
       icon: StarIcon,
-      price: 6.00,
+      price: countryCode === 'ES' ? 16.00 : 6.00,
       description: 'Ideal para comenzar tu digitalización',
       color: 'border-gray-200',
       buttonColor: 'btn-secondary',
@@ -22,13 +22,14 @@ const PricingSection = () => {
         { text: 'Hasta 400 órdenes/mes', included: true },
         { text: '🤖 Digitalización de menú con IA*', included: true, highlight: true },
         { text: '💱 Soporte Multimoneda', included: true },
-        { text: '📱 Menú digital responsivo', included: true }
+        { text: '📱 Menú digital responsivo', included: true },
+        { text: '🧑‍🍳 Módulo KDS (Cocina)', included: false }
       ]
     },
     {
       name: 'Plan Crecimiento',
       icon: SparklesIcon,
-      price: 20.00,
+      price: countryCode === 'ES' ? 25.00 : 20.00,
       description: 'Para restaurantes en expansión',
       color: 'border-primary-200 ring-2 ring-primary-500',
       buttonColor: 'btn-primary',
@@ -42,13 +43,14 @@ const PricingSection = () => {
         { text: 'Hasta 1,500 órdenes/mes', included: true },
         { text: '🤖 Digitalización de menú con IA*', included: true, highlight: true },
         { text: '💱 Soporte Multimoneda', included: true },
-        { text: '📊 Dashboard con estadísticas', included: true, highlight: true }
+        { text: '📊 Dashboard con estadísticas', included: true, highlight: true },
+        { text: '🧑‍🍳 Módulo KDS (Cocina)', included: false }
       ]
     },
     {
       name: 'Plan Pro',
       icon: RocketLaunchIcon,
-      price: 40.00,
+      price: countryCode === 'ES' ? 50.00 : 40.00,
       description: 'Operación completa y avanzada',
       color: 'border-blue-200 ring-2 ring-blue-400',
       buttonColor: 'bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow-lg hover:bg-blue-700 transition-all duration-300',
@@ -61,7 +63,8 @@ const PricingSection = () => {
         { text: 'Hasta 4,000 órdenes/mes', included: true },
         { text: '🤖 Digitalización de menú con IA*', included: true, highlight: true },
         { text: '🎨 Personalización avanzada', included: true, highlight: true },
-        { text: '🔔 Notificaciones en tiempo real', included: true, highlight: true }
+        { text: '🔔 Notificaciones en tiempo real', included: true, highlight: true },
+        { text: '🧑‍🍳 Módulo KDS (Cocina)', included: true, highlight: true }
       ]
     },
     {
@@ -81,7 +84,8 @@ const PricingSection = () => {
         { text: 'Órdenes ilimitadas', included: true, highlight: true },
         { text: '🤖 Digitalización de menú con IA*', included: true, highlight: true },
         { text: '📊 Analytics empresariales', included: true, highlight: true },
-        { text: '🆘 Soporte 24/7 dedicado', included: true, highlight: true }
+        { text: '🆘 Soporte 24/7 dedicado', included: true, highlight: true },
+        { text: '🧑‍🍳 Módulo KDS (Cocina)', included: true, highlight: true }
       ]
     }
   ]

@@ -37,16 +37,16 @@ const AdminChangelogPage = () => {
       title: "Nuevo Canal de Feedback Directo: 'Danos tu Opinión'",
       description: "Hemos habilitado una nueva sección donde puedes sugerir las funcionalidades que necesitas. ¡Leemos todas las sugerencias!",
       date: "Mayo 2026",
-      status: "Lanzado",
+      status: "Planificado",
       icon: ChatBubbleBottomCenterTextIcon,
       color: "bg-green-500"
     },
     {
       id: 2,
       title: "Soporte Multi-divisa: Incorporación del Euro (€) para Expansión Global",
-      description: "Ahora soportamos el Euro (€) como moneda nativa para nuestros clientes en Europa y España.",
-      date: "Mayo 2026",
-      status: "Lanzado",
+      description: "Soporte del Euro (€) como moneda nativa para nuestros clientes en Europa y España.",
+      date: "Enero 2026",
+      status: "Planificado",
       icon: CurrencyEuroIcon,
       color: "bg-blue-500"
     },
@@ -54,7 +54,7 @@ const AdminChangelogPage = () => {
       id: 3,
       title: "Panel de Meseros Optimizado para Dispositivos Móviles",
       description: "Re-diseño completo de la interfaz de meseros para garantizar rapidez en la toma de órdenes desde cualquier smartphone.",
-      date: "Próximamente",
+      date: "Agosto 2025",
       status: "En Desarrollo",
       icon: DevicePhoneMobileIcon,
       color: "bg-yellow-500"
@@ -63,8 +63,8 @@ const AdminChangelogPage = () => {
       id: 4,
       title: "Migración a Infraestructura de Google Cloud (Máxima Disponibilidad)",
       description: "Mejoramos nuestra arquitectura en la nube para garantizar 99.9% de uptime y mayor velocidad de carga en los menús.",
-      date: "En progreso",
-      status: "Infraestructura",
+      date: "Junio 2025",
+      status: "Planificado",
       icon: ServerStackIcon,
       color: "bg-purple-500"
     },
@@ -72,10 +72,19 @@ const AdminChangelogPage = () => {
       id: 5,
       title: "Asistente de Inteligencia Artificial para Onboarding",
       description: "Creación automática de menús con Inteligencia Artificial a partir de imágenes o textos para reducir el tiempo de configuración.",
-      date: "Roadmap Q3",
+      date: "Marzo 2025",
       status: "Planificado",
       icon: SparklesIcon,
       color: "bg-primary-500"
+    },
+    {
+      id: 6,
+      title: "Módulo KDS (Kitchen Display System) para Cocina",
+      description: "Panel dedicado para la cocina con métricas de tiempo de preparación para optimizar el flujo de trabajo.",
+      date: "Enero 2025",
+      status: "Lanzado",
+      icon: RocketLaunchIcon,
+      color: "bg-orange-500"
     }
   ]
 

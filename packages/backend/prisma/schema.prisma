@@ -92,6 +92,7 @@ model UsuarioMesero {
   apellido          String?
   telefono          String?
   pin               String?
+  rol               String       @default("MESERO") // MESERO, COCINA
   activo            Boolean      @default(true)
   lastLogin         DateTime?
   createdAt         DateTime     @default(now())
@@ -172,6 +173,8 @@ model Orden {
   total             Float
   notas             String?
   nombreClienteFactura String?
+  preparacionStartedAt DateTime?
+  preparacionFinishedAt DateTime?
   createdAt         DateTime     @default(now())
   updatedAt         DateTime     @updatedAt
 

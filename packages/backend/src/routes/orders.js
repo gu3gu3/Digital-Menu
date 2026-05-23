@@ -248,12 +248,20 @@ const updateOrderStatus = async (req, res) => {
       }
     }
 
+    const updateData = {
+      estado: status,
+      notas: notas || order.notas,
+    };
+
+    if (status === 'EN_PREPARACION' && !order.preparacionStartedAt) {
+      updateData.preparacionStartedAt = new Date();
+    } else if (status === 'LISTA' && !order.preparacionFinishedAt) {
+      updateData.preparacionFinishedAt = new Date();
+    }
+
     const updatedOrder = await prisma.orden.update({
       where: { id: id },
-      data: {
-        estado: status,
-        notas: notas || order.notas,
-      },
+      data: updateData,
       include: {
         mesa: true,
         sesion: true,

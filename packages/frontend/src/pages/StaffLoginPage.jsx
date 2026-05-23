@@ -26,7 +26,11 @@ const StaffLoginPage = () => {
         localStorage.setItem('staffToken', response.data.token);
         localStorage.setItem('staffUser', JSON.stringify(response.data.user));
         
-        navigate('/staff/dashboard');
+        if (response.data.user.rol === 'COCINA') {
+          navigate('/staff/kitchen');
+        } else {
+          navigate('/staff/dashboard');
+        }
       } else {
         setError(response.error || 'Error al iniciar sesión');
       }
@@ -59,10 +63,10 @@ const StaffLoginPage = () => {
             </div>
           </div>
           <h2 className="mt-8 text-3xl font-bold text-gray-900">
-            Portal de Meseros
+            Portal de Staff
           </h2>
           <p className="mt-2 text-sm text-gray-600">
-            Inicia sesión para gestionar órdenes
+            Inicia sesión para acceder al sistema
           </p>
         </div>
 

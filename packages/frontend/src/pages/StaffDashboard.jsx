@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ClipboardDocumentListIcon,
@@ -38,6 +38,7 @@ const StaffDashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [callNotifications, setCallNotifications] = useState([]);
+  const previousNotifCount = useRef(0);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -155,6 +156,30 @@ const StaffDashboard = () => {
       if (response.success) {
         // Mostrar notificaciones no leídas de tipo CALL o BILL
         const callNotifs = response.data.notifications.filter(n => ['CALL', 'BILL'].includes(n.tipo) && !n.leida);
+        
+        if (callNotifs.length > previousNotifCount.current) {
+          if (navigator.vibrate) {
+            navigator.vibrate([200, 100, 200]);
+          }
+          try {
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(880, audioCtx.currentTime);
+            oscillator.frequency.exponentialRampToValueAtTime(440, audioCtx.currentTime + 0.5);
+            gainNode.gain.setValueAtTime(1, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            oscillator.start();
+            oscillator.stop(audioCtx.currentTime + 0.5);
+          } catch(e) {
+            console.log('Audio autoplay may be blocked', e);
+          }
+        }
+        previousNotifCount.current = callNotifs.length;
+        
         setCallNotifications(callNotifs);
       }
     } catch (error) {
