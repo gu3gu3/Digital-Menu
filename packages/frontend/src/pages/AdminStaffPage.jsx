@@ -34,7 +34,8 @@ const AdminStaffPage = () => {
     password: '',
     nombre: '',
     apellido: '',
-    telefono: ''
+    telefono: '',
+    rol: 'MESERO'
   });
   const [user, setUser] = useState(null);
   const [activeFilter, setActiveFilter] = useState('');
@@ -89,7 +90,7 @@ const AdminStaffPage = () => {
     try {
       await staffService.createMesero(formData);
       setShowCreateModal(false);
-      setFormData({ email: '', password: '', nombre: '', apellido: '', telefono: '' });
+      setFormData({ email: '', password: '', nombre: '', apellido: '', telefono: '', rol: 'MESERO' });
       loadMeseros(true);
       loadStats(true);
     } catch (error) {
@@ -107,7 +108,7 @@ const AdminStaffPage = () => {
       await staffService.updateMesero(selectedMesero.id, updateData);
       setShowEditModal(false);
       setSelectedMesero(null);
-      setFormData({ email: '', password: '', nombre: '', apellido: '', telefono: '' });
+      setFormData({ email: '', password: '', nombre: '', apellido: '', telefono: '', rol: 'MESERO' });
       loadMeseros(true);
     } catch (error) {
       console.error('Error updating mesero:', error);
@@ -146,13 +147,14 @@ const AdminStaffPage = () => {
       password: '',
       nombre: mesero.nombre,
       apellido: mesero.apellido || '',
-      telefono: mesero.telefono || ''
+      telefono: mesero.telefono || '',
+      rol: mesero.rol || 'MESERO'
     });
     setShowEditModal(true);
   };
 
   const resetForm = () => {
-    setFormData({ email: '', password: '', nombre: '', apellido: '', telefono: '' });
+    setFormData({ email: '', password: '', nombre: '', apellido: '', telefono: '', rol: 'MESERO' });
     setSelectedMesero(null);
   };
 
@@ -367,6 +369,9 @@ const AdminStaffPage = () => {
                     Contacto
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Rol
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Estado
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -409,6 +414,11 @@ const AdminStaffPage = () => {
                           </div>
                         )}
                       </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${mesero.rol === 'COCINA' ? 'bg-orange-100 text-orange-800' : 'bg-blue-100 text-blue-800'}`}>
+                        {mesero.rol === 'COCINA' ? 'Cocina' : 'Mesero'}
+                      </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {getStatusBadge(mesero.activo)}
@@ -542,6 +552,22 @@ const AdminStaffPage = () => {
                       />
                     </div>
 
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Rol
+                      </label>
+                      <select
+                        value={formData.rol}
+                        onChange={(e) => setFormData({ ...formData, rol: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      >
+                        <option value="MESERO">Mesero</option>
+                        {['Plan Pro', 'Plan Platinum', 'Pro', 'Platinum'].includes(stats.planNombre) && (
+                          <option value="COCINA">Cocina (KDS)</option>
+                        )}
+                      </select>
+                    </div>
+
                     <div className="flex justify-end space-x-3 pt-4">
                       <button
                         type="button"
@@ -658,6 +684,22 @@ const AdminStaffPage = () => {
                         onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                       />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Rol
+                      </label>
+                      <select
+                        value={formData.rol}
+                        onChange={(e) => setFormData({ ...formData, rol: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      >
+                        <option value="MESERO">Mesero</option>
+                        {['Plan Pro', 'Plan Platinum', 'Pro', 'Platinum'].includes(stats.planNombre) && (
+                          <option value="COCINA">Cocina (KDS)</option>
+                        )}
+                      </select>
                     </div>
 
                     <div className="flex justify-end space-x-3 pt-4">

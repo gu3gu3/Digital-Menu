@@ -21,7 +21,8 @@ const createMeseroSchema = Joi.object({
     'any.required': 'El nombre es requerido'
   }),
   apellido: Joi.string().min(2).optional(),
-  telefono: Joi.string().optional()
+  telefono: Joi.string().optional(),
+  rol: Joi.string().valid('MESERO', 'COCINA').optional()
 });
 
 const updateMeseroSchema = Joi.object({
@@ -30,7 +31,8 @@ const updateMeseroSchema = Joi.object({
   nombre: Joi.string().min(2).optional(),
   apellido: Joi.string().min(2).optional(),
   telefono: Joi.string().optional(),
-  activo: Joi.boolean().optional()
+  activo: Joi.boolean().optional(),
+  rol: Joi.string().valid('MESERO', 'COCINA').optional()
 });
 
 // @desc    Get all meseros for restaurant
@@ -82,6 +84,7 @@ const getMeseros = async (req, res) => {
           nombre: true,
           apellido: true,
           telefono: true,
+          rol: true,
           activo: true,
           lastLogin: true,
           createdAt: true,
@@ -144,6 +147,7 @@ const getMesero = async (req, res) => {
         nombre: true,
         apellido: true,
         telefono: true,
+        rol: true,
         activo: true,
         lastLogin: true,
         createdAt: true,
@@ -188,7 +192,7 @@ const createMesero = async (req, res) => {
       });
     }
 
-    const { email, password, nombre, apellido, telefono } = value;
+    const { email, password, nombre, apellido, telefono, rol } = value;
 
     // Check plan limits
     const meseroCount = await prisma.usuarioMesero.count({
@@ -226,6 +230,7 @@ const createMesero = async (req, res) => {
         nombre,
         apellido,
         telefono,
+        rol: rol || 'MESERO',
         restauranteId,
         activo: true
       },
@@ -235,6 +240,7 @@ const createMesero = async (req, res) => {
         nombre: true,
         apellido: true,
         telefono: true,
+        rol: true,
         activo: true,
         createdAt: true,
         updatedAt: true
@@ -273,7 +279,7 @@ const updateMesero = async (req, res) => {
       });
     }
 
-    const { email, password, nombre, apellido, telefono, activo } = value;
+    const { email, password, nombre, apellido, telefono, activo, rol } = value;
 
     // Check if mesero exists and belongs to restaurant
     const existingMesero = await prisma.usuarioMesero.findFirst({
@@ -311,6 +317,7 @@ const updateMesero = async (req, res) => {
     if (apellido !== undefined) updateData.apellido = apellido;
     if (telefono !== undefined) updateData.telefono = telefono;
     if (activo !== undefined) updateData.activo = activo;
+    if (rol !== undefined) updateData.rol = rol;
     
     // Hash new password if provided
     if (password) {
@@ -328,6 +335,7 @@ const updateMesero = async (req, res) => {
         nombre: true,
         apellido: true,
         telefono: true,
+        rol: true,
         activo: true,
         lastLogin: true,
         createdAt: true,
@@ -449,6 +457,7 @@ const getStaffStats = async (req, res) => {
         meserosActivos,
         limitePlan,
         disponibles,
+        planNombre: admin.restaurante.plan.nombre
       }
     });
 
