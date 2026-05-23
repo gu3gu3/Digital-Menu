@@ -5,9 +5,14 @@ import {
   MapPinIcon,
   ClockIcon
 } from '@heroicons/react/24/outline'
+import useUserLocation from '../hooks/useUserLocation'
 
 const Footer = () => {
   const currentYear = new Date().getFullYear()
+  const { countryCode } = useUserLocation()
+  
+  const whatsappNumber = countryCode === 'ES' ? '34664107092' : '50577483492'
+  const displayPhone = countryCode === 'ES' ? '+34 664 107 092' : '+505 7748 3492'
 
   return (
     <footer id="contact" className="bg-gray-900 text-white">
@@ -32,14 +37,21 @@ const Footer = () => {
               </div>
               <div className="flex items-center space-x-3">
                 <PhoneIcon className="h-5 w-5 text-primary-400 flex-shrink-0" />
-                <a href="tel:+50577483492" className="text-gray-300 hover:text-primary-400 transition-colors">
-                  +505 7748 3492
+                <a href={`tel:${displayPhone.replace(/\s+/g, '')}`} className="text-gray-300 hover:text-primary-400 transition-colors">
+                  {displayPhone}
                 </a>
               </div>
               <div className="flex items-center space-x-3">
                 <MapPinIcon className="h-5 w-5 text-primary-400 flex-shrink-0" />
                 <span className="text-gray-300">
                   Managua, Nicaragua
+                </span>
+              </div>
+              <div className="flex items-center space-x-3">
+                <MapPinIcon className="h-5 w-5 text-primary-400 flex-shrink-0" />
+                <span className="text-gray-300">
+                  Sevilla, España <br />
+                  <a href="tel:+34664107092" className="hover:text-primary-400 transition-colors">+34 664 107 092</a>
                 </span>
               </div>
               <div className="flex items-center space-x-3">
@@ -51,7 +63,7 @@ const Footer = () => {
               {/* WhatsApp Button */}
               <div className="pt-3">
                 <a 
-                  href="https://wa.me/50577483492?text=Hola%2C%20estoy%20interesado%20en%20conocer%20más%20sobre%20MenuView%20para%20mi%20restaurante.%20¿Podrían%20darme%20más%20información%3F"
+                  href={`https://wa.me/${whatsappNumber}?text=Hola%2C%20estoy%20interesado%20en%20conocer%20más%20sobre%20MenuView%20para%20mi%20restaurante.%20¿Podrían%20darme%20más%20información%3F`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center space-x-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 shadow-lg hover:shadow-xl"

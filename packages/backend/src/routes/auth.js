@@ -412,6 +412,7 @@ const login = async (req, res) => {
       apellido: user.apellido,
       telefono: user.telefono,
       role,
+      rol: user.rol, // Agregado para KDS (COCINA)
       restaurante: {
         id: user.restaurante.id,
         nombre: user.restaurante.nombre,
