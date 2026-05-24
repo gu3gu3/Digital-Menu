@@ -16,8 +16,7 @@ const { errorHandler, notFound } = require('./middleware/errorMiddleware');
 const { connectDB } = require('./config/database');
 const { swaggerSetup } = require('./config/swagger');
 
-// Conectar a la base de datos INMEDIATAMENTE para forzar cualquier error.
-connectDB();
+// (La conexión a DB ahora se hace antes de iniciar el servidor al final del archivo)
 
 // Import routes
 const authRoutes = require('./routes/auth');
@@ -205,12 +204,24 @@ app.use(notFound);
 app.use(errorHandler);
 
 // Start server
-app.listen(PORT, () => {
-  console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
-  console.log(`📱 Entorno: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`🔗 Health check: http://localhost:${PORT}/health`);
-  console.log(`🔗 API Docs: http://localhost:${PORT}/api/docs`);
-  console.log(`🤖 AI Menu Generator: http://localhost:${PORT}/api/super-admin/ai-menu-generator`);
-});
+const startServer = async () => {
+  try {
+    // Wait for database connection before listening for requests
+    await connectDB();
+    
+    app.listen(PORT, () => {
+      console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
+      console.log(`📱 Entorno: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`🔗 Health check: http://localhost:${PORT}/health`);
+      console.log(`🔗 API Docs: http://localhost:${PORT}/api/docs`);
+      console.log(`🤖 AI Menu Generator: http://localhost:${PORT}/api/super-admin/ai-menu-generator`);
+    });
+  } catch (error) {
+    console.error("❌ Fallo crítico al iniciar el servidor:", error);
+    process.exit(1);
+  }
+};
+
+startServer();
 
 module.exports = app; 
