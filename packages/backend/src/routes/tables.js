@@ -17,7 +17,7 @@ const updateTableSchema = Joi.object({
   numero: Joi.number().integer().optional().min(1).max(999),
   nombre: Joi.string().optional().max(50),
   capacidad: Joi.number().integer().min(1).max(20),
-  activa: Joi.boolean().optional()
+  activo: Joi.boolean().optional()
 });
 
 /**
@@ -463,6 +463,21 @@ const deleteTable = async (req, res) => {
       return res.status(400).json({
         success: false,
         error: 'No se puede eliminar una mesa con órdenes activas'
+      });
+    }
+
+    // Check if table has any past history (to prevent P2003 foreign key violation)
+    const historyCount = await prisma.mesa.findUnique({
+      where: { id },
+      include: {
+        _count: { select: { ordenes: true, sesiones: true } }
+      }
+    });
+
+    if (historyCount._count.ordenes > 0 || historyCount._count.sesiones > 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'No se puede eliminar una mesa que ya tiene historial de órdenes o sesiones. Por favor, edítela para desactivarla en su lugar.'
       });
     }
 
