@@ -30,6 +30,10 @@ import SendNotificationsPage from './pages/SendNotificationsPage'
 import RenewSubscriptionPage from './pages/RenewSubscriptionPage'
 import PlansManagementPage from './pages/PlansManagementPage'
 import AIMenuGeneratorPage from './pages/AIMenuGeneratorPage'
+import SuperAdminPartnersPage from './pages/SuperAdminPartnersPage'
+import PartnerLoginPage from './pages/partner/PartnerLoginPage'
+import PartnerDashboard from './pages/partner/PartnerDashboard'
+import PartnerAiToolsPage from './pages/partner/PartnerAiToolsPage'
 
 function App() {
   return (
@@ -63,6 +67,12 @@ function App() {
           <Route path="/super-admin/subscriptions/:id/renew" element={<RenewSubscriptionPage />} />
           <Route path="/super-admin/plans" element={<PlansManagementPage />} />
           <Route path="/super-admin/ai-menu-generator" element={<AIMenuGeneratorPage />} />
+          <Route path="/super-admin/partners" element={<SuperAdminPartnersPage />} />
+          
+          {/* Partner routes */}
+          <Route path="/partner/login" element={<PartnerLoginPage />} />
+          <Route path="/partner/dashboard" element={<PartnerDashboard />} />
+          <Route path="/partner/ai-tools" element={<PartnerAiToolsPage />} />
           
           {/* Admin panel routes */}
           <Route path="/admin" element={<AdminLayout />}>

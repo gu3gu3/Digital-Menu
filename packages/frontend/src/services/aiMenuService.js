@@ -1,12 +1,16 @@
 import apiClient from '../lib/apiClient';
 
-const AI_MENU_API_URL = '/super-admin/ai-menu-generator';
+const getApiUrl = () => {
+  return window.location.pathname.includes('/partner') 
+    ? '/partner/ai-menu-generator' 
+    : '/super-admin/ai-menu-generator';
+};
 
 export const aiMenuService = {
   // Obtener lista de restaurantes para selección
   async getRestaurants() {
     try {
-      const response = await apiClient.get(`${AI_MENU_API_URL}/restaurants`);
+      const response = await apiClient.get(`${getApiUrl()}/restaurants`);
       return response.data;
     } catch (error) {
       throw error.response?.data || { message: 'Error de conexión' };
@@ -16,7 +20,7 @@ export const aiMenuService = {
   // Generar menú usando IA desde imágenes (máximo 3)
   async generateMenuFromImage(formData) {
     try {
-      const response = await apiClient.post(`${AI_MENU_API_URL}/generate`, formData, {
+      const response = await apiClient.post(`${getApiUrl()}/generate`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
@@ -60,7 +64,7 @@ export const aiMenuService = {
   // Crear múltiples mesas consecutivas
   async createBulkTables(tableData) {
     try {
-      const response = await apiClient.post(`${AI_MENU_API_URL}/bulk-tables`, tableData);
+      const response = await apiClient.post(`${getApiUrl()}/bulk-tables`, tableData);
       return response.data;
     } catch (error) {
       throw error.response?.data || { message: 'Error de conexión' };
@@ -70,7 +74,7 @@ export const aiMenuService = {
   // Obtener prompts actuales
   async getPrompts() {
     try {
-      const response = await apiClient.get(`${AI_MENU_API_URL}/prompts`);
+      const response = await apiClient.get(`${getApiUrl()}/prompts`);
       return response.data;
     } catch (error) {
       throw error.response?.data || { message: 'Error de conexión' };
@@ -80,7 +84,7 @@ export const aiMenuService = {
   // Generar menú con prompt personalizado
   async generateMenuWithCustomPrompt(formData) {
     try {
-      const response = await apiClient.post(`${AI_MENU_API_URL}/generate-with-custom-prompt`, formData, {
+      const response = await apiClient.post(`${getApiUrl()}/generate-with-custom-prompt`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
@@ -117,7 +121,7 @@ export const aiMenuService = {
   // Actualizar identidad visual del restaurante
   async updateVisualIdentity(formData) {
     try {
-      const response = await apiClient.post(`${AI_MENU_API_URL}/visual-identity`, formData, {
+      const response = await apiClient.post(`${getApiUrl()}/visual-identity`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
@@ -131,7 +135,7 @@ export const aiMenuService = {
   // Actualizar información básica del restaurante
   async updateBasicInfo(restauranteId, data) {
     try {
-      const response = await apiClient.put(`${AI_MENU_API_URL}/basic-info`, {
+      const response = await apiClient.put(`${getApiUrl()}/basic-info`, {
         restauranteId,
         ...data
       });

@@ -38,7 +38,9 @@ const superAdminAuthRoutes = require('./routes/superAdminAuth');
 const superAdminSubscriptionsRoutes = require('./routes/superAdminSubscriptions');
 const notificationRoutes = require('./routes/notifications');
 const aiMenuGeneratorRoutes = require('./routes/aiMenuGenerator');
+const superAdminPartnersRoutes = require('./routes/superAdminPartners');
 const feedbackRoutes = require('./routes/feedback');
+const partnerRoutes = require('./routes/partner');
 
 const app = express();
 
@@ -158,9 +160,12 @@ app.use('/api/menu-import', menuImportRoutes);
 app.use('/api/staff', staffRoutes);
 app.use('/api/super-admin/auth', superAdminAuthRoutes);
 app.use('/api/super-admin/subscriptions', superAdminSubscriptionsRoutes);
+app.use('/api/super-admin/partners', superAdminPartnersRoutes);
 app.use('/api/super-admin/ai-menu-generator', aiMenuGeneratorRoutes);
+app.use('/api/partner/ai-menu-generator', aiMenuGeneratorRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/feedback', feedbackRoutes);
+app.use('/api/partner', partnerRoutes);
 
 // Setup Swagger documentation
 swaggerSetup(app);

@@ -8,7 +8,7 @@
 const express = require('express');
 const Joi = require('joi');
 const { PrismaClient } = require('@prisma/client');
-const { authenticateSuperAdmin } = require('../middleware/superAdminAuth');
+const jwt = require('jsonwebtoken');
 const OpenAI = require('openai');
 const { buildMenuExtractionPrompt, buildDescriptionPrompt } = require('../config/aiPrompts');
 const { upload, handleFileUpload } = require('../config/storage');
@@ -18,6 +18,45 @@ const path = require('path');
 
 const router = express.Router();
 const prisma = new PrismaClient();
+
+// Middleware para autorizar SuperAdmin o Partner
+const requireSuperAdminOrPartner = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization || req.header('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ success: false, message: 'Token requerido' });
+    }
+    const token = authHeader.substring(7);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    
+    if (decoded.role === 'SUPER_ADMIN') {
+      req.user = { role: 'SUPER_ADMIN', id: decoded.userId };
+      return next();
+    } else if (decoded.role === 'PARTNER') {
+      // Validate that the partner is active
+      const partner = await prisma.usuarioPartner.findUnique({ where: { id: decoded.userId } });
+      if (!partner || !partner.activo) {
+         return res.status(403).json({ success: false, message: 'Partner inactivo' });
+      }
+      req.user = { role: 'PARTNER', id: decoded.userId };
+      
+      // If there is a restauranteId in body or query, verify ownership!
+      const restauranteId = req.body.restauranteId || req.query.restauranteId;
+      if (restauranteId) {
+        const rest = await prisma.restaurante.findUnique({ where: { id: restauranteId } });
+        if (!rest || rest.partnerId !== partner.id) {
+           return res.status(403).json({ success: false, message: 'No tienes acceso a este restaurante' });
+        }
+      }
+      
+      return next();
+    } else {
+      return res.status(403).json({ success: false, message: 'Acceso denegado' });
+    }
+  } catch (error) {
+    return res.status(401).json({ success: false, message: 'Token inválido' });
+  }
+};
 
 // Configuración específica de multer para IA (permite PDFs)
 const aiUpload = multer({
@@ -460,7 +499,7 @@ async function generateMissingDescriptions(menuData) {
  *         description: Error interno del servidor o error de OpenAI
  */
 
-router.post('/generate', authenticateSuperAdmin, aiUpload.array('menuImages', 3), async (req, res) => {
+router.post('/generate', requireSuperAdminOrPartner, aiUpload.array('menuImages', 3), async (req, res) => {
   try {
     // Verificar que OpenAI esté configurado
     if (!process.env.OPENAI_API_KEY) {
@@ -759,7 +798,7 @@ router.post('/generate', authenticateSuperAdmin, aiUpload.array('menuImages', 3)
  *       500:
  *         description: Error interno del servidor
  */
-router.post('/bulk-tables', authenticateSuperAdmin, async (req, res) => {
+router.post('/bulk-tables', requireSuperAdminOrPartner, async (req, res) => {
   try {
     // Validar datos
     const { error, value } = bulkTablesSchema.validate(req.body);
@@ -902,7 +941,7 @@ router.post('/bulk-tables', authenticateSuperAdmin, async (req, res) => {
  *               $ref: '#/components/schemas/Error'
  */
 // Endpoint para obtener prompts actuales
-router.get('/prompts', authenticateSuperAdmin, async (req, res) => {
+router.get('/prompts', requireSuperAdminOrPartner, async (req, res) => {
   try {
     const { AI_PROMPTS } = require('../config/aiPrompts');
     
@@ -925,7 +964,7 @@ router.get('/prompts', authenticateSuperAdmin, async (req, res) => {
 });
 
 // Endpoint para generar menú con prompt personalizado
-router.post('/generate-with-custom-prompt', authenticateSuperAdmin, aiUpload.array('menuImages', 3), async (req, res) => {
+router.post('/generate-with-custom-prompt', requireSuperAdminOrPartner, aiUpload.array('menuImages', 3), async (req, res) => {
   try {
     // Validar datos
     const { error, value } = aiMenuSchema.validate(req.body);
@@ -1090,9 +1129,15 @@ router.post('/generate-with-custom-prompt', authenticateSuperAdmin, aiUpload.arr
   }
 });
 
-router.get('/restaurants', authenticateSuperAdmin, async (req, res) => {
+router.get('/restaurants', requireSuperAdminOrPartner, async (req, res) => {
   try {
+    const whereClause = {};
+    if (req.user && req.user.role === 'PARTNER') {
+      whereClause.partnerId = req.user.id;
+    }
+
     const restaurantes = await prisma.restaurante.findMany({
+      where: whereClause,
       select: {
         id: true,
         nombre: true,
@@ -1206,7 +1251,7 @@ router.get('/restaurants', authenticateSuperAdmin, async (req, res) => {
  *         description: Error interno del servidor
  */
 // Endpoint para actualizar información básica del restaurante desde Super Admin
-router.put('/basic-info', authenticateSuperAdmin, async (req, res) => {
+router.put('/basic-info', requireSuperAdminOrPartner, async (req, res) => {
   try {
     const { restauranteId, nombre, descripcion, telefono, direccion, email, moneda } = req.body;
 
@@ -1265,7 +1310,7 @@ router.put('/basic-info', authenticateSuperAdmin, async (req, res) => {
   }
 });
 
-router.post('/visual-identity', authenticateSuperAdmin, upload.fields([
+router.post('/visual-identity', requireSuperAdminOrPartner, upload.fields([
   { name: 'logo', maxCount: 1 },
   { name: 'banner', maxCount: 1 },
   { name: 'backgroundImage', maxCount: 1 }

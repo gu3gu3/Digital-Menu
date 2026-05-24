@@ -19,6 +19,19 @@ apiClient.interceptors.request.use(
     if (!token) {
       token = localStorage.getItem('staffToken');
     }
+    
+    // Check partner path
+    if (!token && window.location.pathname.includes('/partner')) {
+      token = localStorage.getItem('partnerToken');
+    }
+    
+    // Si no hay token específico por ruta, buscar el primero disponible
+    if (!token) {
+      token = localStorage.getItem('adminToken') || 
+              localStorage.getItem('staffToken') || 
+              localStorage.getItem('superAdminToken') ||
+              localStorage.getItem('partnerToken');
+    }
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;

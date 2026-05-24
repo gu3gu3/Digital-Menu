@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { superAdminAuth, subscriptionsService, superAdminUtils, superAdminService } from '../services/superAdminService';
 import useDocumentTitle from '../hooks/useDocumentTitle';
+import { SparklesIcon } from '@heroicons/react/24/outline';
 
 const SuperAdminDashboard = () => {
   const [stats, setStats] = useState(null);
@@ -315,35 +316,42 @@ const SuperAdminDashboard = () => {
         {/* Quick Actions */}
         <div className="bg-white shadow rounded-lg p-6 mb-6">
           <h2 className="text-lg font-medium text-gray-900 mb-4">Acciones Rápidas</h2>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Link
-              key="subscriptions-link"
-              to="/super-admin/subscriptions"
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-md text-center font-medium transition-colors"
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <button 
+              onClick={() => navigate('/super-admin/subscriptions')}
+              className="bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 transition"
             >
               Ver Suscripciones
-            </Link>
-            <Link
-              key="expiring-link"
-              to="/super-admin/expiring"
-              className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-3 rounded-md text-center font-medium transition-colors"
+            </button>
+            <button 
+              onClick={() => navigate('/super-admin/expiring')}
+              className="bg-amber-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-amber-700 transition"
             >
               Próximas a Vencer
-            </Link>
-            <Link
-              key="notifications-link"
-              to="/super-admin/notifications"
-              className="bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-md text-center font-medium transition-colors"
+            </button>
+            <button 
+              onClick={() => navigate('/super-admin/notifications')}
+              className="bg-green-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-green-700 transition"
             >
               Enviar Notificaciones
-            </Link>
-            <Link
-              key="ai-menu-generator-link"
-              to="/super-admin/ai-menu-generator"
-              className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-3 rounded-md text-center font-medium transition-colors"
+            </button>
+            <button 
+              onClick={() => navigate('/super-admin/ai-menu-generator')}
+              className="bg-purple-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-purple-700 transition flex items-center justify-center"
             >
-              🤖 Generador de Menús IA
-            </Link>
+              <SparklesIcon className="h-5 w-5 mr-2" />
+              Generador de Menús IA
+            </button>
+          </div>
+
+          {/* Segunda fila de acciones */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <button 
+              onClick={() => navigate('/super-admin/partners')}
+              className="bg-indigo-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-indigo-700 transition flex items-center justify-center"
+            >
+              Gestión de Agencias (Partners)
+            </button>
           </div>
 
           {/* Acciones administrativas */}
