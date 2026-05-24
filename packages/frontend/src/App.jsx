@@ -25,6 +25,7 @@ import SuperAdminLoginPage from './pages/SuperAdminLoginPage'
 import SuperAdminDashboard from './pages/SuperAdminDashboard'
 import SuperAdminSettingsPage from './pages/SuperAdminSettingsPage'
 import SubscriptionsListPage from './pages/SubscriptionsListPage'
+import SubscriptionDetailsPage from './pages/SubscriptionDetailsPage'
 import ExpiringSubscriptionsPage from './pages/ExpiringSubscriptionsPage'
 import SendNotificationsPage from './pages/SendNotificationsPage'
 import RenewSubscriptionPage from './pages/RenewSubscriptionPage'
@@ -64,6 +65,7 @@ function App() {
           <Route path="/super-admin/subscriptions" element={<SubscriptionsListPage />} />
           <Route path="/super-admin/expiring" element={<ExpiringSubscriptionsPage />} />
           <Route path="/super-admin/notifications" element={<SendNotificationsPage />} />
+          <Route path="/super-admin/subscriptions/:id" element={<SubscriptionDetailsPage />} />
           <Route path="/super-admin/subscriptions/:id/renew" element={<RenewSubscriptionPage />} />
           <Route path="/super-admin/plans" element={<PlansManagementPage />} />
           <Route path="/super-admin/ai-menu-generator" element={<AIMenuGeneratorPage />} />

@@ -101,4 +101,42 @@ router.post('/', authenticateSuperAdmin, async (req, res) => {
   }
 });
 
+// @route   POST /api/super-admin/partners/assign-restaurant
+// @desc    Asignar o desasignar un restaurante a un partner
+// @access  Private (SUPERADMIN)
+router.post('/assign-restaurant', authenticateSuperAdmin, async (req, res) => {
+  try {
+    const { restauranteId, partnerId } = req.body;
+
+    if (!restauranteId) {
+      return res.status(400).json({ success: false, error: 'El ID del restaurante es requerido' });
+    }
+
+    // Si partnerId es nulo o vacío, desasignamos la agencia
+    const dataToUpdate = {
+      partnerId: partnerId || null,
+      fechaAsignacionPartner: partnerId ? new Date() : null
+    };
+
+    const restauranteActualizado = await prisma.restaurante.update({
+      where: { id: restauranteId },
+      data: dataToUpdate,
+      include: {
+        partner: {
+          select: {
+            id: true,
+            nombreAgencia: true,
+            porcentajeComision: true
+          }
+        }
+      }
+    });
+
+    res.json({ success: true, data: restauranteActualizado });
+  } catch (error) {
+    console.error('Error assigning restaurant to partner:', error);
+    res.status(500).json({ success: false, error: 'Error del servidor al asignar restaurante' });
+  }
+});
+
 module.exports = router;

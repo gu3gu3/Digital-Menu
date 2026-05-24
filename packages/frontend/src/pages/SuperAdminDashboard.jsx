@@ -9,7 +9,6 @@ const SuperAdminDashboard = () => {
   const [expiringSubscriptions, setExpiringSubscriptions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [syncingPlans, setSyncingPlans] = useState(false);
   const [autoBlockLoading, setAutoBlockLoading] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showAutoBlockModal, setShowAutoBlockModal] = useState(false);
@@ -56,18 +55,6 @@ const SuperAdminDashboard = () => {
   const handleLogout = async () => {
     await superAdminAuth.logout();
     navigate('/super-admin/login');
-  };
-
-  const handleSyncPlans = async () => {
-    try {
-      setSyncingPlans(true);
-      await superAdminService.syncRestaurantPlans();
-      loadDashboardData();
-    } catch (error) {
-      setError(error.message || 'Error sincronizando planes');
-    } finally {
-      setSyncingPlans(false);
-    }
   };
 
   const handleAutoBlockExpired = async (dryRun = false) => {
@@ -357,29 +344,12 @@ const SuperAdminDashboard = () => {
           {/* Acciones administrativas */}
           <div className="mt-4 pt-4 border-t border-gray-200">
             <div className="space-y-4">
-              {/* Sincronizar Planes */}
-              <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
-                <div>
-                  <h4 className="text-sm font-medium text-blue-900">Sincronizar Planes</h4>
-                  <p className="text-sm text-blue-700">
-                    Sincroniza los planes de restaurantes con sus suscripciones activas
-                  </p>
-                </div>
-                <button
-                  onClick={handleSyncPlans}
-                  disabled={syncingPlans}
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
-                >
-                  {syncingPlans ? 'Sincronizando...' : 'Sincronizar Planes'}
-                </button>
-              </div>
-
               {/* Bloqueo Automático */}
               <div className="flex items-center justify-between p-4 bg-orange-50 rounded-lg">
                 <div>
-                  <h4 className="text-sm font-medium text-orange-900">Bloqueo Automático</h4>
-                  <p className="text-sm text-orange-700">
-                    Bloquear automáticamente suscripciones vencidas (período de gracia: 3 días)
+                  <h4 className="text-sm font-medium text-orange-900">Bloqueo Automático Manual</h4>
+                  <p className="text-sm text-orange-700 max-w-xl">
+                    Busca suscripciones vencidas que superaron 3 días de gracia y las bloquea, notificando a los usuarios para contactar a administración/ventas.
                   </p>
                 </div>
                 <div className="flex space-x-2">

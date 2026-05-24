@@ -361,7 +361,17 @@ router.get('/:id', authenticateSuperAdmin, async (req, res) => {
             plan: true,
             usuariosAdmin: true,
             productos: true,
-            mesas: true
+            mesas: true,
+            partner: {
+              select: {
+                id: true,
+                nombreAgencia: true,
+                nombreContacto: true,
+                email: true,
+                telefono: true,
+                porcentajeComision: true
+              }
+            }
           }
         },
         historialPagos: true
@@ -394,7 +404,10 @@ router.get('/:id', authenticateSuperAdmin, async (req, res) => {
         email: restaurante.email,
         activo: restaurante.activo,
         usuariosAdmin: restaurante.usuariosAdmin,
-        plan: restaurante.plan
+        plan: restaurante.plan,
+        partnerId: restaurante.partnerId,
+        fechaAsignacionPartner: restaurante.fechaAsignacionPartner,
+        partner: restaurante.partner
       },
       stats: {
         totalUsuariosAdmin: restaurante.usuariosAdmin.length,
