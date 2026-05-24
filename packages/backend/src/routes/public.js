@@ -85,10 +85,10 @@ const getRestaurantBySlug = async (req, res) => {
       },
       include: {
         categorias: {
-          where: { activa: true },
+          where: { activa: true, archivado: false },
           include: {
             productos: {
-              where: { disponible: true },
+              where: { disponible: true, archivado: false },
               orderBy: { orden: 'asc' }
             }
           },
@@ -180,10 +180,10 @@ const getMenuBySlug = async (req, res) => {
         moneda: true,
         configuracion: true,
         categorias: {
-          where: { activa: true },
+          where: { activa: true, archivado: false },
           include: {
             productos: {
-              where: { disponible: true },
+              where: { disponible: true, archivado: false },
               orderBy: { orden: 'asc' }
             }
           },

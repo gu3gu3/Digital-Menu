@@ -214,7 +214,7 @@ const getProducts = async (req, res) => {
     const restauranteId = req.user.restauranteId;
     const { categoriaId } = req.query;
 
-    const whereClause = { restauranteId };
+    const whereClause = { restauranteId, archivado: false };
     if (categoriaId) {
       whereClause.categoriaId = categoriaId;
     }
@@ -262,7 +262,8 @@ const getProductById = async (req, res) => {
     const producto = await prisma.producto.findFirst({
       where: {
         id,
-        restauranteId
+        restauranteId,
+        archivado: false
       },
       include: {
         categoria: {
@@ -421,7 +422,8 @@ const updateProduct = async (req, res) => {
     const existingProduct = await prisma.producto.findFirst({
       where: {
         id,
-        restauranteId
+        restauranteId,
+        archivado: false
       }
     });
 
@@ -459,7 +461,8 @@ const updateProduct = async (req, res) => {
           restauranteId,
           categoriaId: checkCategoriaId,
           nombre: checkNombre,
-          id: { not: id }
+          id: { not: id },
+          archivado: false
         }
       });
 
@@ -531,7 +534,8 @@ const deleteProduct = async (req, res) => {
     const existingProduct = await prisma.producto.findFirst({
       where: {
         id,
-        restauranteId
+        restauranteId,
+        archivado: false
       }
     });
 
@@ -548,15 +552,15 @@ const deleteProduct = async (req, res) => {
     });
 
     if (productInOrders) {
-      // Instead of deleting, mark as unavailable
+      // Instead of deleting, mark as archivado
       await prisma.producto.update({
         where: { id },
-        data: { disponible: false }
+        data: { archivado: true }
       });
 
       return res.json({
         success: true,
-        message: 'Producto marcado como no disponible debido a órdenes existentes'
+        message: 'Producto eliminado exitosamente'
       });
     }
 
@@ -590,7 +594,8 @@ const toggleProductAvailability = async (req, res) => {
     const existingProduct = await prisma.producto.findFirst({
       where: {
         id,
-        restauranteId
+        restauranteId,
+        archivado: false
       }
     });
 

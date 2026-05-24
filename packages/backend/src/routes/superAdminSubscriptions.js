@@ -1446,17 +1446,17 @@ router.delete('/restaurant/:id/complete', authenticateSuperAdmin, async (req, re
       });
       stats.categoriasEliminadas = categorias.count;
 
-      // 5. Eliminar mesas
-      const mesas = await tx.mesa.deleteMany({
-        where: { restauranteId: id }
-      });
-      stats.mesasEliminadas = mesas.count;
-
-      // 6. Eliminar sesiones
+      // 5. Eliminar sesiones (dependen de mesas)
       const sesiones = await tx.sesion.deleteMany({
         where: { restauranteId: id }
       });
       stats.sesionesEliminadas = sesiones.count;
+
+      // 6. Eliminar mesas
+      const mesas = await tx.mesa.deleteMany({
+        where: { restauranteId: id }
+      });
+      stats.mesasEliminadas = mesas.count;
 
       // 7. Eliminar usuarios mesero
       const usuariosMesero = await tx.usuarioMesero.deleteMany({

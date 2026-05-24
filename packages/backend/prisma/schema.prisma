@@ -153,6 +153,7 @@ model Categoria {
   nombre      String
   descripcion String?
   activa      Boolean  @default(true)
+  archivado   Boolean  @default(false)
   orden       Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -172,6 +173,7 @@ model Producto {
   precio      Float
   imagenUrl   String?
   disponible  Boolean  @default(true)
+  archivado   Boolean  @default(false)
   orden       Int      @default(0)
   esDestacado Boolean  @default(false)
   createdAt   DateTime @default(now())

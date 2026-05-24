@@ -172,9 +172,10 @@ const getCategories = async (req, res) => {
     const restauranteId = req.user.restauranteId;
 
     const categorias = await prisma.categoria.findMany({
-      where: { restauranteId },
+      where: { restauranteId, archivado: false },
       include: {
         productos: {
+          where: { archivado: false },
           select: {
             id: true,
             nombre: true,
@@ -447,7 +448,8 @@ const updateCategory = async (req, res) => {
     const existingCategory = await prisma.categoria.findFirst({
       where: {
         id,
-        restauranteId
+        restauranteId,
+        archivado: false
       }
     });
 
@@ -464,7 +466,8 @@ const updateCategory = async (req, res) => {
         where: {
           restauranteId,
           nombre: value.nombre,
-          id: { not: id }
+          id: { not: id },
+          archivado: false
         }
       });
 
@@ -570,10 +573,11 @@ const deleteCategory = async (req, res) => {
     const existingCategory = await prisma.categoria.findFirst({
       where: {
         id,
-        restauranteId
+        restauranteId,
+        archivado: false
       },
       include: {
-        productos: true
+        productos: true // Include all products, even archived, to check for orders
       }
     });
 
@@ -586,20 +590,43 @@ const deleteCategory = async (req, res) => {
 
     // Check if category has products
     if (existingCategory.productos.length > 0) {
-      return res.status(400).json({
-        success: false,
-        error: 'No se puede eliminar una categoría que tiene productos. Elimine o mueva los productos primero.'
+      // Check if any product has orders
+      const productosIds = existingCategory.productos.map(p => p.id);
+      const ordersWithProducts = await prisma.itemOrden.findFirst({
+        where: { productoId: { in: productosIds } }
       });
+
+      if (ordersWithProducts) {
+        // Soft delete category and products
+        await prisma.$transaction([
+          prisma.producto.updateMany({
+             where: { id: { in: productosIds }, archivado: false },
+             data: { archivado: true }
+          }),
+          prisma.categoria.update({
+             where: { id },
+             data: { archivado: true, activa: false }
+          })
+        ]);
+        return res.json({ success: true, message: 'Categoría eliminada exitosamente' });
+      } else {
+        // Hard delete products and category
+        await prisma.$transaction([
+          prisma.producto.deleteMany({
+             where: { id: { in: productosIds } }
+          }),
+          prisma.categoria.delete({
+             where: { id }
+          })
+        ]);
+        return res.json({ success: true, message: 'Categoría eliminada exitosamente' });
+      }
+    } else {
+      await prisma.categoria.delete({
+        where: { id }
+      });
+      return res.json({ success: true, message: 'Categoría eliminada exitosamente' });
     }
-
-    await prisma.categoria.delete({
-      where: { id }
-    });
-
-    res.json({
-      success: true,
-      message: 'Categoría eliminada exitosamente'
-    });
 
   } catch (error) {
     console.error('Error eliminando categoría:', error);
