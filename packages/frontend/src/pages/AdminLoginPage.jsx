@@ -160,6 +160,13 @@ const AdminLoginPage = () => {
             </p>
           </div>
         </form>
+
+        {/* Footer */}
+        <div className="mt-8 text-center pb-8">
+          <p className="text-sm text-gray-500">
+            © {new Date().getFullYear()} MenuView. Todos los derechos reservados.
+          </p>
+        </div>
       </div>
     </div>
   )

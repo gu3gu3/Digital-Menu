@@ -13,7 +13,8 @@ import {
   ChartBarIcon,
   FunnelIcon,
   LinkIcon,
-  ClipboardDocumentIcon
+  ClipboardDocumentIcon,
+  FireIcon
 } from '@heroicons/react/24/outline';
 import { Dialog, Transition } from '@headlessui/react';
 import { Fragment } from 'react';
@@ -203,39 +204,74 @@ const AdminStaffPage = () => {
       </div>
 
       {/* Staff Panel Access */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <UsersIcon className="h-5 w-5 text-blue-600" />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Panel Meseros */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center">
+              <div className="p-2 bg-blue-100 rounded-lg shrink-0">
+                <UsersIcon className="h-5 w-5 text-blue-600" />
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-blue-900">Panel de Meseros</h3>
+                <p className="text-xs sm:text-sm text-blue-700">Enlace de acceso para el equipo de sala</p>
+              </div>
             </div>
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-blue-900">Panel de Acceso para Meseros</h3>
-              <p className="text-sm text-blue-700">Comparte este enlace con tu equipo para que puedan acceder al sistema</p>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(`${window.location.origin}/staff/login`);
+                }}
+                className="inline-flex items-center px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
+                title="Copiar enlace"
+              >
+                📋 Copiar
+              </button>
+              <a
+                href="/staff/login"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center px-3 py-2 bg-white border border-blue-300 text-blue-700 rounded-lg hover:bg-blue-50 text-sm"
+                title="Abrir panel de staff"
+              >
+                🔗 Abrir
+              </a>
             </div>
           </div>
-          <div className="flex items-center space-x-2">
-            <div className="bg-white border border-blue-300 rounded-lg px-3 py-2 text-sm text-blue-800 font-mono">
-              {window.location.origin}/staff/login
+        </div>
+
+        {/* Panel Cocina */}
+        <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center">
+              <div className="p-2 bg-orange-100 rounded-lg shrink-0">
+                <FireIcon className="h-5 w-5 text-orange-600" />
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-orange-900">Módulo de Cocina (KDS)</h3>
+                <p className="text-xs sm:text-sm text-orange-700">Enlace de acceso para el personal de cocina</p>
+              </div>
             </div>
-            <button
-              onClick={() => {
-                navigator.clipboard.writeText(`${window.location.origin}/staff/login`);
-              }}
-              className="inline-flex items-center px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
-              title="Copiar enlace"
-            >
-              📋 Copiar
-            </button>
-            <a
-              href="/staff/login"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center px-3 py-2 bg-white border border-blue-300 text-blue-700 rounded-lg hover:bg-blue-50 text-sm"
-              title="Abrir panel de staff"
-            >
-              🔗 Abrir
-            </a>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(`${window.location.origin}/staff/login`);
+                }}
+                className="inline-flex items-center px-3 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 text-sm"
+                title="Copiar enlace"
+              >
+                📋 Copiar
+              </button>
+              <a
+                href="/staff/login"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center px-3 py-2 bg-white border border-orange-300 text-orange-700 rounded-lg hover:bg-orange-50 text-sm"
+                title="Abrir panel de cocina"
+              >
+                🔗 Abrir
+              </a>
+            </div>
           </div>
         </div>
       </div>

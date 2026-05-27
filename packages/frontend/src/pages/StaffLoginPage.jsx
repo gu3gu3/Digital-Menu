@@ -158,7 +158,7 @@ const StaffLoginPage = () => {
         {/* Footer */}
         <div className="text-center">
           <p className="text-sm text-gray-500">
-            © 2024 MenuView. Sistema de gestión de restaurantes.
+            © {new Date().getFullYear()} MenuView. Sistema de gestión de restaurantes.
           </p>
         </div>
       </div>
