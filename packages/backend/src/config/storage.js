@@ -2,6 +2,7 @@ const { Storage } = require('@google-cloud/storage');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs').promises;
+const sharp = require('sharp');
 
 // Helper function to sanitize restaurant name for folder structure
 const sanitizeRestaurantName = (restaurantName) => {
@@ -14,41 +15,6 @@ const sanitizeRestaurantName = (restaurantName) => {
     .replace(/-+/g, '-') // Remove multiple hyphens
     .trim('-'); // Remove leading/trailing hyphens
 };
-
-// Local storage configuration for development
-const localStorage = multer.diskStorage({
-  destination: async (req, file, cb) => {
-    try {
-      const uploadDir = path.join(__dirname, '../../uploads');
-      
-      // Determine folder based on file type
-      let folder;
-      if (file.fieldname === 'logo' || file.fieldname === 'banner' || file.fieldname === 'backgroundImage') {
-        folder = 'restaurants';
-      } else if (file.fieldname === 'imagen' || file.fieldname === 'product-image') {
-        folder = 'products';
-      } else {
-        folder = 'general';
-      }
-      
-      const finalDir = path.join(uploadDir, folder);
-      
-      // Create directory if it doesn't exist
-      await fs.mkdir(finalDir, { recursive: true });
-      
-      cb(null, finalDir);
-    } catch (error) {
-      cb(error);
-    }
-  },
-  filename: (req, file, cb) => {
-    // Generate unique filename
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const extension = path.extname(file.originalname);
-    const fileType = (file.fieldname === 'logo' || file.fieldname === 'banner' || file.fieldname === 'backgroundImage') ? 'restaurant' : 'product';
-    cb(null, `${fileType}-${uniqueSuffix}${extension}`);
-  }
-});
 
 // Google Cloud Storage configuration for production
 class CloudStorage {
@@ -164,7 +130,7 @@ class CloudStorage {
 
 // Multer configuration
 const upload = multer({
-  storage: process.env.NODE_ENV === 'production' ? multer.memoryStorage() : localStorage,
+  storage: multer.memoryStorage(),
   limits: {
     fileSize: 5 * 1024 * 1024, // 5MB limit
   },
@@ -192,15 +158,74 @@ const getPublicUrl = (filePath) => {
   }
 };
 
+// Function to optimize image with sharp
+const optimizeImage = async (file) => {
+  if (!file || !file.buffer) return file;
+
+  let width, height;
+  
+  // Set dimensions based on fieldname
+  if (file.fieldname === 'logo') {
+    width = 512;
+    height = 512;
+  } else if (file.fieldname === 'banner') {
+    width = 1600;
+    height = 400;
+  } else if (file.fieldname === 'backgroundImage') {
+    width = 1920;
+    height = 1080;
+  } else {
+    // default (product-image, imagen, etc)
+    width = 800;
+    height = 800;
+  }
+
+  const optimizedBuffer = await sharp(file.buffer)
+    .resize({
+      width,
+      height,
+      fit: 'inside',
+      withoutEnlargement: true
+    })
+    .webp({ quality: 80 })
+    .toBuffer();
+
+  // Create new unique filename with .webp extension
+  const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+  const type = (file.fieldname === 'logo' || file.fieldname === 'banner' || file.fieldname === 'backgroundImage') ? 'restaurant' : 'product';
+  const newFilename = `${type}-${uniqueSuffix}.webp`;
+
+  return {
+    ...file,
+    buffer: optimizedBuffer,
+    mimetype: 'image/webp',
+    originalname: newFilename,
+    filename: newFilename
+  };
+};
+
 // Wrapper function for handling file uploads
-const handleFileUpload = async (file, restaurantName, fileType) => {
+const handleFileUpload = async (rawFile, restaurantName, fileType) => {
+  // Optimize image first
+  const file = await optimizeImage(rawFile);
+
   if (process.env.NODE_ENV === 'production') {
     // Upload to Google Cloud Storage
     return cloudStorage.uploadToCloud(file, restaurantName, fileType);
   } else {
-    // Local development - file is already saved by multer
-    const localPath = `/uploads/${file.fieldname === 'logo' || file.fieldname === 'banner' || file.fieldname === 'backgroundImage' ? 'restaurants' : 'products'}/${file.filename}`;
-    const fullUrl = `${process.env.BACKEND_URL}${localPath}`;
+    // Local development - Save optimized buffer to disk
+    const uploadDir = path.join(__dirname, '../../uploads');
+    const folder = (file.fieldname === 'logo' || file.fieldname === 'banner' || file.fieldname === 'backgroundImage') ? 'restaurants' : 'products';
+    const finalDir = path.join(uploadDir, folder);
+    
+    // Create directory if it doesn't exist
+    await fs.mkdir(finalDir, { recursive: true });
+    
+    const filePath = path.join(finalDir, file.filename);
+    await fs.writeFile(filePath, file.buffer);
+
+    const localPath = `/uploads/${folder}/${file.filename}`;
+    const fullUrl = `${process.env.BACKEND_URL || ''}${localPath}`;
 
     return {
       url: fullUrl,

@@ -1,11 +1,14 @@
 import { useState } from 'react';
+import useUserLocation from '../hooks/useUserLocation';
 
 const WhatsAppButton = ({ phoneNumber = '+50577483492', message = 'Hola, estoy interesado en conocer más sobre MenuView para mi restaurante. ¿Podrían darme más información?' }) => {
   const [isHovered, setIsHovered] = useState(false);
+  const { countryCode } = useUserLocation();
 
   const handleWhatsAppClick = () => {
+    const activePhone = countryCode === 'ES' ? '34664107092' : phoneNumber.replace(/[^\d]/g, '');
     const encodedMessage = encodeURIComponent(message);
-    const whatsappUrl = `https://wa.me/${phoneNumber.replace(/[^\d]/g, '')}?text=${encodedMessage}`;
+    const whatsappUrl = `https://wa.me/${activePhone}?text=${encodedMessage}`;
     window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
   };
 
