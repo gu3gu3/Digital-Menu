@@ -1143,6 +1143,11 @@ router.get('/restaurants', requireSuperAdminOrPartner, async (req, res) => {
         nombre: true,
         slug: true,
         email: true,
+        telefono: true,
+        direccion: true,
+        descripcion: true,
+        moneda: true,
+        configuracion: true,
         activo: true,
         _count: {
           select: {
@@ -1253,7 +1258,7 @@ router.get('/restaurants', requireSuperAdminOrPartner, async (req, res) => {
 // Endpoint para actualizar información básica del restaurante desde Super Admin
 router.put('/basic-info', requireSuperAdminOrPartner, async (req, res) => {
   try {
-    const { restauranteId, nombre, descripcion, telefono, direccion, email, moneda } = req.body;
+    const { restauranteId, nombre, descripcion, telefono, direccion, email, moneda, mostrarNombreBanner } = req.body;
 
     if (!restauranteId) {
       return res.status(400).json({
@@ -1276,12 +1281,46 @@ router.put('/basic-info', requireSuperAdminOrPartner, async (req, res) => {
 
     // Preparar datos para actualizar (solo los campos que se envían)
     const updateData = {};
-    if (nombre !== undefined) updateData.nombre = nombre;
+    
+    if (nombre !== undefined && nombre !== restaurante.nombre) {
+      const { textToSlug } = require('../utils/slugGenerator');
+      let baseSlug = textToSlug(nombre);
+      if (!baseSlug) baseSlug = 'restaurante';
+
+      // Verificar si el slug ya existe en OTRO restaurante
+      const existingBySlug = await prisma.restaurante.findFirst({
+        where: { 
+          slug: baseSlug,
+          id: { not: restauranteId }
+        }
+      });
+
+      if (existingBySlug) {
+        return res.status(400).json({
+          success: false,
+          error: 'Ese nombre de negocio ya está en uso. Por favor, elija otro.'
+        });
+      }
+
+      updateData.nombre = nombre;
+      updateData.slug = baseSlug;
+    } else if (nombre !== undefined) {
+      // Si el nombre es el mismo, lo dejamos tal cual (solo para que se refleje en updateData)
+      updateData.nombre = nombre;
+    }
+
     if (descripcion !== undefined) updateData.descripcion = descripcion;
     if (telefono !== undefined) updateData.telefono = telefono;
     if (direccion !== undefined) updateData.direccion = direccion;
     if (email !== undefined) updateData.email = email;
     if (moneda !== undefined) updateData.moneda = moneda;
+
+    // Actualizar configuración si se proporciona mostrarNombreBanner
+    if (mostrarNombreBanner !== undefined) {
+      const configuracion = restaurante.configuracion ? (typeof restaurante.configuracion === 'string' ? JSON.parse(restaurante.configuracion) : restaurante.configuracion) : {};
+      configuracion.mostrarNombreBanner = mostrarNombreBanner;
+      updateData.configuracion = configuracion;
+    }
 
     // Actualizar restaurante
     const updatedRestaurant = await prisma.restaurante.update({

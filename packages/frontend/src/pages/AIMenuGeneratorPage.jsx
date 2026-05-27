@@ -47,7 +47,8 @@ const AIMenuGeneratorPage = () => {
     telefono: '',
     direccion: '',
     email: '',
-    moneda: 'USD'
+    moneda: 'USD',
+    mostrarNombreBanner: true
   });
   const [basicInfoLoading, setBasicInfoLoading] = useState(false);
 
@@ -369,13 +370,26 @@ const AIMenuGeneratorPage = () => {
   // Cargar información básica cuando se selecciona un restaurante
   useEffect(() => {
     if (selectedRestaurantInfo) {
+      let mostrarNombreBanner = true;
+      if (selectedRestaurantInfo.configuracion) {
+        try {
+          const config = typeof selectedRestaurantInfo.configuracion === 'string' ? JSON.parse(selectedRestaurantInfo.configuracion) : selectedRestaurantInfo.configuracion;
+          if (config.mostrarNombreBanner !== undefined) {
+            mostrarNombreBanner = config.mostrarNombreBanner;
+          }
+        } catch(e) {
+          console.error("Error parsing configuracion", e);
+        }
+      }
+      
       setBasicInfoData({
         nombre: selectedRestaurantInfo.nombre || '',
         descripcion: selectedRestaurantInfo.descripcion || '',
         telefono: selectedRestaurantInfo.telefono || '',
         direccion: selectedRestaurantInfo.direccion || '',
         email: selectedRestaurantInfo.email || '',
-        moneda: selectedRestaurantInfo.moneda || 'USD'
+        moneda: selectedRestaurantInfo.moneda || 'USD',
+        mostrarNombreBanner
       });
     }
   }, [selectedRestaurantInfo]);
@@ -998,10 +1012,10 @@ const AIMenuGeneratorPage = () => {
         {/* Visual Identity Tab */}
         {activeTab === 'visual-identity' && (
           <div className="space-y-6">
-            {/* Información Básica */}
+            {/* Información del Negocio */}
             <div className="bg-white shadow rounded-lg p-6">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-medium text-gray-900">Información Básica del Restaurante</h3>
+                <h3 className="text-lg font-medium text-gray-900">Información del Negocio</h3>
                 <div className="text-sm text-gray-500">
                   Solo lectura para el administrador - Editable desde Super Admin
                 </div>
@@ -1091,6 +1105,22 @@ const AIMenuGeneratorPage = () => {
                     onChange={(e) => setBasicInfoData({...basicInfoData, direccion: e.target.value})}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500"
                   />
+                </div>
+                
+                <div className="flex items-start bg-gray-50 p-4 rounded-md">
+                  <div className="flex items-center h-5">
+                    <input
+                      id="mostrarNombreBanner"
+                      type="checkbox"
+                      checked={basicInfoData.mostrarNombreBanner}
+                      onChange={(e) => setBasicInfoData({...basicInfoData, mostrarNombreBanner: e.target.checked})}
+                      className="focus:ring-purple-500 h-4 w-4 text-purple-600 border-gray-300 rounded"
+                    />
+                  </div>
+                  <div className="ml-3 text-sm">
+                    <label htmlFor="mostrarNombreBanner" className="font-medium text-gray-700">Mostrar nombre sobre el banner</label>
+                    <p className="text-gray-500">Mostrar el nombre del restaurante sobre el banner del menú (desmárquelo si su banner ya incluye el logo/texto para mantenerlo limpio).</p>
+                  </div>
                 </div>
                 
                 <div>

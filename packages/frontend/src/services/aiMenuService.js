@@ -137,7 +137,13 @@ export const aiMenuService = {
     try {
       const response = await apiClient.put(`${getApiUrl()}/basic-info`, {
         restauranteId,
-        ...data
+        nombre: data.nombre,
+        descripcion: data.descripcion,
+        telefono: data.telefono,
+        direccion: data.direccion,
+        email: data.email,
+        moneda: data.moneda,
+        mostrarNombreBanner: data.mostrarNombreBanner
       });
       return response.data;
     } catch (error) {
