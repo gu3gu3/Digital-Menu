@@ -21,6 +21,11 @@ const AdminDashboard = () => {
     mesas: 0,
     meseros: 0,
     ordenesHoy: 0,
+    ingresosHoy: 0,
+    ticketPromedio: 0,
+    ordenesCanceladas: 0,
+    ordenesCompletadas: 0,
+    topProductosHoy: [],
     plan: {
       nombre: '',
       limiteProductos: 0,
@@ -30,7 +35,6 @@ const AdminDashboard = () => {
       limiteOrdenes: 0
     }
   })
-  const [recentOrders, setRecentOrders] = useState([])
   const [loading, setLoading] = useState(true)
   const navigate = useNavigate()
 
@@ -41,19 +45,11 @@ const AdminDashboard = () => {
     const fetchData = async () => {
       setLoading(true)
       try {
-        const statsPromise = apiClient.get('/admin/stats')
-        const ordersPromise = apiClient.get('/orders?limit=5')
+        const statsResponse = await apiClient.get('/admin/stats')
         
-        const [statsResponse, ordersResponse] = await Promise.all([statsPromise, ordersPromise])
-
         if (statsResponse.data.success) {
           setStats(statsResponse.data.data)
         }
-
-        if (ordersResponse.data.success) {
-          setRecentOrders(ordersResponse.data.data.ordenes || [])
-        }
-
       } catch (error) {
         console.error('Error fetching dashboard data:', error)
       } finally {
@@ -261,64 +257,66 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        {/* Recent Orders */}
-        <div className="bg-white rounded-lg shadow">
+        {/* BI Panel: Resumen del Día */}
+        <div className="bg-white rounded-lg shadow flex flex-col">
           <div className="p-6 border-b border-gray-200">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-medium text-gray-900">Órdenes Recientes</h2>
-              <button
-                onClick={() => navigate('/admin/orders')}
-                className="text-sm text-primary-600 hover:text-primary-500"
-              >
-                Ver todas
-              </button>
-            </div>
+            <h2 className="text-lg font-medium text-gray-900 flex items-center">
+              <ChartBarIcon className="h-5 w-5 mr-2 text-primary-600" />
+              Inteligencia de Negocio (Hoy)
+            </h2>
           </div>
-          <div className="p-6">
-            {recentOrders.length > 0 ? (
-              <div className="space-y-3">
-                {recentOrders.map((order, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-900">
-                        Orden #{order.numeroOrden?.split('-').pop() || 'N/A'} • Mesa {order.mesa?.numero || 'N/A'}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {order.items?.length || 0} productos
-                        {order.mesero && (
-                          <span className="ml-2 text-blue-600">
-                            • Mesero: {order.mesero.nombre} {order.mesero.apellido || ''}
-                          </span>
-                        )}
-                        {!order.mesero && (
-                          <span className="ml-2 text-amber-600">• Sin asignar</span>
-                        )}
-                      </p>
+          <div className="p-6 flex-1 flex flex-col">
+            <div className="grid grid-cols-2 gap-4 mb-6">
+              <div className="bg-green-50 rounded-lg p-4 text-center">
+                <p className="text-sm font-medium text-green-800 mb-1">Ingresos de Hoy</p>
+                <p className="text-2xl font-bold text-green-600">
+                  C$ {parseFloat(stats.ingresosHoy || 0).toFixed(2)}
+                </p>
+              </div>
+              <div className="bg-blue-50 rounded-lg p-4 text-center">
+                <p className="text-sm font-medium text-blue-800 mb-1">Ticket Promedio</p>
+                <p className="text-2xl font-bold text-blue-600">
+                  C$ {parseFloat(stats.ticketPromedio || 0).toFixed(2)}
+                </p>
+              </div>
+            </div>
+
+            <div className="mb-6 flex justify-between items-center text-sm">
+              <div className="flex flex-col items-center flex-1 border-r border-gray-200">
+                <span className="text-gray-500 font-medium">Órdenes Completadas</span>
+                <span className="text-lg font-bold text-green-600">{stats.ordenesCompletadas || 0}</span>
+              </div>
+              <div className="flex flex-col items-center flex-1 border-r border-gray-200">
+                <span className="text-gray-500 font-medium">Órdenes Canceladas</span>
+                <span className="text-lg font-bold text-red-600">{stats.ordenesCanceladas || 0}</span>
+              </div>
+              <div className="flex flex-col items-center flex-1">
+                <span className="text-gray-500 font-medium">Total de Hoy</span>
+                <span className="text-lg font-bold text-gray-800">{stats.ordenesHoy || 0}</span>
+              </div>
+            </div>
+
+            <h3 className="text-md font-semibold text-gray-800 mb-3 border-b pb-2">Top 10 Productos Más Pedidos</h3>
+            {stats.topProductosHoy && stats.topProductosHoy.length > 0 ? (
+              <div className="space-y-3 overflow-y-auto max-h-64 pr-2 custom-scrollbar">
+                {stats.topProductosHoy.map((prod, index) => (
+                  <div key={index} className="flex justify-between items-center bg-gray-50 p-2 rounded-md">
+                    <div className="flex items-center space-x-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center font-bold text-xs">
+                        {index + 1}
+                      </div>
+                      <span className="text-sm font-medium text-gray-800">{prod.nombre}</span>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm font-medium text-gray-900">
-                        C$ {parseFloat(order.total || 0).toFixed(2)}
-                      </p>
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        order.estado === 'COMPLETADA' ? 'bg-green-100 text-green-800' :
-                        order.estado === 'EN_PREPARACION' ? 'bg-yellow-100 text-yellow-800' :
-                        order.estado === 'SERVIDA' ? 'bg-blue-100 text-blue-800' :
-                        order.estado === 'LISTA' ? 'bg-purple-100 text-purple-800' :
-                        'bg-gray-100 text-gray-800'
-                      }`}>
-                        {order.estado || 'PENDIENTE'}
-                      </span>
+                      <p className="text-sm font-bold text-gray-900">{prod.cantidad} uds.</p>
+                      <p className="text-xs text-gray-500">C$ {parseFloat(prod.ingresos || 0).toFixed(2)}</p>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="text-center py-8">
-                <ClipboardDocumentListIcon className="mx-auto h-12 w-12 text-gray-400" />
-                <h3 className="mt-2 text-sm font-medium text-gray-900">No hay órdenes</h3>
-                <p className="mt-1 text-sm text-gray-500">
-                  Las órdenes aparecerán aquí cuando los clientes empiecen a pedir.
-                </p>
+              <div className="text-center py-6">
+                <p className="text-sm text-gray-500">Aún no hay ventas el día de hoy.</p>
               </div>
             )}
           </div>

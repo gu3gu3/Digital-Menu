@@ -39,6 +39,12 @@ const AdminRestaurantPage = () => {
       } else {
         setValue('buttonColor', '#ea580c'); // Default orange
       }
+      if (restaurante.configuracion?.iva) {
+        setValue('iva', restaurante.configuracion.iva);
+      }
+      if (restaurante.configuracion?.servicio) {
+        setValue('servicio', restaurante.configuracion.servicio);
+      }
       setMenuUrl(`${window.location.origin}/menu/${restaurante.slug}`);
     } catch (error) {
       console.error('Error loading restaurant data:', error);
@@ -64,7 +70,10 @@ const AdminRestaurantPage = () => {
         moneda: formData.moneda,
         backgroundColor: formData.backgroundColor,
         configuracion: {
-          buttonColor: formData.buttonColor || '#ea580c'
+          ...restaurantData.configuracion,
+          buttonColor: formData.buttonColor || '#ea580c',
+          iva: formData.iva ? parseFloat(formData.iva) : 0,
+          servicio: formData.servicio ? parseFloat(formData.servicio) : 0
         }
       };
       await restaurantService.updateMyRestaurant(updatedData);
@@ -252,6 +261,30 @@ const AdminRestaurantPage = () => {
         <div className="p-6 bg-white shadow rounded-lg">
           <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center"><CurrencyDollarIcon className="h-5 w-5 mr-2 text-gray-600" />Configuración de Moneda</h3>
           <div className="max-w-md"><label htmlFor="moneda" className="block text-sm font-medium text-gray-700 mb-2">Moneda de tu Restaurante *</label><select id="moneda" {...register("moneda", { required: true })} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">{Object.entries(currenciesByRegion).map(([region, currencies]) => (<optgroup key={region} label={region}>{currencies.map((currency) => (<option key={currency.code} value={currency.code}>{currency.symbol} {currency.name} ({currency.country})</option>))}</optgroup>))}</select><p className="mt-2 text-sm text-gray-500">Los precios de tu menú se mostrarán en esta moneda.</p></div>
+        </div>
+        
+        <div className="p-6 bg-white shadow rounded-lg">
+          <div className="flex justify-between items-start mb-4">
+            <h3 className="text-lg font-medium text-gray-900 flex items-center"><CurrencyDollarIcon className="h-5 w-5 mr-2 text-gray-600" />Impuestos y Servicio</h3>
+            {(!['Plan Pro', 'Plan Platinum'].includes(restaurantData.plan?.nombre)) && (
+              <div className="bg-amber-50 text-amber-800 text-xs px-3 py-2 rounded-md border border-amber-200">
+                Característica exclusiva del Plan Pro. <a href="https://wa.me/50577483492?text=Hola,%20me%20gustar%C3%ADa%20mejorar%20mi%20plan%20en%20MenuView" className="font-bold underline" target="_blank" rel="noopener noreferrer">Mejora tu plan</a>
+              </div>
+            )}
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative">
+            {(!['Plan Pro', 'Plan Platinum'].includes(restaurantData.plan?.nombre)) && (
+               <div className="absolute inset-0 bg-white/60 z-10 rounded-md"></div>
+            )}
+            <div>
+              <label htmlFor="iva" className="block text-sm font-medium text-gray-700">% de IVA</label>
+              <input type="number" step="0.01" min="0" max="25" id="iva" disabled={!['Plan Pro', 'Plan Platinum'].includes(restaurantData.plan?.nombre)} {...register("iva", { min: 0, max: 25 })} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm" onInvalid={(e) => { if (e.target.validity.rangeOverflow) { e.target.setCustomValidity('El valor debe ser menor o igual a 25'); } else if (e.target.validity.rangeUnderflow) { e.target.setCustomValidity('El valor debe ser mayor o igual a 0'); } else { e.target.setCustomValidity('Valor inválido'); } }} onInput={(e) => e.target.setCustomValidity('')} />
+            </div>
+            <div>
+              <label htmlFor="servicio" className="block text-sm font-medium text-gray-700">% de Servicio / Propina</label>
+              <input type="number" step="0.01" min="0" max="25" id="servicio" disabled={!['Plan Pro', 'Plan Platinum'].includes(restaurantData.plan?.nombre)} {...register("servicio", { min: 0, max: 25 })} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm" onInvalid={(e) => { if (e.target.validity.rangeOverflow) { e.target.setCustomValidity('El valor debe ser menor o igual a 25'); } else if (e.target.validity.rangeUnderflow) { e.target.setCustomValidity('El valor debe ser mayor o igual a 0'); } else { e.target.setCustomValidity('Valor inválido'); } }} onInput={(e) => e.target.setCustomValidity('')} />
+            </div>
+          </div>
         </div>
             
         <div className="bg-white shadow-lg rounded-xl overflow-hidden">

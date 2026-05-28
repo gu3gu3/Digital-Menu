@@ -64,6 +64,7 @@ const PricingSection = () => {
         { text: '🤖 Digitalización de menú con IA*', included: true, highlight: true },
         { text: '🎨 Personalización avanzada', included: true, highlight: true },
         { text: '🔔 Notificaciones en tiempo real', included: true, highlight: true },
+        { text: '🧾 Cálculo automático de IVA y Servicio', included: true, highlight: true },
         { text: '🧑‍🍳 Módulo KDS (Cocina)', included: true, highlight: true }
       ]
     },
@@ -85,6 +86,7 @@ const PricingSection = () => {
         { text: '🤖 Digitalización de menú con IA*', included: true, highlight: true },
         { text: '📊 Analytics empresariales', included: true, highlight: true },
         { text: '🆘 Soporte 24/7 dedicado', included: true, highlight: true },
+        { text: '🧾 Cálculo automático de IVA y Servicio', included: true, highlight: true },
         { text: '🧑‍🍳 Módulo KDS (Cocina)', included: true, highlight: true }
       ]
     }
@@ -172,11 +174,11 @@ const PricingSection = () => {
                 {plan.features.map((feature, idx) => (
                   <li key={idx} className="flex items-start">
                     {feature.included ? (
-                      <CheckIcon className={`w-5 h-5 mt-0.5 mr-3 flex-shrink-0 ${feature.highlight ? 'text-primary-600' : 'text-green-500'}`} />
+                      <CheckIcon className={`w-5 h-5 mt-0.5 mr-3 flex-shrink-0 ${feature.highlight ? 'text-green-500' : 'text-primary-500'}`} />
                     ) : (
                       <XMarkIcon className="w-5 h-5 mt-0.5 mr-3 text-gray-400 flex-shrink-0" />
                     )}
-                    <span className={`text-sm ${feature.included ? (feature.highlight ? 'text-primary-700 font-semibold' : 'text-gray-700') : 'text-gray-400'}`}>
+                    <span className={`text-sm ${feature.included ? (feature.highlight ? 'text-green-600 font-semibold' : 'text-gray-700') : 'text-gray-400'}`}>
                       {feature.text}
                     </span>
                   </li>

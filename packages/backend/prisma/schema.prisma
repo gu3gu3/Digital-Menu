@@ -196,6 +196,7 @@ model Orden {
   estado                String    @default("PENDIENTE") // PENDIENTE, EN_PROCESO, COMPLETADA, CANCELADA
   subtotal              Float
   impuestos             Float     @default(0)
+  servicio              Float     @default(0)
   total                 Float
   notas                 String?
   nombreClienteFactura  String?

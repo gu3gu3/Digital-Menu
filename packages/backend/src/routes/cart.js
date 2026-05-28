@@ -101,9 +101,22 @@ const findOrCreateCart = async (sesionId) => {
   }
 };
 
-const calculateTotals = (items) => {
+const calculateTotals = async (items, restauranteId) => {
   const subtotal = items.reduce((acc, item) => acc + item.subtotal, 0);
-  return { subtotal, total: subtotal }; // Simplified totals
+  let impuestos = 0;
+  let servicio = 0;
+
+  if (restauranteId) {
+    const restaurante = await prisma.restaurante.findUnique({ where: { id: restauranteId } });
+    if (restaurante && restaurante.configuracion) {
+      const config = typeof restaurante.configuracion === 'string' ? JSON.parse(restaurante.configuracion) : restaurante.configuracion;
+      if (config.iva) impuestos = subtotal * (config.iva / 100);
+      if (config.servicio) servicio = subtotal * (config.servicio / 100);
+    }
+  }
+
+  const total = subtotal + impuestos + servicio;
+  return { subtotal, impuestos, servicio, total };
 };
 
 /**
@@ -183,11 +196,11 @@ router.post('/:sesionId/add', async (req, res) => {
     }
 
     const updatedCart = await prisma.orden.findUnique({ where: { id: cart.id }, include: { items: true } });
-    const newTotals = calculateTotals(updatedCart.items);
+    const newTotals = await calculateTotals(updatedCart.items, cart.restauranteId);
     
     const finalCart = await prisma.orden.update({
         where: { id: cart.id },
-        data: { subtotal: newTotals.subtotal, total: newTotals.total },
+        data: { subtotal: newTotals.subtotal, impuestos: newTotals.impuestos, servicio: newTotals.servicio, total: newTotals.total },
         include: { items: { include: { producto: true } } },
     });
 
@@ -215,11 +228,11 @@ router.put('/:sesionId/item/:itemId', async (req, res) => {
         }
         
         const updatedCart = await prisma.orden.findUnique({ where: { id: item.ordenId }, include: { items: true } });
-        const newTotals = calculateTotals(updatedCart.items);
+        const newTotals = await calculateTotals(updatedCart.items, updatedCart.restauranteId);
 
         const finalCart = await prisma.orden.update({
             where: { id: item.ordenId },
-            data: { subtotal: newTotals.subtotal, total: newTotals.total },
+            data: { subtotal: newTotals.subtotal, impuestos: newTotals.impuestos, servicio: newTotals.servicio, total: newTotals.total },
             include: { items: { include: { producto: true } } },
         });
 
@@ -336,7 +349,7 @@ router.post('/:sesionId/confirm', async (req, res) => {
 
     if (!cart.items || cart.items.length === 0) throw new Error('El carrito está vacío');
     
-    const newTotals = calculateTotals(cart.items);
+    const newTotals = await calculateTotals(cart.items, cart.restauranteId);
     
     // Append customer name and notes to existing ones if any
     let finalNotas = cart.notas || '';
@@ -361,6 +374,8 @@ router.post('/:sesionId/confirm', async (req, res) => {
         notas: finalNotas,
         nombreClienteFactura: finalNombreCliente,
         subtotal: newTotals.subtotal,
+        impuestos: newTotals.impuestos,
+        servicio: newTotals.servicio,
         total: newTotals.total
       },
       include: { 

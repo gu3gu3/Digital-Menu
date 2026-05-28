@@ -342,8 +342,22 @@ const PublicMenuPage = () => {
     return cart?.items?.reduce((total, item) => total + item.cantidad, 0) || 0
   }
 
-  const getTotalPrice = () => {
+  const getSubtotalPrice = () => {
     return cart?.total || 0;
+  }
+
+  const getTaxAmount = () => {
+    const ivaPct = restaurante?.configuracion?.iva || 0;
+    return getSubtotalPrice() * (ivaPct / 100);
+  }
+
+  const getServiceAmount = () => {
+    const servicePct = restaurante?.configuracion?.servicio || 0;
+    return getSubtotalPrice() * (servicePct / 100);
+  }
+
+  const getTotalPrice = () => {
+    return getSubtotalPrice() + getTaxAmount() + getServiceAmount();
   }
 
   const formatCurrency = (amount) => {
@@ -626,7 +640,32 @@ const PublicMenuPage = () => {
                     ))}
 
                     <div className="pt-4 border-t border-gray-200">
-                      <div className="flex justify-between items-center mb-4">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-sm text-gray-600">Subtotal:</span>
+                        <span className="text-sm font-medium text-gray-900" translate="no">
+                          {formatCurrency(getSubtotalPrice())}
+                        </span>
+                      </div>
+                      
+                      {restaurante?.configuracion?.iva > 0 && (
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-sm text-gray-600">IVA ({restaurante.configuracion.iva}%):</span>
+                          <span className="text-sm font-medium text-gray-900" translate="no">
+                            {formatCurrency(getTaxAmount())}
+                          </span>
+                        </div>
+                      )}
+                      
+                      {restaurante?.configuracion?.servicio > 0 && (
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-sm text-gray-600">Servicio ({restaurante.configuracion.servicio}%):</span>
+                          <span className="text-sm font-medium text-gray-900" translate="no">
+                            {formatCurrency(getServiceAmount())}
+                          </span>
+                        </div>
+                      )}
+
+                      <div className="flex justify-between items-center mb-4 mt-2 pt-2 border-t border-gray-100">
                         <span className="text-lg font-semibold text-gray-900">Total:</span>
                         <span className="text-xl font-bold text-primary-600" translate="no">
                           {formatCurrency(getTotalPrice())}

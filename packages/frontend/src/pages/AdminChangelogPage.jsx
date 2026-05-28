@@ -33,6 +33,15 @@ const AdminChangelogPage = () => {
   // Roadmap & Changelog Dummy Data
   const roadmapItems = [
     {
+      id: 0,
+      title: "Configuración y Desglose Automático de IVA y Servicio",
+      description: "Ahora puedes configurar un porcentaje de IVA y un cargo por servicio global. El sistema desglosará y calculará el total en el carrito del cliente de forma automática. Disponible a partir del Plan Pro.",
+      date: "Mayo 2026",
+      status: "Lanzado",
+      icon: SparklesIcon,
+      color: "bg-indigo-500"
+    },
+    {
       id: 1,
       title: "Nuevo Canal de Feedback Directo: 'Danos tu Opinión'",
       description: "Hemos habilitado una nueva sección donde puedes sugerir las funcionalidades que necesitas. ¡Leemos todas las sugerencias!",

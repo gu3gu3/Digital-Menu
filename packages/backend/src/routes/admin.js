@@ -65,7 +65,7 @@ const getStats = async (req, res) => {
     tomorrow.setDate(tomorrow.getDate() + 1);
 
     // Get statistics
-    const [productos, categorias, mesas, meseros, ordenes, ordenesHoy] = await Promise.all([
+    const [productos, categorias, mesas, meseros, ordenes, ordenesHoyData] = await Promise.all([
       // Count productos
       prisma.producto.count({
         where: { restauranteId }
@@ -86,17 +86,60 @@ const getStats = async (req, res) => {
       prisma.orden.count({
         where: { restauranteId }
       }),
-      // Count ordenes today
-      prisma.orden.count({
+      // Fetch today's orders with items for BI
+      prisma.orden.findMany({
         where: {
           restauranteId,
           createdAt: {
             gte: today,
             lt: tomorrow
           }
+        },
+        include: {
+          items: {
+            include: {
+              producto: true
+            }
+          }
         }
       })
     ]);
+
+    // Calculate BI metrics
+    const ordenesHoy = ordenesHoyData.length;
+    let ingresosHoy = 0;
+    let ordenesCanceladas = 0;
+    let ordenesCompletadas = 0;
+    const productosVendidos = {};
+
+    ordenesHoyData.forEach(orden => {
+      if (orden.estado === 'CANCELADA') {
+        ordenesCanceladas++;
+      } else if (orden.estado === 'COMPLETADA') {
+        ordenesCompletadas++;
+      }
+
+      if (orden.estado !== 'CANCELADA') {
+        ingresosHoy += parseFloat(orden.total || 0);
+
+        orden.items?.forEach(item => {
+          if (!productosVendidos[item.productoId]) {
+            productosVendidos[item.productoId] = {
+              nombre: item.producto?.nombre || 'Producto eliminado',
+              cantidad: 0,
+              ingresos: 0
+            };
+          }
+          productosVendidos[item.productoId].cantidad += item.cantidad;
+          productosVendidos[item.productoId].ingresos += parseFloat(item.subtotal || 0);
+        });
+      }
+    });
+
+    const ticketPromedio = (ordenesHoy - ordenesCanceladas) > 0 ? (ingresosHoy / (ordenesHoy - ordenesCanceladas)) : 0;
+    const topProductosHoy = Object.values(productosVendidos)
+      .sort((a, b) => b.cantidad - a.cantidad)
+      .slice(0, 10);
 
     // Lógica para crear notificaciones de límite
     const plan = admin.restaurante.plan;
@@ -161,6 +204,11 @@ const getStats = async (req, res) => {
         meseros,
         ordenes,
         ordenesHoy,
+        ingresosHoy,
+        ticketPromedio,
+        ordenesCanceladas,
+        ordenesCompletadas,
+        topProductosHoy,
         plan: {
           nombre: formatPlanName(admin.restaurante.plan.nombre),
           limiteProductos: admin.restaurante.plan.limiteProductos,
