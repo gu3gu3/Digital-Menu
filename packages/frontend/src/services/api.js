@@ -103,9 +103,12 @@ class ApiClient {
     return this.request(endpoint, { ...options, method: 'DELETE' });
   }
 
-  // Auth specific methods
   async register(userData) {
     return this.post('/auth/register', userData);
+  }
+
+  async getPublicPlans() {
+    return this.get('/public/planes');
   }
 
   async logout() {

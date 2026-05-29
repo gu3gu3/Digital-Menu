@@ -53,6 +53,17 @@ const authService = {
     }
   },
 
+  // Get active plans for registration
+  getPublicPlans: async () => {
+    try {
+      const response = await apiClient.get('/public/planes');
+      return { data: response.data };
+    } catch (error) {
+      console.error('Get public plans error:', error);
+      return { error: error.response?.data?.error || error.message || 'Error al obtener planes' };
+    }
+  },
+
   // Logout
   logout: async (userType = 'auth') => {
     try {

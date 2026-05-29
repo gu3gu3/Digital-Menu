@@ -13,7 +13,7 @@ import {
 
 const WelcomeDashboard = ({ userData, onContinueToDashboard }) => {
   const [showPassword, setShowPassword] = useState(false)
-  const [copied, setCopied] = useState({ email: false, password: false, menuUrl: false })
+  const [copied, setCopied] = useState({ email: false, password: false, menuUrl: false, adminUrl: false })
 
   const credentials = {
     email: userData.email,
@@ -212,6 +212,33 @@ const WelcomeDashboard = ({ userData, onContinueToDashboard }) => {
                   )}
                 </div>
               </div>
+              {/* URL Admin */}
+              <div>
+                <label className="block text-sm font-medium text-primary-700 mb-1">
+                  Tu enlace de acceso al Dashboard:
+                </label>
+                <div className="flex items-center space-x-2">
+                  <div className="flex-1 relative">
+                    <input
+                      type="text"
+                      value={`${window.location.origin}/admin/login`}
+                      readOnly
+                      className="w-full px-3 py-2 bg-white border border-primary-300 rounded-lg text-gray-900 font-mono text-sm pr-10"
+                    />
+                    <LinkIcon className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-primary-500" />
+                  </div>
+                  <button
+                    onClick={() => copyToClipboard(`${window.location.origin}/admin/login`, 'adminUrl')}
+                    className="p-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+                    title="Copiar URL de Admin"
+                  >
+                    <ClipboardDocumentIcon className="h-4 w-4" />
+                  </button>
+                  {copied.adminUrl && (
+                    <span className="text-green-600 text-sm font-semibold">¡Copiado!</span>
+                  )}
+                </div>
+              </div>
             </div>
 
             <div className="mt-4 p-3 bg-yellow-100 border border-yellow-300 rounded-lg">
@@ -250,10 +277,9 @@ const WelcomeDashboard = ({ userData, onContinueToDashboard }) => {
             </ul>
           </div>
 
-          {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-4">
             <button
-              onClick={onContinueToDashboard}
+              onClick={() => window.open('/admin/login', '_blank')}
               className="flex-1 bg-primary-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-primary-700 transition-colors flex items-center justify-center"
             >
               <span>Ir al Dashboard</span>

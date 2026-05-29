@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { EnvelopeIcon, BuildingStorefrontIcon, UserIcon, PhoneIcon } from '@heroicons/react/24/outline'
 import apiService from '../../services/api'
 import EmailVerification from '../EmailVerification'
@@ -22,6 +22,26 @@ const RegisterSection = () => {
   const [message, setMessage] = useState('')
   const [currentStep, setCurrentStep] = useState('register') // register, verification, welcome
   const [registeredUser, setRegisteredUser] = useState(null)
+  const [plans, setPlans] = useState([])
+  const [selectedPlanId, setSelectedPlanId] = useState('')
+
+  useEffect(() => {
+    const fetchPlans = async () => {
+      try {
+        const response = await apiService.getPublicPlans()
+        if (response.success && response.data) {
+          setPlans(response.data)
+          // Preseleccionar el plan más barato (o gratis) si existe
+          if (response.data.length > 0) {
+            setSelectedPlanId(response.data[0].id)
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching plans:', error)
+      }
+    }
+    fetchPlans()
+  }, [])
 
   const handleChange = (e) => {
     setFormData({
@@ -43,6 +63,12 @@ const RegisterSection = () => {
     setMessage('')
     
     try {
+      if (!selectedPlanId) {
+        setMessage('Por favor, selecciona un plan.')
+        setIsLoading(false)
+        return
+      }
+
       // Preparar datos para el backend
       const registrationData = {
         email: formData.email,
@@ -55,7 +81,8 @@ const RegisterSection = () => {
           descripcion: formData.restauranteDescripcion,
           telefono: formData.restauranteTelefono,
           direccion: formData.restauranteDireccion,
-          email: formData.restauranteEmail
+          email: formData.restauranteEmail,
+          planId: selectedPlanId
         }
       }
 
@@ -174,11 +201,12 @@ const RegisterSection = () => {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Apellido
+                      Apellido *
                     </label>
                     <input
                       type="text"
                       name="apellido"
+                      required
                       value={formData.apellido}
                       onChange={handleChange}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
@@ -201,12 +229,12 @@ const RegisterSection = () => {
                   </div>
                   <div>
                     <InternationalPhoneInput
-                      label="Teléfono Personal"
+                      label="Teléfono Personal *"
                       value={formData.telefono}
                       onChange={(value) => handlePhoneChange(value, 'telefono')}
                       placeholder="Ingresa tu número de teléfono"
                       name="telefono"
-                      required={false}
+                      required={true}
                     />
                   </div>
                 </div>
@@ -236,10 +264,11 @@ const RegisterSection = () => {
                   
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Descripción
+                      Descripción *
                     </label>
                     <textarea
                       name="restauranteDescripcion"
+                      required
                       value={formData.restauranteDescripcion}
                       onChange={handleChange}
                       rows={3}
@@ -251,21 +280,22 @@ const RegisterSection = () => {
                   <div className="grid md:grid-cols-2 gap-6">
                     <div>
                       <InternationalPhoneInput
-                        label="Teléfono del Restaurante"
+                        label="Teléfono del Restaurante *"
                         value={formData.restauranteTelefono}
                         onChange={(value) => handlePhoneChange(value, 'restauranteTelefono')}
                         placeholder="Teléfono de contacto del restaurante"
                         name="restauranteTelefono"
-                        required={false}
+                        required={true}
                       />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Email del Restaurante
+                        Email del Restaurante *
                       </label>
                       <input
                         type="email"
                         name="restauranteEmail"
+                        required
                         value={formData.restauranteEmail}
                         onChange={handleChange}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
@@ -276,11 +306,12 @@ const RegisterSection = () => {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Dirección
+                      Dirección *
                     </label>
                     <input
                       type="text"
                       name="restauranteDireccion"
+                      required
                       value={formData.restauranteDireccion}
                       onChange={handleChange}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
@@ -290,22 +321,52 @@ const RegisterSection = () => {
                 </div>
               </div>
 
-              {/* Plan Emprendedor Info */}
-              <div className="bg-green-50 border border-green-200 rounded-lg p-6">
-                <h4 className="text-lg font-semibold text-green-800 mb-3">Plan Emprendedor Incluye:</h4>
-                <div className="grid md:grid-cols-2 gap-2 text-sm text-green-700">
-                  <div>• Hasta 30 productos en el menú</div>
-                  <div>• Hasta 5 categorías</div>
-                  <div>• Hasta 10 mesas con código QR</div>
-                  <div>• Hasta 2 meseros con panel dedicado</div>
-                  <div>• Hasta 400 órdenes mensuales</div>
-                  <div>• 🤖 Digitalización de menú con IA*</div>
-                  <div>• 💱 Soporte Multimoneda</div>
-                  <div>• 📱 Menú digital responsivo</div>
+              {/* Plan Information */}
+              <div className="pt-4 border-t border-gray-200">
+                <h3 className="text-xl font-semibold text-gray-900 mb-6">Selecciona tu Plan</h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {plans.length === 0 ? (
+                    <div className="col-span-full flex justify-center py-4">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-600"></div>
+                    </div>
+                  ) : (
+                    plans.map((plan) => (
+                      <div 
+                        key={plan.id}
+                        onClick={() => setSelectedPlanId(plan.id)}
+                        className={`relative rounded-lg border p-4 cursor-pointer flex flex-col focus:outline-none transition-all duration-200 ${
+                          selectedPlanId === plan.id 
+                            ? 'bg-green-50 border-green-500 ring-2 ring-green-500' 
+                            : 'bg-white border-gray-300 hover:bg-gray-50'
+                        }`}
+                      >
+                        <div className="flex justify-between items-center mb-2">
+                          <h4 className={`text-lg font-bold ${selectedPlanId === plan.id ? 'text-green-800' : 'text-gray-900'}`}>
+                            {plan.nombre}
+                          </h4>
+                          <span className={`text-lg font-bold ${selectedPlanId === plan.id ? 'text-green-700' : 'text-gray-900'}`}>
+                            {plan.precio === 0 ? 'Gratis' : `$${plan.precio}/mes`}
+                          </span>
+                        </div>
+                        
+                        <div className={`grid grid-cols-1 gap-1 text-sm ${selectedPlanId === plan.id ? 'text-green-700' : 'text-gray-600'}`}>
+                          <div>• Hasta {plan.limiteProductos} productos</div>
+                          <div>• Hasta {plan.limiteCategorias} categorías</div>
+                          {plan.limiteMesas > 0 && <div>• Hasta {plan.limiteMesas} mesas (QR)</div>}
+                          {plan.limiteMeseros > 0 && <div>• Hasta {plan.limiteMeseros} meseros</div>}
+                          {plan.limiteOrdenes > 0 && <div>• {plan.limiteOrdenes} órdenes mensuales</div>}
+                        </div>
+                        
+                        <div className="mt-4 pt-4 border-t border-gray-200 border-opacity-50">
+                          <p className="text-xs text-gray-500 text-center font-medium">
+                            Incluye 15 días de prueba gratis
+                          </p>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
-                <p className="text-xs text-green-600 mt-3">
-                  * Servicio de digitalización disponible como servicio adicional para clientes activos
-                </p>
               </div>
 
               {/* Terms and Submit */}

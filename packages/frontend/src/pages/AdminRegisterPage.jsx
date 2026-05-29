@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline'
 import logo from '../assets/logo.png'
@@ -7,8 +7,8 @@ import InternationalPhoneInput from '../components/InternationalPhoneInput'
 
 const AdminRegisterPage = () => {
   const [formData, setFormData] = useState({
-    // Datos del administrador
     nombre: '',
+    apellido: '',
     email: '',
     telefono: '', // Teléfono personal del administrador
     password: '',
@@ -24,7 +24,27 @@ const AdminRegisterPage = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState({})
+  const [plans, setPlans] = useState([])
+  const [selectedPlanId, setSelectedPlanId] = useState('')
   const navigate = useNavigate()
+
+  useEffect(() => {
+    const fetchPlans = async () => {
+      try {
+        const response = await authService.getPublicPlans()
+        if (response.data && response.data.success) {
+          setPlans(response.data.data)
+          // Preseleccionar el plan más barato (o gratis) si existe
+          if (response.data.data.length > 0) {
+            setSelectedPlanId(response.data.data[0].id)
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching plans:', error)
+      }
+    }
+    fetchPlans()
+  }, [])
 
   const handleChange = (e) => {
     setFormData({
@@ -59,7 +79,9 @@ const AdminRegisterPage = () => {
 
     // Validaciones del administrador
     if (!formData.nombre.trim()) newErrors.nombre = 'El nombre es requerido'
+    if (!formData.apellido.trim()) newErrors.apellido = 'El apellido es requerido'
     if (!formData.email.trim()) newErrors.email = 'El email es requerido'
+    if (!formData.telefono.trim()) newErrors.telefono = 'El teléfono personal es requerido'
     if (!formData.email.includes('@')) newErrors.email = 'Email no válido'
     if (!formData.password) newErrors.password = 'La contraseña es requerida'
     if (formData.password.length < 6) newErrors.password = 'La contraseña debe tener al menos 6 caracteres'
@@ -69,8 +91,11 @@ const AdminRegisterPage = () => {
 
     // Validaciones del restaurante
     if (!formData.nombreRestaurante.trim()) newErrors.nombreRestaurante = 'El nombre del restaurante es requerido'
+    if (!formData.descripcion.trim()) newErrors.descripcion = 'La descripción es requerida'
     if (!formData.telefonoRestaurante.trim()) newErrors.telefonoRestaurante = 'El teléfono del restaurante es requerido'
+    if (!formData.emailRestaurante.trim()) newErrors.emailRestaurante = 'El email del restaurante es requerido'
     if (!formData.direccion.trim()) newErrors.direccion = 'La dirección es requerida'
+    if (!selectedPlanId) newErrors.plan = 'Debes seleccionar un plan'
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -89,6 +114,7 @@ const AdminRegisterPage = () => {
       const result = await authService.register({
         // Datos del administrador
         nombre: formData.nombre,
+        apellido: formData.apellido,
         email: formData.email,
         telefono: formData.telefono,
         password: formData.password,
@@ -98,7 +124,8 @@ const AdminRegisterPage = () => {
           descripcion: formData.descripcion,
           telefono: formData.telefonoRestaurante,
           email: formData.emailRestaurante,
-          direccion: formData.direccion
+          direccion: formData.direccion,
+          planId: selectedPlanId
         }
       })
 
@@ -172,6 +199,25 @@ const AdminRegisterPage = () => {
                 </div>
 
                 <div>
+                  <label htmlFor="apellido" className="block text-sm font-medium text-gray-700">
+                    Apellido *
+                  </label>
+                  <input
+                    id="apellido"
+                    name="apellido"
+                    type="text"
+                    required
+                    className={`mt-1 block w-full px-3 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm ${
+                      errors.apellido ? 'border-red-300' : 'border-gray-300'
+                    }`}
+                    placeholder="Tu apellido"
+                    value={formData.apellido}
+                    onChange={handleChange}
+                  />
+                  {errors.apellido && <p className="mt-1 text-sm text-red-600">{errors.apellido}</p>}
+                </div>
+
+                <div>
                   <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                     Email *
                   </label>
@@ -192,13 +238,13 @@ const AdminRegisterPage = () => {
 
                 <div className="md:col-span-2">
                   <InternationalPhoneInput
-                    label="Teléfono Personal"
+                    label="Teléfono Personal *"
                     value={formData.telefono}
                     onChange={(value) => handlePhoneChange(value, 'telefono')}
                     placeholder="Tu número de teléfono personal"
                     name="telefono"
                     error={errors.telefono}
-                    required={false}
+                    required={true}
                   />
                 </div>
 
@@ -293,11 +339,12 @@ const AdminRegisterPage = () => {
 
                 <div>
                   <label htmlFor="descripcion" className="block text-sm font-medium text-gray-700">
-                    Descripción
+                    Descripción *
                   </label>
                   <textarea
                     id="descripcion"
                     name="descripcion"
+                    required
                     rows={3}
                     className="mt-1 block w-full px-3 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
                     placeholder="Breve descripción de tu restaurante (opcional)"
@@ -321,12 +368,13 @@ const AdminRegisterPage = () => {
 
                   <div>
                     <label htmlFor="emailRestaurante" className="block text-sm font-medium text-gray-700">
-                      Email del Restaurante
+                      Email del Restaurante *
                     </label>
                     <input
                       id="emailRestaurante"
                       name="emailRestaurante"
                       type="email"
+                      required
                       className={`mt-1 block w-full px-3 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm ${
                         errors.emailRestaurante ? 'border-red-300' : 'border-gray-300'
                       }`}
@@ -359,22 +407,53 @@ const AdminRegisterPage = () => {
               </div>
             </div>
 
-            {/* Plan Information - CORREGIDO */}
-            <div className="bg-primary-50 p-4 rounded-lg">
-              <h4 className="text-sm font-medium text-primary-800 mb-2">Plan Emprendedor Incluye:</h4>
-              <ul className="text-sm text-primary-700 space-y-1">
-                <li>• Hasta 30 productos en el menú</li>
-                <li>• Hasta 5 categorías</li>
-                <li>• Hasta 10 mesas con código QR</li>
-                <li>• Hasta 2 meseros con panel dedicado</li>
-                <li>• Hasta 400 órdenes mensuales</li>
-                <li>• 🤖 Digitalización de menú con IA*</li>
-                <li>• 💱 Soporte Multimoneda</li>
-                <li>• 📱 Menú digital responsivo</li>
-              </ul>
-              <p className="text-xs text-primary-600 mt-2">
-                * Servicio de digitalización disponible como servicio adicional para clientes activos
-              </p>
+            {/* Plan Information */}
+            <div className="pt-4 border-t border-gray-200">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Selecciona tu Plan</h3>
+              {errors.plan && <p className="mb-4 text-sm text-red-600">{errors.plan}</p>}
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {plans.length === 0 ? (
+                  <div className="col-span-full flex justify-center py-4">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-600"></div>
+                  </div>
+                ) : (
+                  plans.map((plan) => (
+                    <div 
+                      key={plan.id}
+                      onClick={() => setSelectedPlanId(plan.id)}
+                      className={`relative rounded-lg border p-4 cursor-pointer flex flex-col focus:outline-none ${
+                        selectedPlanId === plan.id 
+                          ? 'bg-primary-50 border-primary-500 ring-2 ring-primary-500' 
+                          : 'bg-white border-gray-300 hover:bg-gray-50'
+                      }`}
+                    >
+                      <div className="flex justify-between items-center mb-2">
+                        <h4 className={`text-lg font-medium ${selectedPlanId === plan.id ? 'text-primary-900' : 'text-gray-900'}`}>
+                          {plan.nombre}
+                        </h4>
+                        <span className={`text-lg font-bold ${selectedPlanId === plan.id ? 'text-primary-700' : 'text-gray-900'}`}>
+                          {plan.precio === 0 ? 'Gratis' : `$${plan.precio}/mes`}
+                        </span>
+                      </div>
+                      
+                      <ul className={`text-sm space-y-1 ${selectedPlanId === plan.id ? 'text-primary-700' : 'text-gray-600'}`}>
+                        <li>• Hasta {plan.limiteProductos} productos</li>
+                        <li>• Hasta {plan.limiteCategorias} categorías</li>
+                        {plan.limiteMesas > 0 && <li>• Hasta {plan.limiteMesas} mesas (QR)</li>}
+                        {plan.limiteMeseros > 0 && <li>• Hasta {plan.limiteMeseros} meseros</li>}
+                        {plan.limiteOrdenes > 0 && <li>• {plan.limiteOrdenes} órdenes mensuales</li>}
+                      </ul>
+                      
+                      <div className="mt-4 pt-4 border-t border-gray-200 border-opacity-50">
+                        <p className="text-xs text-gray-500 text-center font-medium">
+                          Incluye 15 días de prueba gratis
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
 
             <div>

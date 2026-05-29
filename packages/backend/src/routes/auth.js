@@ -195,18 +195,60 @@ const loginSchema = Joi.object({
 });
 
 const registerSchema = Joi.object({
-  email: Joi.string().email().required(),
-  password: Joi.string().min(6).required(),
-  nombre: Joi.string().min(2).required(),
-  apellido: Joi.string().min(2).optional(),
-  telefono: Joi.string().optional(),
+  email: Joi.string().email().required().messages({
+    'string.email': 'Debe ser un email válido',
+    'any.required': 'El email es requerido',
+    'string.empty': 'El email no puede estar vacío'
+  }),
+  password: Joi.string().min(6).required().messages({
+    'string.min': 'La contraseña debe tener al menos 6 caracteres',
+    'any.required': 'La contraseña es requerida',
+    'string.empty': 'La contraseña no puede estar vacía'
+  }),
+  nombre: Joi.string().min(2).required().messages({
+    'string.min': 'El nombre debe tener al menos 2 caracteres',
+    'any.required': 'El nombre es requerido',
+    'string.empty': 'El nombre no puede estar vacío'
+  }),
+  apellido: Joi.string().min(2).required().messages({
+    'string.min': 'El apellido debe tener al menos 2 caracteres',
+    'any.required': 'El apellido es requerido',
+    'string.empty': 'El apellido no puede estar vacío'
+  }),
+  telefono: Joi.string().required().messages({
+    'any.required': 'El teléfono es requerido',
+    'string.empty': 'El teléfono no puede estar vacío'
+  }),
   restaurante: Joi.object({
-    nombre: Joi.string().min(2).required(),
-    descripcion: Joi.string().optional(),
-    telefono: Joi.string().optional(),
-    direccion: Joi.string().optional(),
-    email: Joi.string().email().optional()
-  }).required()
+    nombre: Joi.string().min(2).required().messages({
+      'string.min': 'El nombre del restaurante debe tener al menos 2 caracteres',
+      'any.required': 'El nombre del restaurante es requerido',
+      'string.empty': 'El nombre del restaurante no puede estar vacío'
+    }),
+    descripcion: Joi.string().required().messages({
+      'any.required': 'La descripción es requerida',
+      'string.empty': 'La descripción no puede estar vacía'
+    }),
+    telefono: Joi.string().required().messages({
+      'any.required': 'El teléfono del restaurante es requerido',
+      'string.empty': 'El teléfono del restaurante no puede estar vacío'
+    }),
+    direccion: Joi.string().required().messages({
+      'any.required': 'La dirección es requerida',
+      'string.empty': 'La dirección no puede estar vacía'
+    }),
+    email: Joi.string().email().required().messages({
+      'string.email': 'Debe ser un email válido',
+      'any.required': 'El email del restaurante es requerido',
+      'string.empty': 'El email del restaurante no puede estar vacío'
+    }),
+    planId: Joi.string().required().messages({
+      'any.required': 'El plan es requerido',
+      'string.empty': 'El plan no puede estar vacío'
+    })
+  }).required().messages({
+    'any.required': 'La información del restaurante es requerida'
+  })
 });
 
 const emailVerificationSchema = Joi.object({
@@ -540,18 +582,18 @@ const register = async (req, res) => {
       });
     }
 
-    // Get default free plan (buscar por precio 0 para mayor flexibilidad)
-    const planGratuito = await prisma.plan.findFirst({
+    // Validar que el plan existe y está activo
+    const planElegido = await prisma.plan.findUnique({
       where: { 
+        id: restaurante.planId,
         activo: true
-      },
-      orderBy: { precio: 'asc' } // Tomar el más barato
+      }
     });
 
-    if (!planGratuito) {
-      return res.status(500).json({
+    if (!planElegido) {
+      return res.status(400).json({
         success: false,
-        error: 'Plan gratuito no encontrado. Contacte al soporte.'
+        error: 'El plan seleccionado no es válido o no está activo.'
       });
     }
 
@@ -573,7 +615,7 @@ const register = async (req, res) => {
           telefono: restaurante.telefono,
           direccion: restaurante.direccion,
           email: restaurante.email,
-          planId: planGratuito.id,
+          planId: planElegido.id,
           activo: true
         }
       });
@@ -588,7 +630,7 @@ const register = async (req, res) => {
           telefono,
           restauranteId: newRestaurante.id,
           activo: true,
-          emailVerificado: false
+          emailVerificado: true
         },
         include: {
           restaurante: {
@@ -597,15 +639,32 @@ const register = async (req, res) => {
         }
       });
 
-      // Create subscription for the restaurant
+      // Create subscription for the restaurant based on DEMO_DAYS
+      const demoDays = process.env.DEMO_DAYS !== undefined ? parseInt(process.env.DEMO_DAYS, 10) : 15;
+      
       const fechaInicio = new Date();
       const fechaVencimiento = new Date();
-      fechaVencimiento.setDate(fechaInicio.getDate() + 15); // 15 días gratis
+      let estadoSuscripcion = 'ACTIVA';
+
+      if (demoDays > 0) {
+        // Otorgar demo por demoDays días
+        fechaVencimiento.setDate(fechaInicio.getDate() + demoDays);
+      } else {
+        // El demo está deshabilitado
+        if (planElegido.precio === 0) {
+          // Si es plan gratuito, dar tiempo indefinido (10 años)
+          fechaVencimiento.setFullYear(fechaInicio.getFullYear() + 10);
+        } else {
+          // Si es plan de pago, expira inmediatamente y queda VENCIDA (requiere pago)
+          fechaVencimiento.setDate(fechaInicio.getDate());
+          estadoSuscripcion = 'VENCIDA';
+        }
+      }
 
       await tx.suscripcion.create({
         data: {
           restauranteId: newRestaurante.id,
-          estado: 'ACTIVA',
+          estado: estadoSuscripcion,
           fechaInicio,
           fechaVencimiento,
           renovacionAutomatica: false
@@ -618,18 +677,14 @@ const register = async (req, res) => {
     // Generate email verification token
     const verificationToken = generateEmailVerificationToken(result.id, result.email);
     
-    // Send verification and welcome emails
+    // Send welcome email (verificación de email omitida a petición del cliente)
     try {
-      await emailService.sendVerificationEmail(
-        result.email, 
-        verificationToken, 
-        result.nombre
-      );
-      
       await emailService.sendWelcomeEmail(
         result.email,
         result.nombre,
-        result.restaurante.nombre
+        result.restaurante.nombre,
+        planElegido,
+        demoDays
       );
       
       console.log(`📧 Emails enviados a ${result.email}`);

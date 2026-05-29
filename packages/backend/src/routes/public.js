@@ -269,6 +269,33 @@ const checkSlugAvailability = async (req, res) => {
   }
 };
 
+// @desc    Get all active plans (public)
+// @route   GET /api/public/planes
+// @access  Public
+const getActivePlanes = async (req, res) => {
+  try {
+    const planes = await prisma.plan.findMany({
+      where: {
+        activo: true
+      },
+      orderBy: {
+        precio: 'asc'
+      }
+    });
+
+    res.json({
+      success: true,
+      data: planes
+    });
+  } catch (error) {
+    console.error('Error obteniendo planes activos:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error interno del servidor'
+    });
+  }
+};
+
 // @desc    Get order status by ID (public)
 // @route   GET /api/public/orden/:ordenId
 // @access  Public
@@ -337,5 +364,6 @@ router.get('/restaurant/:slug', getRestaurantBySlug);
 router.get('/menu/:slug', getMenuBySlug);
 router.get('/check-slug/:slug', checkSlugAvailability);
 router.get('/orden/:ordenId', getOrdenStatus);
+router.get('/planes', getActivePlanes);
 
 module.exports = router; 

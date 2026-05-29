@@ -52,7 +52,7 @@ const Header = () => {
             </button>
             <button 
               onClick={() => navigate('/admin/login')}
-              className="text-gray-600 hover:text-primary-600 transition-colors"
+              className="px-4 py-2 text-primary-600 border border-primary-600 rounded-lg hover:bg-primary-50 transition-colors font-medium ml-4"
             >
               Acceso Admin
             </button>
@@ -110,7 +110,7 @@ const Header = () => {
                   navigate('/admin/login')
                   setIsMenuOpen(false)
                 }}
-                className="text-gray-600 hover:text-primary-600 transition-colors text-left"
+                className="px-4 py-2 text-primary-600 border border-primary-600 rounded-lg hover:bg-primary-50 transition-colors font-medium text-center mt-2"
               >
                 Acceso Admin
               </button>

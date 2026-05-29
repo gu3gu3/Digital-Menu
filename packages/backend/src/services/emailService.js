@@ -147,10 +147,10 @@ class EmailService {
     return this.sendEmail(emailContent);
   }
 
-  async sendWelcomeEmail(email, userName, restaurantName) {
+  async sendWelcomeEmail(email, userName, restaurantName, planElegido, demoDays) {
     const baseUrl = process.env.FRONTEND_URL || 'https://menuview.app';
     const dashboardUrl = `${baseUrl}/admin/dashboard`;
-    const staffUrl = `${baseUrl}/staff/login`;
+    const adminLoginUrl = `${baseUrl}/admin/login`;
     
     const emailContent = {
       from: {
@@ -189,12 +189,12 @@ class EmailService {
               <div style="background: linear-gradient(135deg, #edf2f7 0%, #e2e8f0 100%); border-radius: 8px; padding: 25px; margin: 30px 0;">
                 <h3 style="color: #2d3748; margin: 0 0 15px 0; font-size: 18px;">📊 Tu Plan Actual</h3>
                 <p style="color: #4a5568; margin: 0; font-size: 15px;">
-                  <strong>✨ Plan Emprendedor</strong> - 15 días gratis<br>
-                  • Hasta 30 productos<br>
-                  • Hasta 5 categorías<br>
-                  • Hasta 10 mesas<br>
-                  • Hasta 2 meseros<br>
-                  • 400 órdenes por mes
+                  <strong>✨ ${planElegido ? planElegido.nombre : 'Plan Seleccionado'}</strong>${demoDays > 0 ? ` - ${demoDays} días gratis` : ''}<br>
+                  • Hasta ${planElegido ? planElegido.limiteProductos : 30} productos<br>
+                  • Hasta ${planElegido ? planElegido.limiteCategorias : 5} categorías<br>
+                  ${planElegido && planElegido.limiteMesas > 0 ? `• Hasta ${planElegido.limiteMesas} mesas<br>` : ''}
+                  ${planElegido && planElegido.limiteMeseros > 0 ? `• Hasta ${planElegido.limiteMeseros} meseros<br>` : ''}
+                  ${planElegido && planElegido.limiteOrdenes > 0 ? `• ${planElegido.limiteOrdenes} órdenes por mes` : ''}
                 </p>
               </div>
 
@@ -229,18 +229,18 @@ class EmailService {
                 </a>
               </div>
 
-              <!-- Staff Panel Link -->
+              <!-- Admin Login Panel Link -->
               <div style="background-color: #ebf8ff; border: 1px solid #90cdf4; border-radius: 8px; padding: 20px; margin: 30px 0;">
-                <h4 style="color: #2b6cb0; margin: 0 0 10px 0; font-size: 16px;">👥 Panel de Meseros</h4>
+                <h4 style="color: #2b6cb0; margin: 0 0 10px 0; font-size: 16px;">👥 Panel de Administración</h4>
                 <p style="color: #2c5282; margin: 0 0 15px 0; font-size: 14px;">
-                  Comparte este enlace con tu equipo de meseros para que puedan acceder al sistema:
+                  Puedes iniciar sesión en tu panel de administración en cualquier momento usando este enlace:
                 </p>
                 <div style="background-color: #bee3f8; padding: 10px; border-radius: 4px; margin: 10px 0;">
-                  <code style="color: #2a69ac; font-size: 13px; word-break: break-all;">${staffUrl}</code>
+                  <code style="color: #2a69ac; font-size: 13px; word-break: break-all;">${adminLoginUrl}</code>
                 </div>
                 <div style="text-align: center; margin: 15px 0;">
-                  <a href="${staffUrl}" style="background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%); color: white; text-decoration: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; font-size: 14px; display: inline-block;">
-                    🔗 Panel de Staff
+                  <a href="${adminLoginUrl}" style="background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%); color: white; text-decoration: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; font-size: 14px; display: inline-block;">
+                    🔗 Ir al Login
                   </a>
                 </div>
               </div>
@@ -287,7 +287,7 @@ class EmailService {
         4. Invita a tu equipo
 
         Accede a tu dashboard: ${dashboardUrl}
-        Panel de meseros: ${staffUrl}
+        Login de Administración: ${adminLoginUrl}
 
         ¿Necesitas ayuda? Contacta: soporte@menuview.app
 
