@@ -15,6 +15,42 @@ async function seedUnified() {
     console.log('🌱 Iniciando seed unificado del sistema...');
     console.log('=====================================');
 
+    // 2. CREAR SUPER USUARIO ADMINISTRADOR
+    // ========================================
+    console.log('\n👑 Creando super usuario administrador...');
+    
+    const existingSuperUser = await prisma.superUsuario.findFirst({
+      where: { email: 'admin@menuview.app' }
+    });
+    
+    if (!existingSuperUser) {
+      const hashedSuperPassword = await bcrypt.hash('SuperAdmin123!', 12);
+      
+      const superUser = await prisma.superUsuario.create({
+        data: {
+          email: 'admin@menuview.app',
+          password: hashedSuperPassword,
+          nombre: 'Super',
+          apellido: 'Administrador',
+        activo: true
+      }
+    });
+
+      console.log('✅ Super usuario creado:');
+      console.log(`   Email: ${superUser.email}`);
+      console.log(`   Password: SuperAdmin123!`);
+    } else {
+      console.log('ℹ️  Super usuario ya existe:');
+      console.log(`   Email: ${existingSuperUser.email}`);
+    }
+
+    // ========================================
+    // 3. CREAR RESTAURANTES DEMO (SOLO DESARROLLO)
+    // ========================================
+    if (process.env.NODE_ENV === 'production') {
+      console.log('\n⚠️ Entorno de producción detectado: Saltando la generación de datos demo.');
+    } else {
+
     // ========================================
     // 1. CREAR PLANES DEL SISTEMA
     // ========================================
@@ -143,41 +179,6 @@ async function seedUnified() {
     console.log(`   - ${planPlatinum.nombre}: Ilimitado.`);
 
     // ========================================
-    // 2. CREAR SUPER USUARIO ADMINISTRADOR
-    // ========================================
-    console.log('\n👑 Creando super usuario administrador...');
-    
-    const existingSuperUser = await prisma.superUsuario.findFirst({
-      where: { email: 'admin@menuview.app' }
-    });
-    
-    if (!existingSuperUser) {
-      const hashedSuperPassword = await bcrypt.hash('SuperAdmin123!', 12);
-      
-      const superUser = await prisma.superUsuario.create({
-        data: {
-          email: 'admin@menuview.app',
-          password: hashedSuperPassword,
-          nombre: 'Super',
-          apellido: 'Administrador',
-        activo: true
-      }
-    });
-
-      console.log('✅ Super usuario creado:');
-      console.log(`   Email: ${superUser.email}`);
-      console.log(`   Password: SuperAdmin123!`);
-    } else {
-      console.log('ℹ️  Super usuario ya existe:');
-      console.log(`   Email: ${existingSuperUser.email}`);
-    }
-
-    // ========================================
-    // 3. CREAR RESTAURANTES DEMO (SOLO DESARROLLO)
-    // ========================================
-    if (process.env.NODE_ENV === 'production') {
-      console.log('\n⚠️ Entorno de producción detectado: Saltando la generación de datos demo.');
-    } else {
       console.log('\n🏪 Creando restaurantes demo (Entorno local/desarrollo)...');
     
     // Crear passwords hasheados para los admins

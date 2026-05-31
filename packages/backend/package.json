@@ -3,9 +3,7 @@
   "version": "1.0.0",
   "description": "Backend API for Digital Menu QR system",
   "main": "src/index.js",
-  "prisma": {
-    "seed": "node prisma/seed.js"
-  },
+
   "scripts": {
     "dev": "nodemon",
     "start": "node src/server.js",
