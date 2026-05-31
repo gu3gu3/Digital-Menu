@@ -18,6 +18,8 @@ import {
 } from '@heroicons/react/24/outline'
 import logo from '../assets/logo.png'
 import NotificationBell from './NotificationBell'
+import { Transition } from '@headlessui/react'
+import { getBeautifulMenuUrl } from '../utils/urlHelper'
 import apiClient from '../lib/apiClient'
 
 const AdminLayout = () => {
@@ -250,7 +252,7 @@ const AdminLayout = () => {
                 
                 {restaurant?.slug && (
                   <a 
-                    href={`${window.location.origin}/menu/${restaurant.slug}`}
+                    href={getBeautifulMenuUrl(restaurant)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center px-3 py-1.5 bg-primary-50 text-primary-700 border border-primary-200 rounded-lg hover:bg-primary-100 transition-colors text-sm font-medium"

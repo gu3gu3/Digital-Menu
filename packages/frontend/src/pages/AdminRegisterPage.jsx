@@ -18,8 +18,36 @@ const AdminRegisterPage = () => {
     descripcion: '',
     telefonoRestaurante: '', // Teléfono del restaurante
     emailRestaurante: '', // Email del restaurante
-    direccion: ''
+    direccion: '',
+    pais: 'CR' // Default a Costa Rica
   })
+
+  const countries = [
+    { code: 'AR', name: 'Argentina' },
+    { code: 'BO', name: 'Bolivia' },
+    { code: 'BR', name: 'Brasil' },
+    { code: 'CA', name: 'Canadá' },
+    { code: 'CL', name: 'Chile' },
+    { code: 'CO', name: 'Colombia' },
+    { code: 'CR', name: 'Costa Rica' },
+    { code: 'EC', name: 'Ecuador' },
+    { code: 'SV', name: 'El Salvador' },
+    { code: 'ES', name: 'España' },
+    { code: 'US', name: 'Estados Unidos' },
+    { code: 'FR', name: 'Francia' },
+    { code: 'GT', name: 'Guatemala' },
+    { code: 'HN', name: 'Honduras' },
+    { code: 'IT', name: 'Italia' },
+    { code: 'MX', name: 'México' },
+    { code: 'NI', name: 'Nicaragua' },
+    { code: 'PA', name: 'Panamá' },
+    { code: 'PY', name: 'Paraguay' },
+    { code: 'PE', name: 'Perú' },
+    { code: 'GB', name: 'Reino Unido' },
+    { code: 'DO', name: 'República Dominicana' },
+    { code: 'UY', name: 'Uruguay' },
+    { code: 'VE', name: 'Venezuela' }
+  ].sort((a, b) => a.name.localeCompare(b.name));
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -125,6 +153,7 @@ const AdminRegisterPage = () => {
           telefono: formData.telefonoRestaurante,
           email: formData.emailRestaurante,
           direccion: formData.direccion,
+          pais: formData.pais,
           planId: selectedPlanId
         }
       })
@@ -318,23 +347,45 @@ const AdminRegisterPage = () => {
             <div>
               <h3 className="text-lg font-medium text-gray-900 mb-4">Información del Restaurante</h3>
               <div className="space-y-4">
-                <div>
-                  <label htmlFor="nombreRestaurante" className="block text-sm font-medium text-gray-700">
-                    Nombre del Restaurante *
-                  </label>
-                  <input
-                    id="nombreRestaurante"
-                    name="nombreRestaurante"
-                    type="text"
-                    required
-                    className={`mt-1 block w-full px-3 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm ${
-                      errors.nombreRestaurante ? 'border-red-300' : 'border-gray-300'
-                    }`}
-                    placeholder="Nombre de tu restaurante"
-                    value={formData.nombreRestaurante}
-                    onChange={handleChange}
-                  />
-                  {errors.nombreRestaurante && <p className="mt-1 text-sm text-red-600">{errors.nombreRestaurante}</p>}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="nombreRestaurante" className="block text-sm font-medium text-gray-700">
+                      Nombre del Restaurante *
+                    </label>
+                    <input
+                      id="nombreRestaurante"
+                      name="nombreRestaurante"
+                      type="text"
+                      required
+                      className={`mt-1 block w-full px-3 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm ${
+                        errors.nombreRestaurante ? 'border-red-300' : 'border-gray-300'
+                      }`}
+                      placeholder="Nombre de tu restaurante"
+                      value={formData.nombreRestaurante}
+                      onChange={handleChange}
+                    />
+                    {errors.nombreRestaurante && <p className="mt-1 text-sm text-red-600">{errors.nombreRestaurante}</p>}
+                  </div>
+
+                  <div>
+                    <label htmlFor="pais" className="block text-sm font-medium text-gray-700">
+                      País del Restaurante *
+                    </label>
+                    <select
+                      id="pais"
+                      name="pais"
+                      required
+                      className="mt-1 block w-full px-3 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                      value={formData.pais}
+                      onChange={handleChange}
+                    >
+                      {countries.map((country) => (
+                        <option key={country.code} value={country.code}>
+                          {country.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
 
                 <div>
@@ -359,11 +410,19 @@ const AdminRegisterPage = () => {
                       label="Teléfono del Restaurante *"
                       value={formData.telefonoRestaurante}
                       onChange={(value) => handlePhoneChange(value, 'telefonoRestaurante')}
+                      onCountryChange={(country) => {
+                        if (country) {
+                          setFormData(prev => ({ ...prev, pais: country }))
+                        }
+                      }}
                       placeholder="Teléfono de contacto del restaurante"
                       name="telefonoRestaurante"
                       error={errors.telefonoRestaurante}
                       required={true}
                     />
+                    <p className="mt-1 text-xs text-gray-500">
+                      Selecciona la bandera correcta o escribe el prefijo internacional (ej. +502) para configurar automáticamente tu país y moneda.
+                    </p>
                   </div>
 
                   <div>

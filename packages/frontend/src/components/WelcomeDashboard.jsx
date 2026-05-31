@@ -10,6 +10,7 @@ import {
   GlobeAltIcon,
   LinkIcon
 } from '@heroicons/react/24/outline'
+import { getBeautifulMenuUrl } from '../utils/urlHelper'
 
 const WelcomeDashboard = ({ userData, onContinueToDashboard }) => {
   const [showPassword, setShowPassword] = useState(false)
@@ -22,7 +23,7 @@ const WelcomeDashboard = ({ userData, onContinueToDashboard }) => {
 
   // Generar URL pública del menú
   const menuUrl = userData.restaurante?.slug 
-    ? `${window.location.origin}/menu/${userData.restaurante.slug}`
+    ? getBeautifulMenuUrl(userData.restaurante)
     : 'URL pendiente de generar'
 
   const copyToClipboard = async (text, type) => {

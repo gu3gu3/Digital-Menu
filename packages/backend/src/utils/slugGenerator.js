@@ -28,14 +28,23 @@ const textToSlug = (text) => {
 /**
  * Genera un slug único para un restaurante
  * @param {string} nombre - Nombre del restaurante
+ * @param {string} [countryCode] - Código de país opcional (ej. 'CR', 'US')
  * @returns {Promise<string>} - Slug único
  */
-const generateUniqueSlug = async (nombre) => {
+const generateUniqueSlug = async (nombre, countryCode = null) => {
   let baseSlug = textToSlug(nombre);
   
   // Si el slug está vacío, usar un valor por defecto
   if (!baseSlug) {
     baseSlug = 'restaurante';
+  }
+
+  // Si se provee código de país, normalizarlo (ej. cr) y añadirlo al base slug
+  if (countryCode && countryCode.trim() !== '') {
+    const code = countryCode.toLowerCase().trim();
+    if (!baseSlug.endsWith(`-${code}`)) {
+      baseSlug = `${baseSlug}-${code}`;
+    }
   }
   
   let slug = baseSlug;

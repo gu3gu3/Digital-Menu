@@ -2,8 +2,12 @@ import apiClient from '../lib/apiClient.js';
 
 class MenuService {
   // Obtener menú público por slug
-  async getPublicMenu(slug) {
-    const response = await apiClient.get(`/public/menu/${slug}`);
+  async getPublicMenu(slug, countryCode = null) {
+    let url = `/public/menu/${slug}`;
+    if (countryCode) {
+      url += `?countryCode=${countryCode}`;
+    }
+    const response = await apiClient.get(url);
     return response.data.data;
   }
 

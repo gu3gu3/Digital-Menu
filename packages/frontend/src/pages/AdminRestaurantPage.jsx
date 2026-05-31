@@ -13,6 +13,8 @@ import {
 } from 'lucide-react';
 import restaurantService from '../services/restaurantService';
 import { getCurrenciesByRegion, getCurrencyDisplayInfo } from '../utils/currencyUtils';
+import { QRCodeCanvas } from 'qrcode.react';
+import { getBeautifulMenuUrl } from '../utils/urlHelper';
 
 const AdminRestaurantPage = () => {
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm();
@@ -45,7 +47,7 @@ const AdminRestaurantPage = () => {
       if (restaurante.configuracion?.servicio) {
         setValue('servicio', restaurante.configuracion.servicio);
       }
-      setMenuUrl(`${window.location.origin}/menu/${restaurante.slug}`);
+      setMenuUrl(getBeautifulMenuUrl(restaurante));
     } catch (error) {
       console.error('Error loading restaurant data:', error);
       setError('Error al cargar la información del restaurante.');

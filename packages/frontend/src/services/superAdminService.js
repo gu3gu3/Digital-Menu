@@ -261,6 +261,17 @@ export const subscriptionsService = {
     }
   },
 
+  async updateRestaurantDomain(restauranteId, dominioPersonalizado) {
+    try {
+      const response = await apiClient.put(`/super-admin/subscriptions/restaurant/${restauranteId}/domain`, {
+        dominioPersonalizado
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: 'Error de conexión' };
+    }
+  },
+
   // ==================== BLOQUEO AUTOMÁTICO ====================
 
   // Ejecutar bloqueo automático de suscripciones vencidas
@@ -379,6 +390,7 @@ export const superAdminService = {
   getPlanUsage: subscriptionsService.getPlanUsage.bind(subscriptionsService),
   deleteRestaurantCompletely: subscriptionsService.deleteRestaurantCompletely.bind(subscriptionsService),
   resetRestaurantPassword: subscriptionsService.resetRestaurantPassword.bind(subscriptionsService),
+  updateRestaurantDomain: subscriptionsService.updateRestaurantDomain.bind(subscriptionsService),
   autoBlockExpiredSubscriptions: subscriptionsService.autoBlockExpiredSubscriptions.bind(subscriptionsService),
 
   // Utility methods

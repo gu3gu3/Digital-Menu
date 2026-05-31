@@ -35,62 +35,68 @@ import SuperAdminPartnersPage from './pages/SuperAdminPartnersPage'
 import PartnerLoginPage from './pages/partner/PartnerLoginPage'
 import PartnerDashboard from './pages/partner/PartnerDashboard'
 import PartnerAiToolsPage from './pages/partner/PartnerAiToolsPage'
+import DomainInterceptor from './components/DomainInterceptor'
 
 function App() {
   return (
     <Router>
-      <div className="min-h-screen bg-gray-50">
-        <Routes>
-          {/* Public routes */}
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/demo" element={<DemoPage />} />
-          <Route path="/verify-email" element={<EmailVerificationPage />} />
-          <Route path="/menu/:slug" element={<PublicMenuPage />} />
-          
-          {/* Admin authentication routes */}
-          <Route path="/admin/login" element={<AdminLoginPage />} />
-          <Route path="/admin/register" element={<AdminRegisterPage />} />
-          <Route path="/admin/forgot-password" element={<AdminForgotPasswordPage />} />
-          <Route path="/admin/reset-password" element={<AdminResetPasswordPage />} />
-          
-          {/* Staff authentication routes */}
-          <Route path="/staff/login" element={<StaffLoginPage />} />
-          <Route path="/staff/dashboard" element={<StaffDashboard />} />
-          <Route path="/staff/kitchen" element={<KitchenDashboard />} />
-          
-          {/* Super Admin routes */}
-          <Route path="/super-admin/login" element={<SuperAdminLoginPage />} />
-          <Route path="/super-admin/dashboard" element={<SuperAdminDashboard />} />
-          <Route path="/super-admin/settings" element={<SuperAdminSettingsPage />} />
-          <Route path="/super-admin/subscriptions" element={<SubscriptionsListPage />} />
-          <Route path="/super-admin/expiring" element={<ExpiringSubscriptionsPage />} />
-          <Route path="/super-admin/notifications" element={<SendNotificationsPage />} />
-          <Route path="/super-admin/subscriptions/:id" element={<SubscriptionDetailsPage />} />
-          <Route path="/super-admin/subscriptions/:id/renew" element={<RenewSubscriptionPage />} />
-          <Route path="/super-admin/plans" element={<PlansManagementPage />} />
-          <Route path="/super-admin/ai-menu-generator" element={<AIMenuGeneratorPage />} />
-          <Route path="/super-admin/partners" element={<SuperAdminPartnersPage />} />
-          
-          {/* Partner routes */}
-          <Route path="/partner/login" element={<PartnerLoginPage />} />
-          <Route path="/partner/dashboard" element={<PartnerDashboard />} />
-          <Route path="/partner/ai-tools" element={<PartnerAiToolsPage />} />
-          
-          {/* Admin panel routes */}
-          <Route path="/admin" element={<AdminLayout />}>
-            <Route path="dashboard" element={<AdminDashboard />} />
-            <Route path="restaurant" element={<AdminRestaurantPage />} />
-            <Route path="menu" element={<AdminMenuPage />} />
-            <Route path="tables" element={<AdminTablesPage />} />
-            <Route path="orders" element={<AdminOrdersPage />} />
-            <Route path="staff" element={<AdminStaffPage />} />
-            <Route path="feedback" element={<AdminFeedbackPage />} />
-            <Route path="changelog" element={<AdminChangelogPage />} />
-            <Route path="settings" element={<AdminSettingsPage />} />
-            <Route path="notifications" element={<NotificationsPage />} />
-          </Route>
-        </Routes>
-      </div>
+      <DomainInterceptor>
+          <div className="min-h-screen bg-gray-50">
+            <Routes>
+              {/* Public routes */}
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/demo" element={<DemoPage />} />
+              <Route path="/verify-email" element={<EmailVerificationPage />} />
+              
+              {/* Admin authentication routes */}
+              <Route path="/admin/login" element={<AdminLoginPage />} />
+              <Route path="/admin/register" element={<AdminRegisterPage />} />
+              <Route path="/admin/forgot-password" element={<AdminForgotPasswordPage />} />
+              <Route path="/admin/reset-password" element={<AdminResetPasswordPage />} />
+              
+              {/* Staff authentication routes */}
+              <Route path="/staff/login" element={<StaffLoginPage />} />
+              <Route path="/staff/dashboard" element={<StaffDashboard />} />
+              <Route path="/staff/kitchen" element={<KitchenDashboard />} />
+              
+              {/* Super Admin routes */}
+              <Route path="/super-admin/login" element={<SuperAdminLoginPage />} />
+              <Route path="/super-admin/dashboard" element={<SuperAdminDashboard />} />
+              <Route path="/super-admin/settings" element={<SuperAdminSettingsPage />} />
+              <Route path="/super-admin/subscriptions" element={<SubscriptionsListPage />} />
+              <Route path="/super-admin/expiring" element={<ExpiringSubscriptionsPage />} />
+              <Route path="/super-admin/notifications" element={<SendNotificationsPage />} />
+              <Route path="/super-admin/subscriptions/:id" element={<SubscriptionDetailsPage />} />
+              <Route path="/super-admin/subscriptions/:id/renew" element={<RenewSubscriptionPage />} />
+              <Route path="/super-admin/plans" element={<PlansManagementPage />} />
+              <Route path="/super-admin/ai-menu-generator" element={<AIMenuGeneratorPage />} />
+              <Route path="/super-admin/partners" element={<SuperAdminPartnersPage />} />
+              
+              {/* Partner routes */}
+              <Route path="/partner/login" element={<PartnerLoginPage />} />
+              <Route path="/partner/dashboard" element={<PartnerDashboard />} />
+              <Route path="/partner/ai-tools" element={<PartnerAiToolsPage />} />
+              
+              {/* Admin panel routes */}
+              <Route path="/admin" element={<AdminLayout />}>
+                <Route path="dashboard" element={<AdminDashboard />} />
+                <Route path="restaurant" element={<AdminRestaurantPage />} />
+                <Route path="menu" element={<AdminMenuPage />} />
+                <Route path="tables" element={<AdminTablesPage />} />
+                <Route path="orders" element={<AdminOrdersPage />} />
+                <Route path="staff" element={<AdminStaffPage />} />
+                <Route path="feedback" element={<AdminFeedbackPage />} />
+                <Route path="changelog" element={<AdminChangelogPage />} />
+                <Route path="settings" element={<AdminSettingsPage />} />
+                <Route path="notifications" element={<NotificationsPage />} />
+              </Route>
+              
+              {/* Dynamic menu routes (placed at the end so exact routes take precedence) */}
+              <Route path="/:slug" element={<PublicMenuPage />} />
+              <Route path="/:countryCode/:slug" element={<PublicMenuPage />} />
+            </Routes>
+          </div>
+      </DomainInterceptor>
     </Router>
   )
 }

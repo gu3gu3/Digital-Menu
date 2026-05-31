@@ -49,6 +49,7 @@ export const aiMenuService = {
     formData.append('restauranteId', restauranteId);
     formData.append('replaceExistingMenu', options.replaceExistingMenu || false);
     formData.append('generateDescriptions', options.generateDescriptions !== false); // true por defecto
+    formData.append('generateImages', options.generateImages !== false); // true por defecto
     
     if (options.menuType) {
       formData.append('menuType', options.menuType);
@@ -114,6 +115,7 @@ export const aiMenuService = {
     formData.append('customPrompt', customPrompt);
     formData.append('replaceExistingMenu', options.replaceExistingMenu || false);
     formData.append('generateDescriptions', options.generateDescriptions !== false); // true por defecto
+    formData.append('generateImages', options.generateImages !== false); // true por defecto
     
     return formData;
   },

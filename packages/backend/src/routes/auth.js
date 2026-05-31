@@ -245,7 +245,8 @@ const registerSchema = Joi.object({
     planId: Joi.string().required().messages({
       'any.required': 'El plan es requerido',
       'string.empty': 'El plan no puede estar vacío'
-    })
+    }),
+    pais: Joi.string().optional()
   }).required().messages({
     'any.required': 'La información del restaurante es requerida'
   })
@@ -601,8 +602,49 @@ const register = async (req, res) => {
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
+    // Map country code to currency
+    const countryCurrencyMap = {
+      'CR': 'CRC',
+      'HN': 'HNL',
+      'GT': 'GTQ',
+      'SV': 'USD',
+      'NI': 'NIO',
+      'PA': 'PAB',
+      'ES': 'EUR',
+      'MX': 'MXN',
+      'CO': 'COP',
+      'AR': 'ARS',
+      'CL': 'CLP',
+      'PE': 'PEN',
+      'UY': 'UYU',
+      'US': 'USD'
+    };
+
+    let inferredPais = restaurante.pais;
+    let inferredCurrency = null;
+
+    // Use libphonenumber-js to extract country reliably
+    try {
+      const { parsePhoneNumber } = require('libphonenumber-js');
+      if (restaurante.telefono) {
+        // Assume default country from the form if the number doesn't have a '+' prefix
+        const phoneNumber = parsePhoneNumber(restaurante.telefono, restaurante.pais || 'US');
+        if (phoneNumber && phoneNumber.country) {
+          inferredPais = phoneNumber.country; // e.g. 'GT', 'ES', 'CR'
+        }
+      }
+    } catch (phoneErr) {
+      console.warn('Error parsing phone number for country inference:', phoneErr.message);
+    }
+
+    const countryCode = inferredPais || 'US';
+    const monedaAsignada = countryCurrencyMap[countryCode] || 'USD';
+
     // Generate unique slug for restaurant
-    const restauranteSlug = await generateUniqueSlug(restaurante.nombre);
+    const restauranteSlug = await generateUniqueSlug(restaurante.nombre, countryCode);
+
+    // Calculate demo days outside transaction so it's available for email sending
+    const demoDays = parseInt(process.env.DEMO_DAYS || '15', 10);
 
     // Create restaurant and admin user in a transaction
     const result = await prisma.$transaction(async (tx) => {
@@ -615,6 +657,8 @@ const register = async (req, res) => {
           telefono: restaurante.telefono,
           direccion: restaurante.direccion,
           email: restaurante.email,
+          pais: countryCode,
+          moneda: monedaAsignada,
           planId: planElegido.id,
           activo: true
         }
@@ -639,8 +683,7 @@ const register = async (req, res) => {
         }
       });
 
-      // Create subscription for the restaurant based on DEMO_DAYS
-      const demoDays = process.env.DEMO_DAYS !== undefined ? parseInt(process.env.DEMO_DAYS, 10) : 15;
+      const demoDays = parseInt(process.env.DEMO_DAYS || '15', 10);
       
       const fechaInicio = new Date();
       const fechaVencimiento = new Date();

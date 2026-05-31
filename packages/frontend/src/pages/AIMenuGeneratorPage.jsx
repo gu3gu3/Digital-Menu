@@ -12,6 +12,7 @@ const AIMenuGeneratorPage = () => {
   const [menuFiles, setMenuFiles] = useState([]);
   const [replaceExistingMenu, setReplaceExistingMenu] = useState(false);
   const [generateDescriptions, setGenerateDescriptions] = useState(true);
+  const [generateImages, setGenerateImages] = useState(true);
   const [menuType, setMenuType] = useState('');
   const [specialCases, setSpecialCases] = useState([]);
   
@@ -190,6 +191,7 @@ const AIMenuGeneratorPage = () => {
       const formData = aiMenuService.createMenuFormData(selectedRestaurant, menuFiles, {
         replaceExistingMenu,
         generateDescriptions,
+        generateImages,
         menuType: menuType || null,
         specialCases
       });
@@ -282,7 +284,8 @@ const AIMenuGeneratorPage = () => {
     try {
       const formData = aiMenuService.createCustomPromptFormData(selectedRestaurant, menuFiles, customPrompt, {
         replaceExistingMenu,
-        generateDescriptions
+        generateDescriptions,
+        generateImages
       });
 
       const response = await aiMenuService.generateMenuWithCustomPrompt(formData);
@@ -704,6 +707,19 @@ const AIMenuGeneratorPage = () => {
                   />
                   <label htmlFor="generateDescriptions" className="ml-2 block text-sm text-gray-900">
                     Generar descripciones mejoradas con IA
+                  </label>
+                </div>
+                
+                <div className="flex items-center">
+                  <input
+                    id="generateImages"
+                    type="checkbox"
+                    checked={generateImages}
+                    onChange={(e) => setGenerateImages(e.target.checked)}
+                    className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
+                  />
+                  <label htmlFor="generateImages" className="ml-2 block text-sm text-gray-900">
+                    Asignar fotografías de stock automáticamente (Gratis vía Pexels)
                   </label>
                 </div>
               </div>

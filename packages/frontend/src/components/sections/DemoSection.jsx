@@ -3,7 +3,7 @@ import { ArrowTopRightOnSquareIcon, DevicePhoneMobileIcon } from '@heroicons/rea
 import { StarIcon } from '@heroicons/react/24/solid'
 
 const DemoSection = () => {
-  const demoUrl = "https://menuview.app/menu/bella-vista";
+  const demoUrl = "https://menuview.app/bella-vista";
 
   return (
     <section id="demo" className="section-padding bg-gradient-to-b from-gray-50 to-white">

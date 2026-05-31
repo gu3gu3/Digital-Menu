@@ -77,11 +77,19 @@ const buildAbsoluteUrl = (path) => {
 const getRestaurantBySlug = async (req, res) => {
   try {
     const { slug } = req.params;
+    const { countryCode } = req.query;
 
-    const restaurante = await prisma.restaurante.findUnique({
+    let searchConditions = [
+      { slug, activo: true }
+    ];
+
+    if (countryCode && countryCode.trim() !== '') {
+      searchConditions.unshift({ slug: `${slug}-${countryCode.toLowerCase()}`, activo: true });
+    }
+
+    const restaurante = await prisma.restaurante.findFirst({
       where: { 
-        slug,
-        activo: true 
+        OR: searchConditions
       },
       include: {
         categorias: {
@@ -160,11 +168,19 @@ const getRestaurantBySlug = async (req, res) => {
 const getMenuBySlug = async (req, res) => {
   try {
     const { slug } = req.params;
+    const { countryCode } = req.query;
 
-    const restaurante = await prisma.restaurante.findUnique({
+    let searchConditions = [
+      { slug, activo: true }
+    ];
+
+    if (countryCode && countryCode.trim() !== '') {
+      searchConditions.unshift({ slug: `${slug}-${countryCode.toLowerCase()}`, activo: true });
+    }
+
+    const restaurante = await prisma.restaurante.findFirst({
       where: { 
-        slug,
-        activo: true 
+        OR: searchConditions
       },
       select: {
         id: true,
@@ -234,6 +250,46 @@ const getMenuBySlug = async (req, res) => {
 
   } catch (error) {
     console.error('Error obteniendo menú por slug:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error interno del servidor'
+    });
+  }
+};
+
+// @desc    Obtener slug de restaurante por dominio personalizado
+// @route   GET /api/public/domain/:domain
+// @access  Public
+const getSlugByDomain = async (req, res) => {
+  try {
+    const { domain } = req.params;
+
+    const restaurante = await prisma.restaurante.findFirst({
+      where: { 
+        dominioPersonalizado: domain,
+        activo: true 
+      },
+      select: {
+        slug: true
+      }
+    });
+
+    if (!restaurante) {
+      return res.status(404).json({
+        success: false,
+        error: 'Dominio no encontrado'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        slug: restaurante.slug
+      }
+    });
+
+  } catch (error) {
+    console.error('Error obteniendo slug por dominio:', error);
     res.status(500).json({
       success: false,
       error: 'Error interno del servidor'
@@ -363,6 +419,7 @@ const getOrdenStatus = async (req, res) => {
 router.get('/restaurant/:slug', getRestaurantBySlug);
 router.get('/menu/:slug', getMenuBySlug);
 router.get('/check-slug/:slug', checkSlugAvailability);
+router.get('/domain/:domain', getSlugByDomain);
 router.get('/orden/:ordenId', getOrdenStatus);
 router.get('/planes', getActivePlanes);
 

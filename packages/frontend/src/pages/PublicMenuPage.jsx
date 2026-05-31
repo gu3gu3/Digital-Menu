@@ -22,8 +22,11 @@ const isValidImageUrl = (url) => {
   return url.startsWith('http://') || url.startsWith('https://');
 };
 
-const PublicMenuPage = () => {
-  const { slug } = useParams()
+const PublicMenuPage = ({ slugOverride }) => {
+  const params = useParams()
+  const activeSlug = slugOverride || params.slug
+  const countryCode = params.countryCode
+  
   const [searchParams] = useSearchParams()
   const mesaNumero = searchParams.get('mesa')
 
@@ -98,11 +101,11 @@ const PublicMenuPage = () => {
   };
 
   useEffect(() => {
-    if (slug) {
+    if (activeSlug) {
       loadMenu()
       // Only prompt for name if a table number is present in the URL
       if (mesaNumero) {
-      const savedName = localStorage.getItem(`customerName_${slug}_${mesaNumero}`)
+      const savedName = localStorage.getItem(`customerName_${activeSlug}_${mesaNumero}`)
       if (savedName) {
         setCustomerName(savedName)
       } else {
@@ -110,7 +113,7 @@ const PublicMenuPage = () => {
       }
     }
     }
-  }, [slug, mesaNumero])
+  }, [activeSlug, countryCode, mesaNumero])
 
   useEffect(() => {
     if (restaurante && mesaNumero) {
@@ -120,16 +123,16 @@ const PublicMenuPage = () => {
 
   // Cargar ID de orden guardado en localStorage al inicializar
   useEffect(() => {
-    const savedOrdenId = localStorage.getItem(`orden_${slug}_${mesaNumero}`)
+    const savedOrdenId = localStorage.getItem(`orden_${activeSlug}_${mesaNumero}`)
     if (savedOrdenId) {
       setCurrentOrdenId(savedOrdenId)
     }
-  }, [slug, mesaNumero])
+  }, [activeSlug, mesaNumero])
 
   const loadMenu = async () => {
     try {
       setLoading(true)
-      const data = await menuService.getPublicMenu(slug)
+      const data = await menuService.getPublicMenu(activeSlug, countryCode)
       
       setRestaurante(data.restaurante)
       setCategorias(data.categorias)
@@ -147,23 +150,23 @@ const PublicMenuPage = () => {
 
   const initializeSession = async () => {
     try {
-      const sesion = await menuService.createOrResumeSession(slug, mesaNumero)
+      const sesion = await menuService.createOrResumeSession(activeSlug, mesaNumero)
       setSesionId(sesion.id)
       setTableInactiveMessage('') // Limpiar mensaje si tuvo éxito
       
-      const previousSesionId = localStorage.getItem(`lastSesionId_${slug}_${mesaNumero}`)
+      const previousSesionId = localStorage.getItem(`lastSesionId_${activeSlug}_${mesaNumero}`)
       
       if (previousSesionId !== sesion.id) {
         // La sesión cambió (el admin limpió la mesa o es una visita nueva)
         // Purgamos los datos locales de la sesión anterior
-        localStorage.removeItem(`customerName_${slug}_${mesaNumero}`)
-        localStorage.removeItem(`orden_${slug}_${mesaNumero}`)
+        localStorage.removeItem(`customerName_${activeSlug}_${mesaNumero}`)
+        localStorage.removeItem(`orden_${activeSlug}_${mesaNumero}`)
         setCustomerName('')
         setCurrentOrdenId(null)
         setTimeout(() => setIsNameModalOpen(true), 500)
       } else {
         // Es la misma sesión actual, sincronizar nombre si es necesario
-        const savedName = localStorage.getItem(`customerName_${slug}_${mesaNumero}`)
+        const savedName = localStorage.getItem(`customerName_${activeSlug}_${mesaNumero}`)
         if (savedName && !sesion.clienteNombre) {
           try {
             await menuService.updateSession(sesion.id, { clienteNombre: savedName })
@@ -174,7 +177,7 @@ const PublicMenuPage = () => {
       }
       
       // Guardar el nuevo id para la próxima vez
-      localStorage.setItem(`lastSesionId_${slug}_${mesaNumero}`, sesion.id)
+      localStorage.setItem(`lastSesionId_${activeSlug}_${mesaNumero}`, sesion.id)
       
       // Iniciar con carrito local vacío
       setCart({ items: [], total: 0 })
@@ -260,7 +263,7 @@ const PublicMenuPage = () => {
   const handleNameSubmit = async (name) => {
     try {
       setCustomerName(name)
-      localStorage.setItem(`customerName_${slug}_${mesaNumero}`, name)
+      localStorage.setItem(`customerName_${activeSlug}_${mesaNumero}`, name)
       
       // Actualizar la sesión con el nombre del cliente
       if (sesionId) {
@@ -273,7 +276,7 @@ const PublicMenuPage = () => {
       console.error('Error updating session with customer name:', error)
       // Aún así permitir continuar, solo mostrar advertencia
     setCustomerName(name)
-    localStorage.setItem(`customerName_${slug}_${mesaNumero}`, name)
+    localStorage.setItem(`customerName_${activeSlug}_${mesaNumero}`, name)
     setIsNameModalOpen(false)
     showNotification(`¡Hola, ${name}! Bienvenido.`, 'success')
     }
@@ -314,7 +317,7 @@ const PublicMenuPage = () => {
       });
       
       setCurrentOrdenId(data.orden.id)
-      localStorage.setItem(`orden_${slug}_${mesaNumero}`, data.orden.id)
+      localStorage.setItem(`orden_${activeSlug}_${mesaNumero}`, data.orden.id)
       
       setCart({ items: [], total: 0 })
       setShowOrderModal(false)
@@ -335,7 +338,7 @@ const PublicMenuPage = () => {
 
   const clearOrderTracking = () => {
     setCurrentOrdenId(null)
-    localStorage.removeItem(`orden_${slug}_${mesaNumero}`)
+    localStorage.removeItem(`orden_${activeSlug}_${mesaNumero}`)
   }
 
   const getTotalItems = () => {
@@ -695,7 +698,7 @@ const PublicMenuPage = () => {
       {/* Banner de seguimiento de orden */}
       <OrderStatusBanner 
         ordenId={currentOrdenId}
-        restauranteSlug={slug}
+        restauranteSlug={activeSlug}
         primaryButtonColor={primaryButtonColor}
       />
 

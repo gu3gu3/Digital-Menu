@@ -4,24 +4,15 @@ import 'react-phone-number-input/style.css'
 const InternationalPhoneInput = ({ 
   value, 
   onChange, 
+  onCountryChange,
   placeholder = "Ingresa tu número de teléfono",
   className = "",
   required = false,
   name = "telefono",
   label = "Teléfono",
-  error = ""
+  error = "",
+  defaultCountry = "CR"
 }) => {
-  // Solo los países centroamericanos que soportamos
-  const supportedCountries = [
-    'NI', // Nicaragua (por defecto)
-    'CR', // Costa Rica  
-    'HN', // Honduras
-    'GT', // Guatemala
-    'PA', // Panamá
-    'SV', // El Salvador
-    'US'  // Estados Unidos
-  ]
-
   return (
     <div className="space-y-2">
       {label && (
@@ -32,10 +23,11 @@ const InternationalPhoneInput = ({
       
       <div className={`phone-input-container ${error ? 'phone-error' : ''} ${className}`}>
         <PhoneInput
-          countries={supportedCountries}
-          defaultCountry="NI"
+          international
+          defaultCountry={defaultCountry}
           value={value}
           onChange={onChange}
+          onCountryChange={onCountryChange}
           placeholder={placeholder}
           numberInputProps={{
             required: required,

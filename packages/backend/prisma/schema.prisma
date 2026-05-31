@@ -46,6 +46,8 @@ model Restaurante {
   moneda          String   @default("USD")
   activo          Boolean  @default(true)
   configuracion   Json?
+  pais            String?  @default("US")
+  dominioPersonalizado String? @unique
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 

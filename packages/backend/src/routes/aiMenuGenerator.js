@@ -88,6 +88,7 @@ const aiMenuSchema = Joi.object({
   }),
   replaceExistingMenu: Joi.boolean().default(false),
   generateDescriptions: Joi.boolean().default(true),
+  generateImages: Joi.boolean().default(true),
   menuType: Joi.string().valid('FAST_FOOD', 'FINE_DINING', 'PIZZA', 'CAFE_BAKERY', 'BAR').optional(),
   specialCases: Joi.array().items(Joi.string().valid('MULTILINGUAL', 'WITH_IMAGES', 'PROMOTIONS', 'POOR_QUALITY')).default([])
 });
@@ -211,6 +212,7 @@ async function extractMenuFromImages(imageBuffers, mimeTypes, menuType = null, s
       
       const response = await openai.chat.completions.create({
         model: "gpt-4o",
+        response_format: { type: "json_object" },
         messages: [
           {
             role: "user",
@@ -236,10 +238,31 @@ async function extractMenuFromImages(imageBuffers, mimeTypes, menuType = null, s
 
       const content = response.choices[0].message.content;
       
-      // Limpiar el contenido para asegurar que sea JSON válido
-      const cleanContent = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+      if (!content) {
+        console.warn(`OpenAI devolvió contenido vacío para la imagen ${i + 1}. Posible filtro de seguridad o error de formato.`);
+        continue; // Ignorar esta imagen y continuar con la siguiente
+      }
       
-      const imageMenuData = JSON.parse(cleanContent);
+      // Encontrar el inicio y fin del JSON válido por si hay texto extra
+      let cleanContent = content;
+      const startIndex = cleanContent.indexOf('{');
+      const endIndex = cleanContent.lastIndexOf('}');
+      
+      if (startIndex !== -1 && endIndex !== -1) {
+        cleanContent = cleanContent.substring(startIndex, endIndex + 1);
+      } else {
+        // Fallback al método anterior
+        cleanContent = cleanContent.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+      }
+      
+      let imageMenuData;
+      try {
+        imageMenuData = JSON.parse(cleanContent);
+      } catch (parseError) {
+        console.error(`Error parseando JSON de OpenAI en la imagen ${i + 1}:`, parseError);
+        console.error("Contenido recibido:", cleanContent);
+        continue;
+      }
       
       // Combinar datos de múltiples imágenes
       if (imageMenuData.categorias) {
@@ -292,6 +315,7 @@ async function extractMenuWithCustomPrompt(imageBuffers, mimeTypes, customPrompt
 
       const response = await openai.chat.completions.create({
         model: "gpt-4o",
+        response_format: { type: "json_object" },
         messages: [
           {
             role: "user",
@@ -314,10 +338,29 @@ async function extractMenuWithCustomPrompt(imageBuffers, mimeTypes, customPrompt
 
       const content = response.choices[0].message.content;
       
-      // Limpiar el contenido para asegurar que sea JSON válido
-      const cleanContent = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+      if (!content) {
+        console.warn(`OpenAI devolvió contenido vacío para la imagen ${i + 1}. Posible filtro de seguridad.`);
+        continue;
+      }
       
-      const imageMenuData = JSON.parse(cleanContent);
+      // Encontrar el inicio y fin del JSON válido por si hay texto extra
+      let cleanContent = content;
+      const startIndex = cleanContent.indexOf('{');
+      const endIndex = cleanContent.lastIndexOf('}');
+      
+      if (startIndex !== -1 && endIndex !== -1) {
+        cleanContent = cleanContent.substring(startIndex, endIndex + 1);
+      } else {
+        cleanContent = cleanContent.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+      }
+      
+      let imageMenuData;
+      try {
+        imageMenuData = JSON.parse(cleanContent);
+      } catch (parseError) {
+        console.error(`Error parseando JSON de OpenAI en la imagen ${i + 1}:`, parseError);
+        continue;
+      }
       
       // Combinar datos de múltiples imágenes
       if (imageMenuData.categorias) {
@@ -367,11 +410,12 @@ function mergeMenuData(targetMenu, sourceMenu) {
 async function generateMissingDescriptions(menuData) {
   try {
     const response = await openai.chat.completions.create({
-      model: "gpt-4",
+      model: "gpt-4-turbo",
+      response_format: { type: "json_object" },
       messages: [
         {
           role: "system",
-          content: "Eres un experto en gastronomía y marketing culinario. Generas descripciones atractivas y apetitosas para productos de menú que sean concisas pero persuasivas."
+          content: "Eres un experto en gastronomía y marketing culinario. Generas descripciones atractivas y apetitosas para productos de menú que sean concisas pero persuasivas. IMPORTANTE: Responde ÚNICAMENTE con un objeto JSON válido."
         },
         {
           role: "user",
@@ -382,12 +426,64 @@ async function generateMissingDescriptions(menuData) {
     });
 
     const content = response.choices[0].message.content;
-    const cleanContent = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
     
-    return JSON.parse(cleanContent);
+    if (!content) {
+      console.warn("OpenAI devolvió contenido vacío al generar descripciones.");
+      return menuData;
+    }
+    
+    let cleanContent = content;
+    const startIndex = cleanContent.indexOf('{');
+    const endIndex = cleanContent.lastIndexOf('}');
+    
+    if (startIndex !== -1 && endIndex !== -1) {
+      cleanContent = cleanContent.substring(startIndex, endIndex + 1);
+    } else {
+      cleanContent = cleanContent.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+    }
+    
+    try {
+      const generatedData = JSON.parse(cleanContent);
+      return mergeDescriptions(menuData, generatedData);
+    } catch (parseError) {
+      console.error("Error parseando descripciones de OpenAI:", parseError);
+      return menuData;
+    }
+    return menuData; // Retornar datos originales si falla
   } catch (error) {
     console.error('Error generating descriptions:', error);
-    return menuData; // Retornar datos originales si falla
+    return menuData;
+  }
+}
+
+// Función para obtener imágenes de Pexels
+async function fetchPexelsImage(productName) {
+  try {
+    const apiKey = process.env.PEXELS_API_KEY;
+    if (!apiKey) return null; // Saltar si no hay API key configurada
+    
+    // Agregamos " food" para asegurar que salgan platillos
+    const query = encodeURIComponent(`${productName} food`);
+    const response = await fetch(`https://api.pexels.com/v1/search?query=${query}&per_page=1`, {
+      headers: {
+        Authorization: apiKey
+      }
+    });
+    
+    if (!response.ok) {
+      console.warn(`Pexels API error para "${productName}": ${response.status}`);
+      return null;
+    }
+    
+    const data = await response.json();
+    if (data.photos && data.photos.length > 0) {
+      // Pexels ofrece varios tamaños. 'large' o 'medium' son buenos para el menú
+      return data.photos[0].src.large; 
+    }
+    return null;
+  } catch (error) {
+    console.error(`Error buscando imagen en Pexels para "${productName}":`, error);
+    return null;
   }
 }
 
@@ -518,7 +614,7 @@ router.post('/generate', requireSuperAdminOrPartner, aiUpload.array('menuImages'
       });
     }
 
-    const { restauranteId, replaceExistingMenu, generateDescriptions, menuType, specialCases } = value;
+    const { restauranteId, replaceExistingMenu, generateDescriptions, generateImages, menuType, specialCases } = value;
 
     // Validar que se subieron archivos
     if (!req.files || req.files.length === 0) {
@@ -601,6 +697,20 @@ router.post('/generate', requireSuperAdminOrPartner, aiUpload.array('menuImages'
     const finalMenuData = generateDescriptions 
       ? await generateMissingDescriptions(menuData)
       : menuData;
+
+    // Asignar imágenes de Pexels si se solicita
+    if (generateImages && process.env.PEXELS_API_KEY) {
+      console.log('🖼️ Buscando imágenes en Pexels para los productos...');
+      for (const categoria of finalMenuData.categorias) {
+        for (const producto of categoria.productos) {
+          const imageUrl = await fetchPexelsImage(producto.nombre);
+          if (imageUrl) {
+            producto.imagenUrl = imageUrl;
+          }
+        }
+      }
+      console.log('✅ Búsqueda de imágenes en Pexels completada');
+    }
 
     // Si se debe reemplazar el menú existente, desactivar productos existentes
     if (replaceExistingMenu) {
@@ -692,6 +802,7 @@ router.post('/generate', requireSuperAdminOrPartner, aiUpload.array('menuImages'
             precio: productoData.precio,
             disponible: productoData.disponible,
             orden: productoData.orden,
+            imagenUrl: productoData.imagenUrl || existingProduct?.imagenUrl,
             categoriaId: categoria.id
           },
           create: {
@@ -700,6 +811,7 @@ router.post('/generate', requireSuperAdminOrPartner, aiUpload.array('menuImages'
             precio: productoData.precio,
             disponible: productoData.disponible,
             orden: productoData.orden,
+            imagenUrl: productoData.imagenUrl,
             categoriaId: categoria.id,
             restauranteId
           }
