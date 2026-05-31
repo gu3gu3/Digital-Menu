@@ -69,7 +69,7 @@ const AdminLayout = () => {
       setPlanInfo(response.data.data.plan)
     } catch (error) {
       console.error('Error loading plan info or refreshing user:', error)
-      setPlanInfo({ nombre: 'Plan Gratuito' }) // fallback
+      setPlanInfo({ nombre: 'Plan Desconocido' }) // fallback
     }
   }
 
