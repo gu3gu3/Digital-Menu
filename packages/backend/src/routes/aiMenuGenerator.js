@@ -456,14 +456,28 @@ async function generateMissingDescriptions(menuData) {
   }
 }
 
+// Función para obtener contexto de búsqueda en Pexels según la categoría
+function getPexelsSearchContext(categoryName = '') {
+  const cat = categoryName.toLowerCase();
+  if (cat.includes('bebida') || cat.includes('drink') || cat.includes('refresco')) return 'drink';
+  if (cat.includes('licor') || cat.includes('coctel') || cat.includes('cerveza') || cat.includes('alcohol') || cat.includes('vino')) return 'alcohol liquor drink';
+  if (cat.includes('postre') || cat.includes('dessert') || cat.includes('dulce')) return 'dessert';
+  if (cat.includes('carne') || cat.includes('meat') || cat.includes('grill') || cat.includes('asado') || cat.includes('parrilla')) return 'meat';
+  if (cat.includes('ensalada') || cat.includes('vegetal') || cat.includes('vegan') || cat.includes('salad')) return 'salad vegetables';
+  if (cat.includes('desayuno') || cat.includes('breakfast')) return 'breakfast';
+  if (cat.includes('marisco') || cat.includes('seafood') || cat.includes('pescado')) return 'seafood';
+  return 'food'; // Default fallback
+}
+
 // Función para obtener imágenes de Pexels
-async function fetchPexelsImage(productName) {
+async function fetchPexelsImage(productName, categoryName) {
   try {
     const apiKey = process.env.PEXELS_API_KEY;
     if (!apiKey) return null; // Saltar si no hay API key configurada
     
-    // Agregamos " food" para asegurar que salgan platillos
-    const query = encodeURIComponent(`${productName} food`);
+    // Obtenemos un contexto más inteligente basado en la categoría (bebida, licor, carne, etc)
+    const searchContext = getPexelsSearchContext(categoryName);
+    const query = encodeURIComponent(`${productName} ${searchContext}`);
     const response = await fetch(`https://api.pexels.com/v1/search?query=${query}&per_page=1`, {
       headers: {
         Authorization: apiKey
@@ -703,7 +717,7 @@ router.post('/generate', requireSuperAdminOrPartner, aiUpload.array('menuImages'
       console.log('🖼️ Buscando imágenes en Pexels para los productos...');
       for (const categoria of finalMenuData.categorias) {
         for (const producto of categoria.productos) {
-          const imageUrl = await fetchPexelsImage(producto.nombre);
+          const imageUrl = await fetchPexelsImage(producto.nombre, categoria.nombre);
           if (imageUrl) {
             producto.imagenUrl = imageUrl;
           }
