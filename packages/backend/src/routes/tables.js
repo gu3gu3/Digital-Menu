@@ -6,6 +6,16 @@ const Joi = require('joi');
 
 const router = express.Router();
 
+const getBeautifulMenuUrlBackend = (slug, pais, origin) => {
+  const country = pais ? pais.toLowerCase() : '';
+  let displaySlug = slug;
+  if (country && displaySlug.endsWith(`-${country}`)) {
+    displaySlug = displaySlug.substring(0, displaySlug.length - country.length - 1);
+  }
+  const prefix = country ? `/${country}` : '';
+  return `${origin}${prefix}/${displaySlug}`;
+};
+
 // Validation schemas
 const tableSchema = Joi.object({
   numero: Joi.number().integer().required().min(1).max(999),
@@ -283,8 +293,8 @@ const createTable = async (req, res) => {
     const qrCode = `table-${restauranteId}-${numero}-${Date.now()}`;
     
     // Get restaurant slug for QR URL
-    const restauranteSlug = restaurante.slug;
-    const qrUrl = `${process.env.VITE_FRONTEND_URL || 'http://localhost:5173'}/menu/${restauranteSlug}?mesa=${numero}`;
+    const baseUrl = process.env.VITE_FRONTEND_URL || 'http://localhost:5173';
+    const qrUrl = `${getBeautifulMenuUrlBackend(restaurante.slug, restaurante.pais, baseUrl)}?mesa=${numero}`;
 
     // Create table
     const mesa = await prisma.mesa.create({
@@ -514,7 +524,7 @@ const getTableQR = async (req, res) => {
       },
       include: {
         restaurante: {
-          select: { slug: true }
+          select: { slug: true, pais: true }
         }
       }
     });
@@ -523,7 +533,8 @@ const getTableQR = async (req, res) => {
       return res.status(404).json({ success: false, error: 'Mesa no encontrada' });
     }
 
-    const qrUrl = `${process.env.VITE_FRONTEND_URL || 'http://localhost:5173'}/menu/${mesa.restaurante.slug}?mesa=${mesa.numero}`;
+    const baseUrl = process.env.VITE_FRONTEND_URL || 'http://localhost:5173';
+    const qrUrl = `${getBeautifulMenuUrlBackend(mesa.restaurante.slug, mesa.restaurante.pais, baseUrl)}?mesa=${mesa.numero}`;
 
     const qrCodeImage = await QRCode.toDataURL(qrUrl, {
       width: 300,
@@ -559,7 +570,7 @@ const getAllQRCodes = async (req, res) => {
 
     const restaurante = await prisma.restaurante.findUnique({
       where: { id: restauranteId },
-      select: { nombre: true, slug: true }
+      select: { nombre: true, slug: true, pais: true }
     });
     
     const mesas = await prisma.mesa.findMany({
@@ -574,7 +585,8 @@ const getAllQRCodes = async (req, res) => {
 
     const qrCodes = await Promise.all(
       mesas.map(async (mesa) => {
-        const qrUrl = `${process.env.VITE_FRONTEND_URL || 'http://localhost:5173'}/menu/${restaurante.slug}?mesa=${mesa.numero}`;
+        const baseUrl = process.env.VITE_FRONTEND_URL || 'http://localhost:5173';
+        const qrUrl = `${getBeautifulMenuUrlBackend(restaurante.slug, restaurante.pais, baseUrl)}?mesa=${mesa.numero}`;
         
         try {
           const qrCodeImage = await QRCode.toDataURL(qrUrl, {

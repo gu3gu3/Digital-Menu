@@ -751,6 +751,7 @@ const register = async (req, res) => {
         id: result.restaurante.id,
         nombre: result.restaurante.nombre,
         slug: result.restaurante.slug,
+        pais: result.restaurante.pais,
         descripcion: result.restaurante.descripcion,
         plan: {
           nombre: result.restaurante.plan.nombre,
