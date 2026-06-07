@@ -1,6 +1,6 @@
 const express = require('express');
 const rateLimit = require('express-rate-limit');
-const prisma = require('../config/prisma');
+const { prisma } = require('../config/database');
 
 const router = express.Router();
 
