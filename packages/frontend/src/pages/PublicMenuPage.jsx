@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import { 
   MapPinIcon, 
@@ -419,10 +419,7 @@ const PublicMenuPage = ({ slugOverride }) => {
 
   const selectedCategoryData = categorias.find(cat => cat.id === selectedCategory)
 
-  const handleOrderDelivered = () => {
-    localStorage.removeItem(`orden_${realSlug}_${mesaNumero}`)
-    setCurrentOrdenId(null)
-  }
+
 
   if (loading) {
     return (
@@ -788,6 +785,7 @@ const PublicMenuPage = ({ slugOverride }) => {
       <OrderStatusBanner 
         ordenId={currentOrdenId}
         restauranteSlug={realSlug}
+        onClearOrder={clearOrderTracking}
         primaryButtonColor={primaryButtonColor}
       />
 
