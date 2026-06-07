@@ -128,19 +128,21 @@ class CloudStorage {
   }
 }
 
-// Multer configuration
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB limit
+    fileSize: 10 * 1024 * 1024, // 10MB limit (for images and short videos)
   },
   fileFilter: (req, file, cb) => {
     // Check file type
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    const allowedTypes = [
+      'image/jpeg', 'image/jpg', 'image/png', 'image/webp',
+      'video/mp4', 'video/webm'
+    ];
     if (allowedTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error('Solo se permiten archivos de imagen (JPEG, JPG, PNG, WebP)'), false);
+      cb(new Error('Solo se permiten imágenes (JPEG, PNG, WebP) o videos cortos (MP4, WebM)'), false);
     }
   }
 });
@@ -206,8 +208,20 @@ const optimizeImage = async (file) => {
 
 // Wrapper function for handling file uploads
 const handleFileUpload = async (rawFile, restaurantName, fileType) => {
-  // Optimize image first
-  const file = await optimizeImage(rawFile);
+  // Solo optimizar si es una imagen
+  let file = rawFile;
+  const isVideo = file.mimetype.startsWith('video/');
+  
+  if (!isVideo) {
+    file = await optimizeImage(rawFile);
+  } else {
+    // Para videos, generar un nombre único pero mantener el formato
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const extension = path.extname(file.originalname) || '.mp4';
+    const newFilename = `${fileType}-${uniqueSuffix}${extension}`;
+    file.filename = newFilename;
+    file.originalname = newFilename;
+  }
 
   if (process.env.NODE_ENV === 'production') {
     // Upload to Google Cloud Storage

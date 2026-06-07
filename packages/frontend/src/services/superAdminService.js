@@ -295,6 +295,40 @@ export const subscriptionsService = {
   }
 };
 
+// ==================== GESTIÓN DE SPONSORS ====================
+
+export const sponsorsService = {
+  // Obtener todos los sponsors
+  async getSponsors() {
+    try {
+      const response = await apiClient.get('/super-admin/sponsors');
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: 'Error de conexión' };
+    }
+  },
+
+  // Crear un nuevo sponsor
+  async createSponsor(sponsorData) {
+    try {
+      const response = await apiClient.post('/super-admin/sponsors', sponsorData);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: 'Error de conexión' };
+    }
+  },
+
+  // Resetear contraseña de un sponsor
+  async resetPassword(id) {
+    try {
+      const response = await apiClient.post(`/super-admin/sponsors/${id}/reset-password`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: 'Error de conexión' };
+    }
+  }
+};
+
 // ==================== UTILIDADES ====================
 
 export const superAdminUtils = {
@@ -393,6 +427,11 @@ export const superAdminService = {
   updateRestaurantDomain: subscriptionsService.updateRestaurantDomain.bind(subscriptionsService),
   autoBlockExpiredSubscriptions: subscriptionsService.autoBlockExpiredSubscriptions.bind(subscriptionsService),
 
+  // Sponsors methods
+  getSponsors: sponsorsService.getSponsors.bind(sponsorsService),
+  createSponsor: sponsorsService.createSponsor.bind(sponsorsService),
+  resetSponsorPassword: sponsorsService.resetPassword.bind(sponsorsService),
+
   // Utility methods
   formatDate: superAdminUtils.formatDate.bind(superAdminUtils),
   formatCurrency: superAdminUtils.formatCurrency.bind(superAdminUtils),
@@ -406,6 +445,7 @@ export const superAdminService = {
 export default {
   auth: superAdminAuth,
   subscriptions: subscriptionsService,
+  sponsors: sponsorsService,
   utils: superAdminUtils,
   superAdminService
 }; 

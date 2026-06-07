@@ -24,13 +24,19 @@ apiClient.interceptors.request.use(
     if (!token && window.location.pathname.includes('/partner')) {
       token = localStorage.getItem('partnerToken');
     }
+
+    // Check sponsor path
+    if (!token && window.location.pathname.includes('/sponsor')) {
+      token = localStorage.getItem('sponsor_token');
+    }
     
     // Si no hay token específico por ruta, buscar el primero disponible
     if (!token) {
       token = localStorage.getItem('adminToken') || 
               localStorage.getItem('staffToken') || 
               localStorage.getItem('superAdminToken') ||
-              localStorage.getItem('partnerToken');
+              localStorage.getItem('partnerToken') ||
+              localStorage.getItem('sponsor_token');
     }
 
     if (token) {
@@ -55,6 +61,8 @@ apiClient.interceptors.response.use(
       localStorage.removeItem('superAdminUser');
       localStorage.removeItem('staffToken');
       localStorage.removeItem('staffUser');
+      localStorage.removeItem('sponsor_token');
+      localStorage.removeItem('sponsor_user');
       // Los componentes manejarán la redirección según el contexto
     }
     return Promise.reject(error);

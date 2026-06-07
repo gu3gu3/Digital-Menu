@@ -204,6 +204,59 @@ router.post('/product/:productId/image',
   }
 );
 
+// Upload sponsor campaign media (image or video)
+router.post('/sponsor/campaign/media', 
+  authenticateToken, 
+  requireRole(['SPONSOR']),
+  upload.single('media'),
+  async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({
+          success: false,
+          error: 'No se proporcionó ningún archivo'
+        });
+      }
+
+      // Sponsor slug is their id or slug, we can use their business name
+      const sponsor = await prisma.usuarioSponsor.findUnique({
+        where: { id: req.user.id },
+        select: { nombreEmpresa: true }
+      });
+
+      if (!sponsor) {
+        return res.status(404).json({
+          success: false,
+          error: 'Sponsor no encontrado'
+        });
+      }
+
+      // We'll upload directly to cloud using the storage config
+      // Note: handleFileUpload expects a restaurantName, we'll pass the sponsor's name
+      // and 'campaign' as fileType
+      
+      const uploadResult = await handleFileUpload(req.file, `sponsor-${sponsor.nombreEmpresa}`, 'campaign');
+
+      res.json({
+        success: true,
+        data: {
+          mediaUrl: uploadResult.url,
+          filename: uploadResult.filename,
+          path: uploadResult.path
+        },
+        message: 'Archivo multimedia subido exitosamente'
+      });
+
+    } catch (error) {
+      console.error('Error uploading campaign media:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Error interno del servidor al subir el archivo'
+      });
+    }
+  }
+);
+
 // Bulk upload multiple product images
 router.post('/products/images', 
   authenticateToken, 

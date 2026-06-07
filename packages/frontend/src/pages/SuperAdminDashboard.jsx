@@ -339,6 +339,12 @@ const SuperAdminDashboard = () => {
             >
               Gestión de Agencias (Partners)
             </button>
+            <button 
+              onClick={() => navigate('/super-admin/sponsors')}
+              className="bg-blue-800 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-900 transition flex items-center justify-center"
+            >
+              Gestión de Sponsors
+            </button>
           </div>
 
           {/* Acciones administrativas */}

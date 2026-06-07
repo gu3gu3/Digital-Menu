@@ -19,6 +19,11 @@ const SubscriptionDetailsPage = () => {
   // Para asignar partner
   const [selectedPartnerId, setSelectedPartnerId] = useState('');
   
+  // Para asignar sponsor
+  const [sponsors, setSponsors] = useState([]);
+  const [selectedSponsorId, setSelectedSponsorId] = useState('');
+  const [savingSponsor, setSavingSponsor] = useState(false);
+  
   // Para asignar dominio personalizado
   const [domainInput, setDomainInput] = useState('');
   const [savingDomain, setSavingDomain] = useState(false);
@@ -37,6 +42,7 @@ const SubscriptionDetailsPage = () => {
       if (subResponse.success) {
         setSubscription(subResponse.data);
         setSelectedPartnerId(subResponse.data.restaurante.partnerId || '');
+        setSelectedSponsorId(subResponse.data.restaurante.sponsorId || '');
         setDomainInput(subResponse.data.restaurante.dominioPersonalizado || '');
       }
 
@@ -44,6 +50,12 @@ const SubscriptionDetailsPage = () => {
       const partnersResponse = await apiClient.get('/super-admin/partners');
       if (partnersResponse.data && partnersResponse.data.success) {
         setPartners(partnersResponse.data.data);
+      }
+
+      // 3. Fetch Sponsors list
+      const sponsorsResponse = await apiClient.get('/super-admin/sponsors');
+      if (sponsorsResponse.data && sponsorsResponse.data.success) {
+        setSponsors(sponsorsResponse.data.data);
       }
       
     } catch (err) {
@@ -92,6 +104,29 @@ const SubscriptionDetailsPage = () => {
     }
   };
 
+  const handleAssignSponsor = async () => {
+    try {
+      setSavingSponsor(true);
+      setError('');
+      
+      const payload = {
+        restauranteId: subscription.restaurante.id,
+        sponsorId: selectedSponsorId || null
+      };
+
+      const response = await apiClient.post('/super-admin/sponsors/assign-restaurant', payload);
+      
+      if (response.data.success) {
+        alert('Sponsor asignado correctamente');
+        fetchData(); // Reload data
+      }
+    } catch (err) {
+      setError(err.response?.data?.error || 'Error al asignar sponsor');
+    } finally {
+      setSavingSponsor(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -121,6 +156,7 @@ const SubscriptionDetailsPage = () => {
   const { restaurante, stats } = subscription;
   const planName = restaurante?.plan?.nombre || 'Plan Desconocido';
   const hasPartner = !!restaurante?.partner;
+  const hasSponsor = !!restaurante?.sponsor;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -237,6 +273,53 @@ const SubscriptionDetailsPage = () => {
                 className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
               >
                 {saving ? 'Guardando...' : 'Guardar Asignación'}
+              </button>
+            </div>
+          </div>
+
+          {/* Sponsor Assignment Box */}
+          <div className="bg-white shadow rounded-lg p-6 flex flex-col justify-between">
+            <div>
+              <div className="flex items-center space-x-2 mb-4 border-b pb-2">
+                <BuildingOfficeIcon className="h-5 w-5 text-amber-600" />
+                <h3 className="text-lg font-medium text-gray-900">Sponsor B2B</h3>
+              </div>
+              
+              {hasSponsor && (
+                <div className="mb-4 bg-amber-50 p-3 rounded-md border border-amber-100">
+                  <p className="text-xs text-amber-600 font-semibold uppercase tracking-wider mb-1">Sponsor Actual</p>
+                  <p className="font-bold text-gray-900 text-lg">{restaurante.sponsor.nombreEmpresa}</p>
+                  <p className="text-sm text-gray-600">{restaurante.sponsor.contactoName}</p>
+                  <p className="text-xs text-gray-500 mt-1">{restaurante.sponsor.email}</p>
+                </div>
+              )}
+
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Asignar o Remover Sponsor
+                </label>
+                <select
+                  value={selectedSponsorId}
+                  onChange={(e) => setSelectedSponsorId(e.target.value)}
+                  className="w-full border-gray-300 rounded-md shadow-sm focus:ring-amber-500 focus:border-amber-500 sm:text-sm p-2 border"
+                >
+                  <option value="">-- Sin Sponsor Asignado --</option>
+                  {sponsors.map(s => (
+                    <option key={s.id} value={s.id}>
+                      {s.nombreEmpresa} ({s.contactoName})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="mt-6">
+              <button
+                onClick={handleAssignSponsor}
+                disabled={savingSponsor || selectedSponsorId === (restaurante?.sponsorId || '')}
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 disabled:opacity-50"
+              >
+                {savingSponsor ? 'Guardando...' : 'Guardar Sponsor'}
               </button>
             </div>
           </div>

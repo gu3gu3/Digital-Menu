@@ -35,6 +35,9 @@ import SuperAdminPartnersPage from './pages/SuperAdminPartnersPage'
 import PartnerLoginPage from './pages/partner/PartnerLoginPage'
 import PartnerDashboard from './pages/partner/PartnerDashboard'
 import PartnerAiToolsPage from './pages/partner/PartnerAiToolsPage'
+import SuperAdminSponsorsPage from './pages/SuperAdminSponsorsPage'
+import SponsorLoginPage from './pages/sponsor/SponsorLoginPage'
+import SponsorDashboard from './pages/sponsor/SponsorDashboard'
 import DomainInterceptor from './components/DomainInterceptor'
 
 function App() {
@@ -71,6 +74,11 @@ function App() {
               <Route path="/super-admin/plans" element={<PlansManagementPage />} />
               <Route path="/super-admin/ai-menu-generator" element={<AIMenuGeneratorPage />} />
               <Route path="/super-admin/partners" element={<SuperAdminPartnersPage />} />
+              <Route path="/super-admin/sponsors" element={<SuperAdminSponsorsPage />} />
+              
+              {/* Sponsor routes */}
+              <Route path="/sponsor/login" element={<SponsorLoginPage />} />
+              <Route path="/sponsor/dashboard" element={<SponsorDashboard />} />
               
               {/* Partner routes */}
               <Route path="/partner/login" element={<PartnerLoginPage />} />

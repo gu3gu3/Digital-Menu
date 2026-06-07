@@ -13,6 +13,8 @@ import menuService from '../services/menuService'
 import OrderStatusBanner from '../components/OrderStatusBanner'
 import { formatMenuPrice, formatOrderTotal } from '../utils/currencyUtils'
 import NamePromptModal from '../components/NamePromptModal'
+import SplashOverlay from '../components/public/SplashOverlay'
+import SponsorBanner from '../components/public/SponsorBanner'
 
 const isValidImageUrl = (url) => {
   if (!url || typeof url !== 'string') return false;
@@ -32,6 +34,9 @@ const PublicMenuPage = ({ slugOverride }) => {
 
   // Estados principales
   const [restaurante, setRestaurante] = useState(null)
+  
+  // Definimos realSlug que siempre usará el slug oficial de la DB si está disponible
+  const realSlug = restaurante?.slug || activeSlug;
   const [categorias, setCategorias] = useState([])
   const [selectedCategory, setSelectedCategory] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -52,6 +57,7 @@ const PublicMenuPage = ({ slugOverride }) => {
   const [customerName, setCustomerName] = useState('')
   const [isNameModalOpen, setIsNameModalOpen] = useState(false)
   const [orderNotes, setOrderNotes] = useState('')
+  const [showSplash, setShowSplash] = useState(false)
 
   // Estados Swipe
   const [touchStart, setTouchStart] = useState(null)
@@ -103,17 +109,36 @@ const PublicMenuPage = ({ slugOverride }) => {
   useEffect(() => {
     if (activeSlug) {
       loadMenu()
-      // Only prompt for name if a table number is present in the URL
-      if (mesaNumero) {
-      const savedName = localStorage.getItem(`customerName_${activeSlug}_${mesaNumero}`)
-      if (savedName) {
-        setCustomerName(savedName)
-      } else {
-        setTimeout(() => setIsNameModalOpen(true), 500)
-      }
-    }
     }
   }, [activeSlug, countryCode, mesaNumero])
+
+  // Lógica para coordinar el Splash y el Modal de Nombre (Se ejecuta cuando ya tenemos los datos del restaurante)
+  useEffect(() => {
+    if (restaurante && !loading) {
+      const splashAlreadyShown = sessionStorage.getItem(`splashShown_${realSlug}`) === 'true';
+      const splashCampaign = restaurante.sponsorActivo?.campanas?.find(c => c.position === 'SPLASH' || (!c.position && c.splashImageUrl));
+      const hasActiveCampaign = !!splashCampaign;
+
+      if (mesaNumero) {
+        const savedName = localStorage.getItem(`customerName_${realSlug}_${mesaNumero}`)
+        if (savedName) {
+          setCustomerName(savedName)
+          // Si ya tiene nombre y no ha visto el splash en esta sesión, mostrarlo
+          if (hasActiveCampaign && !splashAlreadyShown) {
+            setShowSplash(true)
+          }
+        } else {
+          // Si no tiene nombre, el modal se abre. El splash se mostrará DESPUÉS de ingresar el nombre.
+          setTimeout(() => setIsNameModalOpen(true), 500)
+        }
+      } else {
+        // Vista pública (sin mesa). Mostrar splash si hay campaña.
+        if (hasActiveCampaign && !splashAlreadyShown) {
+          setShowSplash(true)
+        }
+      }
+    }
+  }, [restaurante, loading, activeSlug, mesaNumero])
 
   useEffect(() => {
     if (restaurante && mesaNumero) {
@@ -123,11 +148,11 @@ const PublicMenuPage = ({ slugOverride }) => {
 
   // Cargar ID de orden guardado en localStorage al inicializar
   useEffect(() => {
-    const savedOrdenId = localStorage.getItem(`orden_${activeSlug}_${mesaNumero}`)
+    const savedOrdenId = localStorage.getItem(`orden_${realSlug}_${mesaNumero}`)
     if (savedOrdenId) {
       setCurrentOrdenId(savedOrdenId)
     }
-  }, [activeSlug, mesaNumero])
+  }, [realSlug, mesaNumero])
 
   const loadMenu = async () => {
     try {
@@ -150,23 +175,23 @@ const PublicMenuPage = ({ slugOverride }) => {
 
   const initializeSession = async () => {
     try {
-      const sesion = await menuService.createOrResumeSession(activeSlug, mesaNumero)
+      const sesion = await menuService.createOrResumeSession(realSlug, mesaNumero)
       setSesionId(sesion.id)
       setTableInactiveMessage('') // Limpiar mensaje si tuvo éxito
       
-      const previousSesionId = localStorage.getItem(`lastSesionId_${activeSlug}_${mesaNumero}`)
+      const previousSesionId = localStorage.getItem(`lastSesionId_${realSlug}_${mesaNumero}`)
       
       if (previousSesionId !== sesion.id) {
         // La sesión cambió (el admin limpió la mesa o es una visita nueva)
         // Purgamos los datos locales de la sesión anterior
-        localStorage.removeItem(`customerName_${activeSlug}_${mesaNumero}`)
-        localStorage.removeItem(`orden_${activeSlug}_${mesaNumero}`)
+        localStorage.removeItem(`customerName_${realSlug}_${mesaNumero}`)
+        localStorage.removeItem(`orden_${realSlug}_${mesaNumero}`)
         setCustomerName('')
         setCurrentOrdenId(null)
         setTimeout(() => setIsNameModalOpen(true), 500)
       } else {
         // Es la misma sesión actual, sincronizar nombre si es necesario
-        const savedName = localStorage.getItem(`customerName_${activeSlug}_${mesaNumero}`)
+        const savedName = localStorage.getItem(`customerName_${realSlug}_${mesaNumero}`)
         if (savedName && !sesion.clienteNombre) {
           try {
             await menuService.updateSession(sesion.id, { clienteNombre: savedName })
@@ -177,7 +202,7 @@ const PublicMenuPage = ({ slugOverride }) => {
       }
       
       // Guardar el nuevo id para la próxima vez
-      localStorage.setItem(`lastSesionId_${activeSlug}_${mesaNumero}`, sesion.id)
+      localStorage.setItem(`lastSesionId_${realSlug}_${mesaNumero}`, sesion.id)
       
       // Iniciar con carrito local vacío
       setCart({ items: [], total: 0 })
@@ -263,7 +288,7 @@ const PublicMenuPage = ({ slugOverride }) => {
   const handleNameSubmit = async (name) => {
     try {
       setCustomerName(name)
-      localStorage.setItem(`customerName_${activeSlug}_${mesaNumero}`, name)
+      localStorage.setItem(`customerName_${realSlug}_${mesaNumero}`, name)
       
       // Actualizar la sesión con el nombre del cliente
       if (sesionId) {
@@ -272,15 +297,39 @@ const PublicMenuPage = ({ slugOverride }) => {
       
       setIsNameModalOpen(false)
       showNotification(`¡Hola, ${name}! Bienvenido.`, 'success')
+
+      // Una vez ingresado el nombre, revisamos si toca mostrar el Splash
+      const splashAlreadyShown = sessionStorage.getItem(`splashShown_${realSlug}`) === 'true';
+      const splashCampaign = restaurante?.sponsorActivo?.campanas?.find(c => c.position === 'SPLASH' || (!c.position && c.splashImageUrl));
+      if (splashCampaign && !splashAlreadyShown) {
+        setTimeout(() => {
+          setShowSplash(true);
+        }, 300); // Pequeño delay para que el modal se cierre visualmente primero
+      }
+
     } catch (error) {
       console.error('Error updating session with customer name:', error)
       // Aún así permitir continuar, solo mostrar advertencia
-    setCustomerName(name)
-    localStorage.setItem(`customerName_${activeSlug}_${mesaNumero}`, name)
-    setIsNameModalOpen(false)
-    showNotification(`¡Hola, ${name}! Bienvenido.`, 'success')
+      setCustomerName(name)
+      localStorage.setItem(`customerName_${realSlug}_${mesaNumero}`, name)
+      setIsNameModalOpen(false)
+      showNotification(`¡Hola, ${name}! Bienvenido.`, 'success')
+      
+      // Una vez ingresado el nombre, revisamos si toca mostrar el Splash
+      const splashAlreadyShown = sessionStorage.getItem(`splashShown_${realSlug}`) === 'true';
+      const splashCampaign = restaurante?.sponsorActivo?.campanas?.find(c => c.position === 'SPLASH' || (!c.position && c.splashImageUrl));
+      if (splashCampaign && !splashAlreadyShown) {
+        setTimeout(() => {
+          setShowSplash(true);
+        }, 300);
+      }
     }
   }
+
+  const handleSplashComplete = () => {
+    setShowSplash(false);
+    sessionStorage.setItem(`splashShown_${realSlug}`, 'true');
+  };
 
   const showOrderConfirmation = () => {
     if (!cart || cart.items.length === 0) {
@@ -317,7 +366,7 @@ const PublicMenuPage = ({ slugOverride }) => {
       });
       
       setCurrentOrdenId(data.orden.id)
-      localStorage.setItem(`orden_${activeSlug}_${mesaNumero}`, data.orden.id)
+      localStorage.setItem(`orden_${realSlug}_${mesaNumero}`, data.orden.id)
       
       setCart({ items: [], total: 0 })
       setShowOrderModal(false)
@@ -369,6 +418,11 @@ const PublicMenuPage = ({ slugOverride }) => {
   }
 
   const selectedCategoryData = categorias.find(cat => cat.id === selectedCategory)
+
+  const handleOrderDelivered = () => {
+    localStorage.removeItem(`orden_${realSlug}_${mesaNumero}`)
+    setCurrentOrdenId(null)
+  }
 
   if (loading) {
     return (
@@ -437,6 +491,21 @@ const PublicMenuPage = ({ slugOverride }) => {
         }
       `}</style>
       
+      {showSplash && (
+        <SplashOverlay 
+          campana={restaurante?.sponsorActivo?.campanas?.find(c => c.position === 'SPLASH' || (!c.position && c.splashImageUrl))} 
+          onComplete={handleSplashComplete} 
+          restauranteId={restaurante?.id}
+        />
+      )}
+
+      {restaurante?.sponsorActivo?.campanas?.some(c => c.position === 'BOTTOM') && (
+        <SponsorBanner 
+          campana={restaurante?.sponsorActivo?.campanas?.find(c => c.position === 'BOTTOM')}
+          restauranteId={restaurante?.id}
+        />
+      )}
+
       <NamePromptModal 
         isOpen={isNameModalOpen}
         onSubmit={handleNameSubmit}
@@ -533,6 +602,16 @@ const PublicMenuPage = ({ slugOverride }) => {
             <div className="lg:w-2/3">
               {selectedCategoryData && (
                 <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-sm">
+                  
+                  {restaurante?.sponsorActivo?.campanas?.find(c => c.position === 'TOP') && (
+                    <div className="mb-6">
+                      <SponsorBanner 
+                        campana={restaurante?.sponsorActivo?.campanas?.find(c => c.position === 'TOP')} 
+                        restauranteId={restaurante?.id}
+                      />
+                    </div>
+                  )}
+
                   <div className="p-6 border-b border-gray-200">
                     <h2 className="text-2xl font-bold text-gray-900">{selectedCategoryData.nombre}</h2>
                     <p className="text-gray-600 mt-1">{selectedCategoryData.descripcion}</p>
@@ -541,8 +620,17 @@ const PublicMenuPage = ({ slugOverride }) => {
                   <div className="p-6 space-y-6">
                     {selectedCategoryData.productos
                       ?.filter(producto => producto.disponible)
-                      ?.map((producto) => (
-                      <div key={producto.id} className="border border-gray-100 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all duration-300 bg-white group">
+                      ?.map((producto, index) => (
+                        <React.Fragment key={producto.id}>
+                          {index === 2 && restaurante?.sponsorActivo?.campanas?.find(c => c.position === 'IN_FEED') && (
+                            <div className="col-span-1 lg:col-span-2 xl:col-span-3">
+                              <SponsorBanner 
+                                campana={restaurante?.sponsorActivo?.campanas?.find(c => c.position === 'IN_FEED')} 
+                                restauranteId={restaurante?.id}
+                              />
+                            </div>
+                          )}
+                      <div className="border border-gray-100 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all duration-300 bg-white group">
                         <div className="flex justify-between items-start gap-4">
                           <div className="flex-1 min-w-0">
                             <h3 className="text-lg font-bold text-gray-900 leading-tight">{producto.nombre}</h3>
@@ -579,6 +667,7 @@ const PublicMenuPage = ({ slugOverride }) => {
                           </button>
                         </div>
                       </div>
+                      </React.Fragment>
                     ))}
                   </div>
                 </div>
@@ -698,7 +787,7 @@ const PublicMenuPage = ({ slugOverride }) => {
       {/* Banner de seguimiento de orden */}
       <OrderStatusBanner 
         ordenId={currentOrdenId}
-        restauranteSlug={activeSlug}
+        restauranteSlug={realSlug}
         primaryButtonColor={primaryButtonColor}
       />
 

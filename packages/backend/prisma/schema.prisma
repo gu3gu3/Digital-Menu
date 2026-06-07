@@ -32,24 +32,24 @@ model Plan {
 }
 
 model Restaurante {
-  id              String   @id @default(cuid())
-  nombre          String
-  slug            String   @unique
-  descripcion     String?  @db.Text
-  telefono        String?
-  direccion       String?
-  email           String?  @unique
-  logoUrl         String?
-  bannerUrl       String?
-  backgroundImage String?
-  backgroundColor String?
-  moneda          String   @default("USD")
-  activo          Boolean  @default(true)
-  configuracion   Json?
-  pais            String?  @default("US")
-  dominioPersonalizado String? @unique
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id                   String   @id @default(cuid())
+  nombre               String
+  slug                 String   @unique
+  descripcion          String?  @db.Text
+  telefono             String?
+  direccion            String?
+  email                String?  @unique
+  logoUrl              String?
+  bannerUrl            String?
+  backgroundImage      String?
+  backgroundColor      String?
+  moneda               String   @default("USD")
+  activo               Boolean  @default(true)
+  configuracion        Json?
+  pais                 String?  @default("US")
+  dominioPersonalizado String?  @unique
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
 
   planId String
   plan   Plan   @relation(fields: [planId], references: [id])
@@ -69,6 +69,9 @@ model Restaurante {
   partnerId              String?
   partner                UsuarioPartner? @relation(fields: [partnerId], references: [id], onDelete: SetNull)
   fechaAsignacionPartner DateTime? // Marca de tiempo para iniciar el reloj de los 6 meses
+
+  sponsors        UsuarioSponsor[] @relation("SponsorToRestaurante")
+  metricasAnuncio MetricaAnuncio[]
 
   @@map("restaurantes")
 }
@@ -187,6 +190,8 @@ model Producto {
 
   restauranteId String
   restaurante   Restaurante @relation(fields: [restauranteId], references: [id], onDelete: Cascade)
+
+  maridajeSugerido MaridajeSugerido?
 
   @@unique([restauranteId, nombre])
   @@map("productos")
@@ -336,4 +341,79 @@ model Sugerencia {
   restaurante   Restaurante @relation(fields: [restauranteId], references: [id], onDelete: Cascade)
 
   @@map("sugerencias")
+}
+
+// ==========================================
+// NUEVOS MODELOS PARA EL MÓDULO ENTERPRISE
+// ==========================================
+
+model UsuarioSponsor {
+  id            String   @id @default(cuid())
+  slug          String   @unique
+  email         String   @unique
+  password      String
+  nombreEmpresa String   @default("Compañía Cervecera de Nicaragua")
+  logoUrl       String?
+  contactoName  String
+  cargo         String?
+  telefono      String?
+  activo        Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relación Muchos-a-Muchos implícita
+  restaurantesPatrocinados Restaurante[]    @relation("SponsorToRestaurante")
+  campanas                 CampanaAnuncio[]
+
+  @@map("usuarios_sponsor")
+}
+
+model CampanaAnuncio {
+  id             String   @id @default(cuid())
+  nombre         String
+  activo         Boolean  @default(true)
+  fechaInicio    DateTime
+  fechaFin       DateTime
+  splashImageUrl String?
+  bannerImageUrl String?
+  targetUrl      String?
+  position       String?  @default("TOP") // TOP, MID, BOTTOM
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  sponsorId String
+  sponsor   UsuarioSponsor   @relation(fields: [sponsorId], references: [id], onDelete: Cascade)
+  metricas  MetricaAnuncio[]
+
+  @@map("campanas_anuncio")
+}
+
+model MetricaAnuncio {
+  id          String   @id @default(cuid())
+  tipo        String // "VISTA", "CLICK", "CONVERSION"
+  dispositivo String? // "MOBILE", "DESKTOP"
+  createdAt   DateTime @default(now())
+
+  campanaId String
+  campana   CampanaAnuncio @relation(fields: [campanaId], references: [id], onDelete: Cascade)
+
+  // PROTECCIÓN DE DATA: Si el restaurante muere, la métrica se queda para el reporte de CCN
+  restauranteId String?
+  restaurante   Restaurante? @relation(fields: [restauranteId], references: [id], onDelete: SetNull)
+
+  @@index([campanaId, tipo])
+  @@map("metrics_anuncio")
+}
+
+model MaridajeSugerido {
+  id            String  @id @default(cuid())
+  marcaSugerida String // Ej: "Victoria Clásica", "Victoria Frost"
+  textoGancho   String // Ej: "Ideal para acompañar este asado nica"
+  activo        Boolean @default(true)
+
+  // Relación 1-a-1 estricta con el Producto
+  productoId String   @unique
+  producto   Producto @relation(fields: [productoId], references: [id], onDelete: Cascade)
+
+  @@map("maridajes_sugeridos")
 }

@@ -371,6 +371,14 @@ router.get('/:id', authenticateSuperAdmin, async (req, res) => {
                 telefono: true,
                 porcentajeComision: true
               }
+            },
+            sponsors: {
+              select: {
+                id: true,
+                nombreEmpresa: true,
+                contactoName: true,
+                email: true
+              }
             }
           }
         },
@@ -407,7 +415,10 @@ router.get('/:id', authenticateSuperAdmin, async (req, res) => {
         plan: restaurante.plan,
         partnerId: restaurante.partnerId,
         fechaAsignacionPartner: restaurante.fechaAsignacionPartner,
-        partner: restaurante.partner
+        partner: restaurante.partner,
+        sponsorId: restaurante.sponsors && restaurante.sponsors.length > 0 ? restaurante.sponsors[0].id : null,
+        sponsor: restaurante.sponsors && restaurante.sponsors.length > 0 ? restaurante.sponsors[0] : null,
+        sponsors: restaurante.sponsors
       },
       stats: {
         totalUsuariosAdmin: restaurante.usuariosAdmin.length,

@@ -38,8 +38,12 @@ const superAdminSubscriptionsRoutes = require('./routes/superAdminSubscriptions'
 const notificationRoutes = require('./routes/notifications');
 const aiMenuGeneratorRoutes = require('./routes/aiMenuGenerator');
 const superAdminPartnersRoutes = require('./routes/superAdminPartners');
+const superAdminSponsorsRoutes = require('./routes/superAdminSponsors');
 const feedbackRoutes = require('./routes/feedback');
 const partnerRoutes = require('./routes/partner');
+const telemetryRoutes = require('./routes/telemetry');
+const sponsorAuthRoutes = require('./routes/sponsorAuth');
+const sponsorCampaignsRoutes = require('./routes/sponsorCampaigns');
 
 const app = express();
 
@@ -62,8 +66,8 @@ app.use((req, res, next) => {
 });
 
 // 1. CORS Configuration (Apply First!)
-// Permitimos localhost, dominios de producción y direcciones IP de red local para pruebas desde dispositivos móviles
-const allowedOriginsRegex = /(^https:\/\/(.*\.)?menuview\.app$)|(^https:\/\/(.*\.)?run\.app$)|(^http:\/\/localhost:)|(^http:\/\/127\.0\.0\.1:)|(^http:\/\/192\.168\.)|(^http:\/\/10\.)/;
+// Permitimos localhost, subdominios locales, dominios de producción y direcciones IP de red local para pruebas desde dispositivos móviles
+const allowedOriginsRegex = /(^https:\/\/(.*\.)?menuview\.app$)|(^https:\/\/(.*\.)?run\.app$)|(^http:\/\/(.*\.)?localhost:)|(^http:\/\/127\.0\.0\.1:)|(^http:\/\/192\.168\.)|(^http:\/\/10\.)/;
 
 console.log('Checkpoint 1: Configurando CORS...');
 app.use(cors({
@@ -160,11 +164,17 @@ app.use('/api/staff', staffRoutes);
 app.use('/api/super-admin/auth', superAdminAuthRoutes);
 app.use('/api/super-admin/subscriptions', superAdminSubscriptionsRoutes);
 app.use('/api/super-admin/partners', superAdminPartnersRoutes);
+app.use('/api/super-admin/sponsors', superAdminSponsorsRoutes);
 app.use('/api/super-admin/ai-menu-generator', aiMenuGeneratorRoutes);
 app.use('/api/partner/ai-menu-generator', aiMenuGeneratorRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/feedback', feedbackRoutes);
 app.use('/api/partner', partnerRoutes);
+app.use('/api/telemetry', telemetryRoutes);
+
+// Sponsor API routes
+app.use('/api/sponsor/auth', sponsorAuthRoutes);
+app.use('/api/sponsor/campaigns', sponsorCampaignsRoutes);
 
 // Setup Swagger documentation
 swaggerSetup(app);

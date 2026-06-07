@@ -49,6 +49,10 @@ const authenticate = async (req, res, next) => {
       user = await prisma.usuarioPartner.findUnique({
         where: { id: decoded.userId }
       });
+    } else if (decoded.role === 'SPONSOR') {
+      user = await prisma.usuarioSponsor.findUnique({
+        where: { id: decoded.userId }
+      });
     }
 
     if (!user || !user.activo) {
@@ -63,7 +67,7 @@ const authenticate = async (req, res, next) => {
       userId: user.id,
       id: user.id,
       email: user.email,
-      nombre: user.nombre || user.nombreAgencia, // Dependiendo del modelo
+      nombre: user.nombre || user.nombreAgencia || user.nombreEmpresa, // Dependiendo del modelo
       apellido: user.apellido,
       role: decoded.role,
       restauranteId: user.restauranteId,

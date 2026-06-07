@@ -105,6 +105,29 @@ const getRestaurantBySlug = async (req, res) => {
         mesas: {
           where: { activo: true },
           select: { id: true, numero: true, nombre: true, qrCodeUrl: true }
+        },
+        sponsors: {
+          where: { activo: true },
+          select: {
+            id: true,
+            nombreEmpresa: true,
+            logoUrl: true,
+            campanas: {
+              where: {
+                activa: true,
+                fechaInicio: { lte: new Date() },
+                fechaFin: { gte: new Date() }
+              },
+              select: {
+                id: true,
+                nombre: true,
+                splashImageUrl: true,
+                bannerImageUrl: true,
+                targetUrl: true,
+                position: true
+              }
+            }
+          }
         }
       }
     });
@@ -148,6 +171,15 @@ const getRestaurantBySlug = async (req, res) => {
           moneda: restaurante.moneda,
           configuracion: restaurante.configuracion
         },
+        sponsorActivo: restaurante.sponsors?.length > 0 ? {
+          nombreEmpresa: restaurante.sponsors[0].nombreEmpresa,
+          logoUrl: buildAbsoluteUrl(restaurante.sponsors[0].logoUrl),
+          campanas: restaurante.sponsors[0].campanas?.map(c => ({
+            ...c,
+            splashImageUrl: c.splashImageUrl ? buildAbsoluteUrl(c.splashImageUrl) : null,
+            bannerImageUrl: c.bannerImageUrl ? buildAbsoluteUrl(c.bannerImageUrl) : null
+          })) || []
+        } : null,
         categorias: restaurante.categorias,
         mesas: restaurante.mesas
       }
@@ -415,7 +447,25 @@ const getOrdenStatus = async (req, res) => {
   }
 };
 
+// @desc    Obtener detalles públicos del sponsor
+// @route   GET /api/public/sponsor/:slug
+// @access  Public
+const getSponsorBySlug = async (req, res) => {
+  try {
+    const { slug } = req.params;
+    const sponsor = await prisma.usuarioSponsor.findUnique({
+      where: { slug, activo: true },
+      select: { nombreEmpresa: true, logoUrl: true, slug: true }
+    });
+    if (!sponsor) return res.status(404).json({ success: false, error: 'Sponsor no encontrado' });
+    res.json({ success: true, data: sponsor });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Error interno' });
+  }
+};
+
 // Routes
+router.get('/sponsor/:slug', getSponsorBySlug);
 router.get('/restaurant/:slug', getRestaurantBySlug);
 router.get('/menu/:slug', getMenuBySlug);
 router.get('/check-slug/:slug', checkSlugAvailability);
