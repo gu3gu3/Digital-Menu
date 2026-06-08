@@ -12,9 +12,56 @@ router.get('/metrics', authenticateToken, requireRole(['SPONSOR']), async (req, 
     const campaigns = await prisma.campanaAnuncio.findMany({
       where: { sponsorId: req.user.id },
       include: {
-        metricas: true
+        metricas: {
+          include: {
+            restaurante: true
+          }
+        }
       }
     });
+
+    const pointsMap = {};
+    const chartData = [];
+
+    campaigns.forEach(camp => {
+      let campVistas = 0;
+      let campClics = 0;
+
+      camp.metricas.forEach(m => {
+        if (m.tipo === 'VISTA') campVistas++;
+        if (m.tipo === 'CLICK') campClics++;
+
+        if (m.restauranteId && m.restaurante) {
+          if (!pointsMap[m.restauranteId]) {
+            pointsMap[m.restauranteId] = {
+              name: m.restaurante.nombre,
+              clicks: 0
+            };
+          }
+          if (m.tipo === 'CLICK') {
+            pointsMap[m.restauranteId].clicks++;
+          }
+        }
+      });
+
+      if (camp.activo) {
+        chartData.push({
+          name: camp.nombre,
+          Vistas: campVistas,
+          Clics: campClics
+        });
+      }
+    });
+
+    let topPuntosVenta = Object.values(pointsMap)
+      .sort((a, b) => b.clicks - a.clicks)
+      .slice(0, 10);
+
+    const maxClicks = topPuntosVenta.length > 0 ? topPuntosVenta[0].clicks : 0;
+    topPuntosVenta = topPuntosVenta.map(p => ({
+      ...p,
+      percent: maxClicks > 0 ? Math.round((p.clicks / maxClicks) * 100) : 0
+    }));
 
     const calculateMetrics = (campList) => {
       let vistas = 0;
@@ -37,7 +84,9 @@ router.get('/metrics', authenticateToken, requireRole(['SPONSOR']), async (req, 
       success: true,
       data: {
         splash: splashMetrics,
-        banner: bannerMetrics
+        banner: bannerMetrics,
+        chartData,
+        topPuntosVenta
       }
     });
   } catch (error) {

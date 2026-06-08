@@ -8,12 +8,7 @@ import apiClient from '../../lib/apiClient';
 import defaultLogo from '../../assets/logo.png';
 import CampaignBuilder from './CampaignBuilder';
 
-const data = [
-  { name: 'Victoria Frost - El Clásico', Vistas: 82400, Clics: 14820 },
-  { name: 'Victoria Clásica - Verano Nica', Vistas: 61200, Clics: 7100 },
-  { name: 'Victoria Maestro - Maridaje Gourmet', Vistas: 40920, Clics: 2390 },
-];
-
+// Se eliminan datos quemados de la gráfica
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
@@ -36,7 +31,9 @@ export default function SponsorDashboard() {
   const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' o 'campaigns'
   const [metrics, setMetrics] = useState({
     splash: { vistas: 0, clics: 0, ctr: 0 },
-    banner: { vistas: 0, clics: 0, ctr: 0 }
+    banner: { vistas: 0, clics: 0, ctr: 0 },
+    chartData: [],
+    topPuntosVenta: []
   });
 
   useEffect(() => {
@@ -273,7 +270,7 @@ export default function SponsorDashboard() {
             <div className="h-80 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
-                  data={data}
+                  data={metrics.chartData || []}
                   margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
@@ -304,14 +301,10 @@ export default function SponsorDashboard() {
           <motion.div variants={itemVariants} className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
             <div className="flex items-center gap-2 mb-6">
               <Award className="text-amber-500" size={20} />
-              <h2 className="text-lg font-bold text-slate-900">Top 3 Puntos de Venta</h2>
+              <h2 className="text-lg font-bold text-slate-900">Top Puntos de Venta</h2>
             </div>
             <div className="flex-1 space-y-4">
-              {[
-                { name: 'San Juan del Sur - Bar El Timón', clicks: 4820, percent: 100 },
-                { name: 'Managua - Cajun Shrimp & Beer', clicks: 3150, percent: 65 },
-                { name: 'Granada - El Tercer Ojo', clicks: 2890, percent: 59 }
-              ].map((punto, index) => (
+              {(metrics.topPuntosVenta || []).map((punto, index) => (
                 <div key={index} className="bg-slate-50 p-4 rounded-xl border border-slate-100">
                   <div className="flex justify-between items-center mb-2">
                     <div className="flex items-center gap-3">
