@@ -236,6 +236,29 @@ const getMenuBySlug = async (req, res) => {
             }
           },
           orderBy: { orden: 'asc' }
+        },
+        sponsors: {
+          where: { activo: true },
+          select: {
+            id: true,
+            nombreEmpresa: true,
+            logoUrl: true,
+            campanas: {
+              where: {
+                activo: true,
+                fechaInicio: { lte: new Date() },
+                fechaFin: { gte: new Date() }
+              },
+              select: {
+                id: true,
+                nombre: true,
+                splashImageUrl: true,
+                bannerImageUrl: true,
+                targetUrl: true,
+                position: true
+              }
+            }
+          }
         }
       }
     });
@@ -276,7 +299,16 @@ const getMenuBySlug = async (req, res) => {
           moneda: restaurante.moneda,
           configuracion: restaurante.configuracion
         },
-        categorias: restaurante.categorias
+        categorias: restaurante.categorias,
+        sponsorActivo: restaurante.sponsors?.length > 0 ? {
+          nombreEmpresa: restaurante.sponsors[0].nombreEmpresa,
+          logoUrl: buildAbsoluteUrl(restaurante.sponsors[0].logoUrl),
+          campanas: restaurante.sponsors[0].campanas?.map(c => ({
+            ...c,
+            splashImageUrl: c.splashImageUrl ? buildAbsoluteUrl(c.splashImageUrl) : null,
+            bannerImageUrl: c.bannerImageUrl ? buildAbsoluteUrl(c.bannerImageUrl) : null
+          })) || []
+        } : null
       }
     });
 
