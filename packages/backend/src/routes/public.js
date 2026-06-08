@@ -5,12 +5,17 @@ const router = express.Router();
 const prisma = new PrismaClient();
 
 // Función auxiliar para construir URLs absolutas
-const buildAbsoluteUrl = (path) => {
+const buildAbsoluteUrl = (path, req = null) => {
   if (!path || path.startsWith('http')) {
     return path;
   }
   // Asegurarse de que la URL base termina sin / y la ruta empieza con /
-  const baseUrl = (process.env.BACKEND_URL || 'http://localhost:3001').replace(/\/$/, '');
+  let baseUrl;
+  if (req && req.get('host')) {
+    baseUrl = `${req.protocol}://${req.get('host')}`;
+  } else {
+    baseUrl = (process.env.BACKEND_URL || 'http://localhost:3001').replace(/\/$/, '');
+  }
   const cleanPath = path.startsWith('/') ? path : `/${path}`;
   return `${baseUrl}${cleanPath}`;
 };
@@ -140,18 +145,18 @@ const getRestaurantBySlug = async (req, res) => {
     }
 
     // Construir URLs absolutas para el restaurante y productos
-    restaurante.logoUrl = buildAbsoluteUrl(restaurante.logoUrl);
-    restaurante.bannerUrl = buildAbsoluteUrl(restaurante.bannerUrl);
-    restaurante.backgroundImage = buildAbsoluteUrl(restaurante.backgroundImage);
+    restaurante.logoUrl = buildAbsoluteUrl(restaurante.logoUrl, req);
+    restaurante.bannerUrl = buildAbsoluteUrl(restaurante.bannerUrl, req);
+    restaurante.backgroundImage = buildAbsoluteUrl(restaurante.backgroundImage, req);
     
     restaurante.categorias.forEach(categoria => {
       categoria.productos.forEach(producto => {
-        producto.imagenUrl = buildAbsoluteUrl(producto.imagenUrl);
+        producto.imagenUrl = buildAbsoluteUrl(producto.imagenUrl, req);
       });
     });
 
     restaurante.mesas.forEach(mesa => {
-      mesa.qrCodeUrl = buildAbsoluteUrl(mesa.qrCodeUrl);
+      mesa.qrCodeUrl = buildAbsoluteUrl(mesa.qrCodeUrl, req);
     });
 
     res.json({
@@ -172,11 +177,11 @@ const getRestaurantBySlug = async (req, res) => {
           configuracion: restaurante.configuracion,
           sponsorActivo: restaurante.sponsors?.length > 0 ? {
             nombreEmpresa: restaurante.sponsors[0].nombreEmpresa,
-            logoUrl: buildAbsoluteUrl(restaurante.sponsors[0].logoUrl),
+            logoUrl: buildAbsoluteUrl(restaurante.sponsors[0].logoUrl, req),
             campanas: restaurante.sponsors[0].campanas?.map(c => ({
               ...c,
-              splashImageUrl: c.splashImageUrl ? buildAbsoluteUrl(c.splashImageUrl) : null,
-              bannerImageUrl: c.bannerImageUrl ? buildAbsoluteUrl(c.bannerImageUrl) : null
+              splashImageUrl: c.splashImageUrl ? buildAbsoluteUrl(c.splashImageUrl, req) : null,
+              bannerImageUrl: c.bannerImageUrl ? buildAbsoluteUrl(c.bannerImageUrl, req) : null
             })) || []
           } : null
         },
@@ -271,13 +276,13 @@ const getMenuBySlug = async (req, res) => {
     }
     
     // Construir URLs absolutas para el restaurante y productos
-    restaurante.logoUrl = buildAbsoluteUrl(restaurante.logoUrl);
-    restaurante.bannerUrl = buildAbsoluteUrl(restaurante.bannerUrl);
-    restaurante.backgroundImage = buildAbsoluteUrl(restaurante.backgroundImage);
+    restaurante.logoUrl = buildAbsoluteUrl(restaurante.logoUrl, req);
+    restaurante.bannerUrl = buildAbsoluteUrl(restaurante.bannerUrl, req);
+    restaurante.backgroundImage = buildAbsoluteUrl(restaurante.backgroundImage, req);
     
     restaurante.categorias.forEach(categoria => {
       categoria.productos.forEach(producto => {
-        producto.imagenUrl = buildAbsoluteUrl(producto.imagenUrl);
+        producto.imagenUrl = buildAbsoluteUrl(producto.imagenUrl, req);
       });
     });
 
@@ -300,11 +305,11 @@ const getMenuBySlug = async (req, res) => {
           configuracion: restaurante.configuracion,
           sponsorActivo: restaurante.sponsors?.length > 0 ? {
             nombreEmpresa: restaurante.sponsors[0].nombreEmpresa,
-            logoUrl: buildAbsoluteUrl(restaurante.sponsors[0].logoUrl),
+            logoUrl: buildAbsoluteUrl(restaurante.sponsors[0].logoUrl, req),
             campanas: restaurante.sponsors[0].campanas?.map(c => ({
               ...c,
-              splashImageUrl: c.splashImageUrl ? buildAbsoluteUrl(c.splashImageUrl) : null,
-              bannerImageUrl: c.bannerImageUrl ? buildAbsoluteUrl(c.bannerImageUrl) : null
+              splashImageUrl: c.splashImageUrl ? buildAbsoluteUrl(c.splashImageUrl, req) : null,
+              bannerImageUrl: c.bannerImageUrl ? buildAbsoluteUrl(c.bannerImageUrl, req) : null
             })) || []
           } : null
         },
