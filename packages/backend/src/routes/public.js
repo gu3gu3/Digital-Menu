@@ -114,7 +114,7 @@ const getRestaurantBySlug = async (req, res) => {
             logoUrl: true,
             campanas: {
               where: {
-                activa: true,
+                activo: true,
                 fechaInicio: { lte: new Date() },
                 fechaFin: { gte: new Date() }
               },
