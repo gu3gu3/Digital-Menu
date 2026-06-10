@@ -490,13 +490,16 @@ const getOrdenStatus = async (req, res) => {
 const getSponsorBySlug = async (req, res) => {
   try {
     const { slug } = req.params;
-    const sponsor = await prisma.usuarioSponsor.findUnique({
-      where: { slug, activo: true },
+    console.log(`Buscando sponsor con slug: "${slug}"`);
+    const sponsor = await prisma.usuarioSponsor.findFirst({
+      where: { slug: slug, activo: true },
       select: { nombreEmpresa: true, logoUrl: true, slug: true }
     });
+    console.log(`Resultado sponsor:`, sponsor);
     if (!sponsor) return res.status(404).json({ success: false, error: 'Sponsor no encontrado' });
     res.json({ success: true, data: sponsor });
   } catch (error) {
+    console.error('Error en getSponsorBySlug:', error);
     res.status(500).json({ success: false, error: 'Error interno' });
   }
 };
