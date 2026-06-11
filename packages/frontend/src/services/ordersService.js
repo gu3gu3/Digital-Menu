@@ -32,8 +32,10 @@ class OrdersService {
   }
 
   // Get order statistics
-  async getOrderStats(period = 'today') {
-    const response = await apiClient.get('/orders/stats', { params: { period } });
+  async getOrderStats(period = 'today', tipoPedido) {
+    const params = { period };
+    if (tipoPedido) params.tipoPedido = tipoPedido;
+    const response = await apiClient.get('/orders/stats', { params });
     return response.data;
   }
 

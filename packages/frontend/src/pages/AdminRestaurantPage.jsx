@@ -9,7 +9,9 @@ import {
   UserCircle,
   Store as BuildingStorefrontIcon,
   DollarSign as CurrencyDollarIcon,
-  Paintbrush as PaintBrushIcon
+  Paintbrush as PaintBrushIcon,
+  MapPin,
+  Truck
 } from 'lucide-react';
 import restaurantService from '../services/restaurantService';
 import { getCurrenciesByRegion, getCurrencyDisplayInfo } from '../utils/currencyUtils';
@@ -47,6 +49,14 @@ const AdminRestaurantPage = () => {
       if (restaurante.configuracion?.servicio) {
         setValue('servicio', restaurante.configuracion.servicio);
       }
+      if (restaurante.configuracion?.delivery) {
+        setValue('delivery_enabled', restaurante.configuracion.delivery.enabled || false);
+        setValue('delivery_latitud', restaurante.configuracion.delivery.latitud || '');
+        setValue('delivery_longitud', restaurante.configuracion.delivery.longitud || '');
+        setValue('delivery_tarifaBase', restaurante.configuracion.delivery.tarifaBase || 0);
+        setValue('delivery_kmBase', restaurante.configuracion.delivery.kmBase || 0);
+        setValue('delivery_costoKmExtra', restaurante.configuracion.delivery.costoKmExtra || 0);
+      }
       setMenuUrl(getBeautifulMenuUrl(restaurante));
     } catch (error) {
       console.error('Error loading restaurant data:', error);
@@ -75,7 +85,15 @@ const AdminRestaurantPage = () => {
           ...restaurantData.configuracion,
           buttonColor: formData.buttonColor || '#ea580c',
           iva: formData.iva ? parseFloat(formData.iva) : 0,
-          servicio: formData.servicio ? parseFloat(formData.servicio) : 0
+          servicio: formData.servicio ? parseFloat(formData.servicio) : 0,
+          delivery: {
+            enabled: formData.delivery_enabled || false,
+            latitud: formData.delivery_latitud ? parseFloat(formData.delivery_latitud) : null,
+            longitud: formData.delivery_longitud ? parseFloat(formData.delivery_longitud) : null,
+            tarifaBase: formData.delivery_tarifaBase ? parseFloat(formData.delivery_tarifaBase) : 0,
+            kmBase: formData.delivery_kmBase ? parseFloat(formData.delivery_kmBase) : 0,
+            costoKmExtra: formData.delivery_costoKmExtra ? parseFloat(formData.delivery_costoKmExtra) : 0,
+          }
         }
       };
       await restaurantService.updateMyRestaurant(updatedData);
@@ -162,6 +180,26 @@ const AdminRestaurantPage = () => {
     }, () => {
       toast.error('No se pudo copiar la URL.');
     });
+  };
+
+  const obtenerCoordenadas = () => {
+    if (!navigator.geolocation) {
+      toast.error('La geolocalización no es soportada por tu navegador');
+      return;
+    }
+    toast.info('Obteniendo coordenadas GPS...');
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setValue('delivery_latitud', position.coords.latitude);
+        setValue('delivery_longitud', position.coords.longitude);
+        toast.success('Coordenadas capturadas correctamente');
+      },
+      (error) => {
+        console.error('Error getting location:', error);
+        toast.error('No se pudo obtener la ubicación. Verifica los permisos.');
+      },
+      { enableHighAccuracy: true }
+    );
   };
 
   const ImageUploadField = ({ label, description, imageType, currentImageUrl }) => {
@@ -317,6 +355,60 @@ const AdminRestaurantPage = () => {
           <div className="p-6 border-b border-gray-200"><h4 className="text-lg font-semibold text-gray-800 mb-4">Identidad Visual</h4><div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6"><ImageUploadField label="Logo del Restaurante" description="Formato cuadrado recomendado (ej. 512x512)." imageType="logo" currentImageUrl={restaurantData?.logoUrl} /><ImageUploadField label="Banner del Restaurante" description="Se mostrará en la cabecera del menú. Recomendado: 1600x400." imageType="banner" currentImageUrl={restaurantData?.bannerUrl} /></div></div>
           <div className="p-6"><h4 className="text-lg font-semibold text-gray-800 mb-1">Imagen de Fondo</h4><p className="text-sm text-gray-500 mb-4">Alternativa al color de fondo. Si subes una imagen, esta tendrá prioridad.</p><ImageUploadField label="" description="Recomendado: 1920x1080. Intenta que no sea muy pesada." imageType="background" currentImageUrl={restaurantData?.backgroundImage} /></div>
               </div>
+
+        <div className="bg-white shadow-lg rounded-xl overflow-hidden">
+          <div className="p-6">
+            <h3 className="text-xl font-bold text-gray-900 flex items-center mb-2"><Truck className="h-6 w-6 mr-2 text-indigo-600" />Configuración de Delivery y Costos de Envío</h3>
+            <p className="mt-1 text-sm text-gray-500 mb-6">Configura el costo dinámico por distancia. El sistema calculará el costo de envío usando la distancia en línea recta desde tu local hasta el cliente.</p>
+            
+            <div className="flex items-center mb-6">
+              <input type="checkbox" id="delivery_enabled" {...register("delivery_enabled")} className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" />
+              <label htmlFor="delivery_enabled" className="ml-2 block text-sm font-medium text-gray-900">Habilitar cálculo dinámico de Delivery por GPS</label>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+              <div className="md:col-span-2 flex justify-between items-center mb-2">
+                <h4 className="font-semibold text-gray-700">Ubicación del Local</h4>
+                <button type="button" onClick={obtenerCoordenadas} className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                  <MapPin className="h-4 w-4 mr-1" /> Obtener mis coordenadas ahora
+                </button>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Latitud</label>
+                <input type="number" step="any" {...register("delivery_latitud")} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Ej: 12.136389" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Longitud</label>
+                <input type="number" step="any" {...register("delivery_longitud")} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Ej: -86.251389" />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+              <div className="md:col-span-3 mb-2"><h4 className="font-semibold text-gray-700">Reglas de Cobro</h4></div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Tarifa Base (Monto)</label>
+                <div className="mt-1 relative rounded-md shadow-sm">
+                  <input type="number" step="0.01" min="0" {...register("delivery_tarifaBase")} className="block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Ej: 40" />
+                </div>
+                <p className="text-xs text-gray-500 mt-1">Costo mínimo de envío.</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Distancia Base (Km)</label>
+                <div className="mt-1 relative rounded-md shadow-sm">
+                  <input type="number" step="0.1" min="0" {...register("delivery_kmBase")} className="block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Ej: 3" />
+                </div>
+                <p className="text-xs text-gray-500 mt-1">Km incluidos en Tarifa Base.</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Costo por Km Extra</label>
+                <div className="mt-1 relative rounded-md shadow-sm">
+                  <input type="number" step="0.01" min="0" {...register("delivery_costoKmExtra")} className="block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Ej: 15" />
+                </div>
+                <p className="text-xs text-gray-500 mt-1">Se suma por cada km extra.</p>
+              </div>
+            </div>
+          </div>
+        </div>
 
         <div className="flex justify-end pt-4">
           <button type="submit" disabled={isSubmitting} className="inline-flex justify-center py-2 px-6 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50">

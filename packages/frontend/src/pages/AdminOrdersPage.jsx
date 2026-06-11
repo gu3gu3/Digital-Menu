@@ -305,16 +305,14 @@ const AdminOrdersPage = () => {
               {/* Mesa Filter */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Mesa</label>
-                <select
-                  value={filters.mesa}
+                <input
+                  type="number"
+                  min="1"
+                  placeholder="Número de mesa..."
+                  value={filters.mesa || ''}
                   onChange={(e) => setFilters({ ...filters, mesa: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                >
-                  <option value="">Todas las mesas</option>
-                  {Array.from({ length: 12 }, (_, i) => (
-                    <option key={i + 1} value={i + 1}>Mesa {i + 1}</option>
-                  ))}
-                </select>
+                />
               </div>
 
               {/* Date Filter */}

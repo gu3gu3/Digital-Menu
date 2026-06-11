@@ -1,15 +1,18 @@
-import React, { useState, useEffect } from 'react'
-import { useParams, useSearchParams, useLocation } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useParams, useSearchParams } from 'react-router-dom'
 import { 
-  ShoppingBagIcon, XMarkIcon, PlusIcon, MinusIcon, TrashIcon,
-  ChevronUpIcon, ChevronDownIcon, ClockIcon, MapPinIcon, CheckCircleIcon 
+  MapPinIcon, 
+  PhoneIcon, 
+  ShoppingCartIcon,
+  PlusIcon,
+  MinusIcon,
+  CheckCircleIcon,
+  XMarkIcon
 } from '@heroicons/react/24/outline'
 import menuService from '../services/menuService'
 import OrderStatusBanner from '../components/OrderStatusBanner'
 import { formatMenuPrice, formatOrderTotal } from '../utils/currencyUtils'
 import NamePromptModal from '../components/NamePromptModal'
-import SplashOverlay from '../components/public/SplashOverlay'
-import SponsorBanner from '../components/public/SponsorBanner'
 
 const isValidImageUrl = (url) => {
   if (!url || typeof url !== 'string') return false;
@@ -23,17 +26,12 @@ const PublicMenuPage = ({ slugOverride }) => {
   const params = useParams()
   const activeSlug = slugOverride || params.slug
   const countryCode = params.countryCode
-  const location = useLocation()
-  const isExternalOrder = location.pathname.startsWith('/order/')
   
   const [searchParams] = useSearchParams()
   const mesaNumero = searchParams.get('mesa')
 
   // Estados principales
   const [restaurante, setRestaurante] = useState(null)
-  
-  // Definimos realSlug que siempre usará el slug oficial de la DB si está disponible
-  const realSlug = restaurante?.slug || activeSlug;
   const [categorias, setCategorias] = useState([])
   const [selectedCategory, setSelectedCategory] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -54,16 +52,6 @@ const PublicMenuPage = ({ slugOverride }) => {
   const [customerName, setCustomerName] = useState('')
   const [isNameModalOpen, setIsNameModalOpen] = useState(false)
   const [orderNotes, setOrderNotes] = useState('')
-  const [showSplash, setShowSplash] = useState(false)
-  
-  // Estados para Pedidos Externos
-  const [tipoPedido, setTipoPedido] = useState('RECOGER') // 'RECOGER' o 'A_DOMICILIO'
-  const [telefono, setTelefono] = useState('')
-  const [direccion, setDireccion] = useState('')
-  const [userLocation, setUserLocation] = useState(null)
-  const [calculatedCostoEnvio, setCalculatedCostoEnvio] = useState(0)
-  const [isGettingLocation, setIsGettingLocation] = useState(false)
-  const [locationError, setLocationError] = useState('')
 
   // Estados Swipe
   const [touchStart, setTouchStart] = useState(null)
@@ -115,36 +103,17 @@ const PublicMenuPage = ({ slugOverride }) => {
   useEffect(() => {
     if (activeSlug) {
       loadMenu()
-    }
-  }, [activeSlug, countryCode, mesaNumero])
-
-  // Lógica para coordinar el Splash y el Modal de Nombre (Se ejecuta cuando ya tenemos los datos del restaurante)
-  useEffect(() => {
-    if (restaurante && !loading) {
-      const splashAlreadyShown = sessionStorage.getItem(`splashShown_${realSlug}`) === 'true';
-      const splashCampaign = restaurante.sponsorActivo?.campanas?.find(c => c.position === 'SPLASH' || (!c.position && c.splashImageUrl));
-      const hasActiveCampaign = !!splashCampaign;
-
+      // Only prompt for name if a table number is present in the URL
       if (mesaNumero) {
-        const savedName = localStorage.getItem(`customerName_${realSlug}_${mesaNumero}`)
-        if (savedName) {
-          setCustomerName(savedName)
-          // Si ya tiene nombre y no ha visto el splash en esta sesión, mostrarlo
-          if (hasActiveCampaign && !splashAlreadyShown) {
-            setShowSplash(true)
-          }
-        } else {
-          // Si no tiene nombre, el modal se abre. El splash se mostrará DESPUÉS de ingresar el nombre.
-          setTimeout(() => setIsNameModalOpen(true), 500)
-        }
+      const savedName = localStorage.getItem(`customerName_${activeSlug}_${mesaNumero}`)
+      if (savedName) {
+        setCustomerName(savedName)
       } else {
-        // Vista pública (sin mesa). Mostrar splash si hay campaña.
-        if (hasActiveCampaign && !splashAlreadyShown) {
-          setShowSplash(true)
-        }
+        setTimeout(() => setIsNameModalOpen(true), 500)
       }
     }
-  }, [restaurante, loading, activeSlug, mesaNumero])
+    }
+  }, [activeSlug, countryCode, mesaNumero])
 
   useEffect(() => {
     if (restaurante && mesaNumero) {
@@ -154,11 +123,11 @@ const PublicMenuPage = ({ slugOverride }) => {
 
   // Cargar ID de orden guardado en localStorage al inicializar
   useEffect(() => {
-    const savedOrdenId = localStorage.getItem(`orden_${realSlug}_${mesaNumero}`)
+    const savedOrdenId = localStorage.getItem(`orden_${activeSlug}_${mesaNumero}`)
     if (savedOrdenId) {
       setCurrentOrdenId(savedOrdenId)
     }
-  }, [realSlug, mesaNumero])
+  }, [activeSlug, mesaNumero])
 
   const loadMenu = async () => {
     try {
@@ -181,23 +150,23 @@ const PublicMenuPage = ({ slugOverride }) => {
 
   const initializeSession = async () => {
     try {
-      const sesion = await menuService.createOrResumeSession(realSlug, mesaNumero)
+      const sesion = await menuService.createOrResumeSession(activeSlug, mesaNumero)
       setSesionId(sesion.id)
       setTableInactiveMessage('') // Limpiar mensaje si tuvo éxito
       
-      const previousSesionId = localStorage.getItem(`lastSesionId_${realSlug}_${mesaNumero}`)
+      const previousSesionId = localStorage.getItem(`lastSesionId_${activeSlug}_${mesaNumero}`)
       
       if (previousSesionId !== sesion.id) {
         // La sesión cambió (el admin limpió la mesa o es una visita nueva)
         // Purgamos los datos locales de la sesión anterior
-        localStorage.removeItem(`customerName_${realSlug}_${mesaNumero}`)
-        localStorage.removeItem(`orden_${realSlug}_${mesaNumero}`)
+        localStorage.removeItem(`customerName_${activeSlug}_${mesaNumero}`)
+        localStorage.removeItem(`orden_${activeSlug}_${mesaNumero}`)
         setCustomerName('')
         setCurrentOrdenId(null)
         setTimeout(() => setIsNameModalOpen(true), 500)
       } else {
         // Es la misma sesión actual, sincronizar nombre si es necesario
-        const savedName = localStorage.getItem(`customerName_${realSlug}_${mesaNumero}`)
+        const savedName = localStorage.getItem(`customerName_${activeSlug}_${mesaNumero}`)
         if (savedName && !sesion.clienteNombre) {
           try {
             await menuService.updateSession(sesion.id, { clienteNombre: savedName })
@@ -208,7 +177,7 @@ const PublicMenuPage = ({ slugOverride }) => {
       }
       
       // Guardar el nuevo id para la próxima vez
-      localStorage.setItem(`lastSesionId_${realSlug}_${mesaNumero}`, sesion.id)
+      localStorage.setItem(`lastSesionId_${activeSlug}_${mesaNumero}`, sesion.id)
       
       // Iniciar con carrito local vacío
       setCart({ items: [], total: 0 })
@@ -294,7 +263,7 @@ const PublicMenuPage = ({ slugOverride }) => {
   const handleNameSubmit = async (name) => {
     try {
       setCustomerName(name)
-      localStorage.setItem(`customerName_${realSlug}_${mesaNumero}`, name)
+      localStorage.setItem(`customerName_${activeSlug}_${mesaNumero}`, name)
       
       // Actualizar la sesión con el nombre del cliente
       if (sesionId) {
@@ -303,39 +272,15 @@ const PublicMenuPage = ({ slugOverride }) => {
       
       setIsNameModalOpen(false)
       showNotification(`¡Hola, ${name}! Bienvenido.`, 'success')
-
-      // Una vez ingresado el nombre, revisamos si toca mostrar el Splash
-      const splashAlreadyShown = sessionStorage.getItem(`splashShown_${realSlug}`) === 'true';
-      const splashCampaign = restaurante?.sponsorActivo?.campanas?.find(c => c.position === 'SPLASH' || (!c.position && c.splashImageUrl));
-      if (splashCampaign && !splashAlreadyShown) {
-        setTimeout(() => {
-          setShowSplash(true);
-        }, 300); // Pequeño delay para que el modal se cierre visualmente primero
-      }
-
     } catch (error) {
       console.error('Error updating session with customer name:', error)
       // Aún así permitir continuar, solo mostrar advertencia
-      setCustomerName(name)
-      localStorage.setItem(`customerName_${realSlug}_${mesaNumero}`, name)
-      setIsNameModalOpen(false)
-      showNotification(`¡Hola, ${name}! Bienvenido.`, 'success')
-      
-      // Una vez ingresado el nombre, revisamos si toca mostrar el Splash
-      const splashAlreadyShown = sessionStorage.getItem(`splashShown_${realSlug}`) === 'true';
-      const splashCampaign = restaurante?.sponsorActivo?.campanas?.find(c => c.position === 'SPLASH' || (!c.position && c.splashImageUrl));
-      if (splashCampaign && !splashAlreadyShown) {
-        setTimeout(() => {
-          setShowSplash(true);
-        }, 300);
-      }
+    setCustomerName(name)
+    localStorage.setItem(`customerName_${activeSlug}_${mesaNumero}`, name)
+    setIsNameModalOpen(false)
+    showNotification(`¡Hola, ${name}! Bienvenido.`, 'success')
     }
   }
-
-  const handleSplashComplete = () => {
-    setShowSplash(false);
-    sessionStorage.setItem(`splashShown_${realSlug}`, 'true');
-  };
 
   const showOrderConfirmation = () => {
     if (!cart || cart.items.length === 0) {
@@ -351,25 +296,9 @@ const PublicMenuPage = ({ slugOverride }) => {
   }
 
   const confirmOrder = async () => {
-    // Si hay mesaNumero, la orden requiere sesión activa
-    if (mesaNumero && !sesionId) {
+    if (!sesionId) {
       showNotification('La sesión no es válida. Recarga la página.', 'error')
       return
-    }
-
-    if (!mesaNumero) {
-      if (tipoPedido === 'A_DOMICILIO' && (!direccion || direccion.trim() === '')) {
-        showNotification('Por favor, ingresa tu dirección para el envío a domicilio', 'error')
-        return
-      }
-      if (!telefono || telefono.trim() === '') {
-        showNotification('Por favor, ingresa tu teléfono para contactarte', 'error')
-        return
-      }
-      if (tipoPedido === 'A_DOMICILIO' && restaurante?.configuracion?.delivery?.enabled && !userLocation) {
-        showNotification('Por favor, utiliza el botón para obtener tu ubicación GPS para el cálculo de envío', 'error')
-        return
-      }
     }
     
     try {
@@ -381,32 +310,14 @@ const PublicMenuPage = ({ slugOverride }) => {
         notas: ''
       }));
 
-      let data;
-
-      if (mesaNumero) {
-        data = await menuService.confirmOrder(sesionId, {
-          nombreClienteFactura: customerName,
-          notas: orderNotes.trim() || undefined,
-          items: itemsParaBackend
-        });
-      } else {
-        data = await menuService.createExternalOrder({
-          slug: realSlug,
-          tipoPedido,
-          datosCliente: {
-            nombre: customerName,
-            telefono: telefono.trim(),
-            direccion: tipoPedido === 'A_DOMICILIO' ? direccion.trim() : undefined,
-            coordenadas: userLocation ? { lat: userLocation.lat, lng: userLocation.lng } : undefined
-          },
-          costoEnvio: tipoPedido === 'A_DOMICILIO' ? calculatedCostoEnvio : 0,
-          notas: orderNotes.trim() || undefined,
-          items: itemsParaBackend
-        });
-      }
+      const data = await menuService.confirmOrder(sesionId, {
+        nombreClienteFactura: customerName,
+        notas: orderNotes.trim() || undefined,
+        items: itemsParaBackend
+      });
       
       setCurrentOrdenId(data.orden.id)
-      localStorage.setItem(`orden_${realSlug}_${mesaNumero || 'externo'}`, data.orden.id)
+      localStorage.setItem(`orden_${activeSlug}_${mesaNumero}`, data.orden.id)
       
       setCart({ items: [], total: 0 })
       setShowOrderModal(false)
@@ -419,7 +330,7 @@ const PublicMenuPage = ({ slugOverride }) => {
 
     } catch (error) {
       console.error('Error confirming order:', error)
-      showNotification(error.response?.data?.error || error.message || 'Error al enviar el pedido. Intenta de nuevo.', 'error')
+      showNotification(error.message || 'Error al enviar el pedido. Intenta de nuevo.', 'error')
     } finally {
       setSubmittingOrder(false)
     }
@@ -448,74 +359,9 @@ const PublicMenuPage = ({ slugOverride }) => {
     return getSubtotalPrice() * (servicePct / 100);
   }
 
-  const getDeliveryAmount = () => {
-    if (tipoPedido === 'A_DOMICILIO') {
-      return calculatedCostoEnvio || 0;
-    }
-    return 0;
-  }
-
   const getTotalPrice = () => {
-    return getSubtotalPrice() + getTaxAmount() + getServiceAmount() + getDeliveryAmount();
+    return getSubtotalPrice() + getTaxAmount() + getServiceAmount();
   }
-
-  // Haversine formula to calculate distance in km
-  const calculateDistance = (lat1, lon1, lat2, lon2) => {
-    const R = 6371; // Earth radius in km
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = 
-      Math.sin(dLat/2) * Math.sin(dLat/2) +
-      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-      Math.sin(dLon/2) * Math.sin(dLon/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    return R * c;
-  };
-
-  const handleGetLocation = () => {
-    if (!navigator.geolocation) {
-      setLocationError('Tu navegador no soporta geolocalización.');
-      return;
-    }
-
-    setIsGettingLocation(true);
-    setLocationError('');
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const clientLat = position.coords.latitude;
-        const clientLng = position.coords.longitude;
-        setUserLocation({ lat: clientLat, lng: clientLng });
-        
-        // Calculate delivery fee if restaurant has delivery config
-        const deliveryConfig = restaurante?.configuracion?.delivery;
-        if (deliveryConfig && deliveryConfig.enabled && deliveryConfig.latitud && deliveryConfig.longitud) {
-          const distanceKm = calculateDistance(
-            deliveryConfig.latitud, 
-            deliveryConfig.longitud,
-            clientLat,
-            clientLng
-          );
-          
-          let costo = deliveryConfig.tarifaBase || 0;
-          if (distanceKm > (deliveryConfig.kmBase || 0)) {
-            const extraKm = distanceKm - (deliveryConfig.kmBase || 0);
-            costo += extraKm * (deliveryConfig.costoKmExtra || 0);
-          }
-          
-          setCalculatedCostoEnvio(Math.round(costo)); // Redondear
-        }
-        
-        setIsGettingLocation(false);
-      },
-      (error) => {
-        console.error('Error getting location:', error);
-        setLocationError('No pudimos acceder a tu ubicación. Verifica los permisos de tu navegador.');
-        setIsGettingLocation(false);
-      },
-      { enableHighAccuracy: true }
-    );
-  };
 
   const formatCurrency = (amount) => {
     const currencyCode = restaurante?.moneda || 'USD'; // Usar moneda del restaurante o USD por defecto
@@ -523,8 +369,6 @@ const PublicMenuPage = ({ slugOverride }) => {
   }
 
   const selectedCategoryData = categorias.find(cat => cat.id === selectedCategory)
-
-
 
   if (loading) {
     return (
@@ -593,26 +437,10 @@ const PublicMenuPage = ({ slugOverride }) => {
         }
       `}</style>
       
-      {showSplash && (
-        <SplashOverlay 
-          campana={restaurante?.sponsorActivo?.campanas?.find(c => c.position === 'SPLASH' || (!c.position && c.splashImageUrl))} 
-          onComplete={handleSplashComplete} 
-          restauranteId={restaurante?.id}
-        />
-      )}
-
-      {restaurante?.sponsorActivo?.campanas?.some(c => c.position === 'BOTTOM') && (
-        <SponsorBanner 
-          campana={restaurante?.sponsorActivo?.campanas?.find(c => c.position === 'BOTTOM')}
-          restauranteId={restaurante?.id}
-        />
-      )}
-
       <NamePromptModal 
         isOpen={isNameModalOpen}
         onSubmit={handleNameSubmit}
         restaurantName={restaurante?.nombre || 'este restaurante'}
-        isExternalOrder={isExternalOrder}
       />
 
       {/* Banner Section */}
@@ -705,16 +533,6 @@ const PublicMenuPage = ({ slugOverride }) => {
             <div className="lg:w-2/3">
               {selectedCategoryData && (
                 <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-sm">
-                  
-                  {restaurante?.sponsorActivo?.campanas?.find(c => c.position === 'TOP') && (
-                    <div className="mb-6">
-                      <SponsorBanner 
-                        campana={restaurante?.sponsorActivo?.campanas?.find(c => c.position === 'TOP')} 
-                        restauranteId={restaurante?.id}
-                      />
-                    </div>
-                  )}
-
                   <div className="p-6 border-b border-gray-200">
                     <h2 className="text-2xl font-bold text-gray-900">{selectedCategoryData.nombre}</h2>
                     <p className="text-gray-600 mt-1">{selectedCategoryData.descripcion}</p>
@@ -723,17 +541,8 @@ const PublicMenuPage = ({ slugOverride }) => {
                   <div className="p-6 space-y-6">
                     {selectedCategoryData.productos
                       ?.filter(producto => producto.disponible)
-                      ?.map((producto, index) => (
-                        <React.Fragment key={producto.id}>
-                          {index === 2 && restaurante?.sponsorActivo?.campanas?.find(c => c.position === 'IN_FEED') && (
-                            <div className="col-span-1 lg:col-span-2 xl:col-span-3">
-                              <SponsorBanner 
-                                campana={restaurante?.sponsorActivo?.campanas?.find(c => c.position === 'IN_FEED')} 
-                                restauranteId={restaurante?.id}
-                              />
-                            </div>
-                          )}
-                      <div className="border border-gray-100 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all duration-300 bg-white group">
+                      ?.map((producto) => (
+                      <div key={producto.id} className="border border-gray-100 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all duration-300 bg-white group">
                         <div className="flex justify-between items-start gap-4">
                           <div className="flex-1 min-w-0">
                             <h3 className="text-lg font-bold text-gray-900 leading-tight">{producto.nombre}</h3>
@@ -765,12 +574,11 @@ const PublicMenuPage = ({ slugOverride }) => {
                                 : 'text-white shadow hover:shadow-md hover:-translate-y-0.5'
                             }`}
                           >
-                            <ShoppingBagIcon className="w-5 h-5" />
+                            <ShoppingCartIcon className="w-5 h-5" />
                             Agregar
                           </button>
                         </div>
                       </div>
-                      </React.Fragment>
                     ))}
                   </div>
                 </div>
@@ -799,7 +607,7 @@ const PublicMenuPage = ({ slugOverride }) => {
                   </div>
                 ) : !cart || cart.items.length === 0 ? (
                   <div className="text-center py-8">
-                    <ShoppingBagIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <ShoppingCartIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                     <p className="text-gray-500">Tu carrito está vacío</p>
                     <p className="text-sm text-gray-400 mt-1">Agrega productos para hacer tu pedido</p>
                   </div>
@@ -852,18 +660,11 @@ const PublicMenuPage = ({ slugOverride }) => {
                       )}
                       
                       {restaurante?.configuracion?.servicio > 0 && (
-                        <div className="flex justify-between items-center mt-2">
+                        <div className="flex justify-between items-center mb-2">
                           <span className="text-sm text-gray-600">Servicio ({restaurante.configuracion.servicio}%):</span>
                           <span className="text-sm font-medium text-gray-900" translate="no">
                             {formatCurrency(getServiceAmount())}
                           </span>
-                        </div>
-                      )}
-                      
-                      {tipoPedido === 'A_DOMICILIO' && calculatedCostoEnvio > 0 && (
-                        <div className="flex justify-between items-center mt-2">
-                          <span className="text-sm text-gray-600">Costo de Envío:</span>
-                          <span className="text-sm font-medium text-gray-900" translate="no">{formatCurrency(getDeliveryAmount())}</span>
                         </div>
                       )}
 
@@ -897,8 +698,7 @@ const PublicMenuPage = ({ slugOverride }) => {
       {/* Banner de seguimiento de orden */}
       <OrderStatusBanner 
         ordenId={currentOrdenId}
-        restauranteSlug={realSlug}
-        onClearOrder={clearOrderTracking}
+        restauranteSlug={activeSlug}
         primaryButtonColor={primaryButtonColor}
       />
 
@@ -926,78 +726,7 @@ const PublicMenuPage = ({ slugOverride }) => {
             <p className="text-gray-600 mt-2">
               Tu pedido para <span className="font-semibold">{customerName}</span> está casi listo.
             </p>
-            <div className="mt-4 max-h-[60vh] overflow-y-auto px-1 scrollbar-hide">
-              
-              {!mesaNumero && (
-                <>
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Tipo de Pedido</label>
-                    <div className="flex gap-4">
-                      <label className="flex items-center">
-                        <input
-                          type="radio"
-                          value="RECOGER"
-                          checked={tipoPedido === 'RECOGER'}
-                          onChange={(e) => setTipoPedido(e.target.value)}
-                          className="mr-2"
-                        />
-                        <span className="text-sm">Pasar a recoger</span>
-                      </label>
-                      <label className="flex items-center">
-                        <input
-                          type="radio"
-                          value="A_DOMICILIO"
-                          checked={tipoPedido === 'A_DOMICILIO'}
-                          onChange={(e) => setTipoPedido(e.target.value)}
-                          className="mr-2"
-                        />
-                        <span className="text-sm">A domicilio</span>
-                      </label>
-                    </div>
-                  </div>
-
-                  <div className="mb-4">
-                    <label htmlFor="telefono" className="block text-sm font-medium text-gray-700">Teléfono *</label>
-                    <input
-                      type="tel"
-                      id="telefono"
-                      value={telefono}
-                      onChange={(e) => setTelefono(e.target.value)}
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-primary-500 focus:border-primary-500"
-                      placeholder="Ej: 8888-8888"
-                    />
-                  </div>
-
-                  {tipoPedido === 'A_DOMICILIO' && (
-                    <div className="mb-4">
-                      <label htmlFor="direccion" className="block text-sm font-medium text-gray-700 mb-1">Dirección de entrega *</label>
-                      {restaurante?.configuracion?.delivery?.enabled && (
-                        <div className="mb-3">
-                          <button
-                            type="button"
-                            onClick={handleGetLocation}
-                            disabled={isGettingLocation}
-                            className={`w-full flex justify-center items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${userLocation ? 'bg-green-600 hover:bg-green-700' : 'bg-primary-600 hover:bg-primary-700'} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500`}
-                          >
-                            <MapPinIcon className="h-5 w-5 mr-2" />
-                            {isGettingLocation ? 'Obteniendo GPS...' : (userLocation ? 'Ubicación obtenida ✓' : 'Obtener mi ubicación exacta para calcular envío')}
-                          </button>
-                          {locationError && <p className="mt-1 text-sm text-red-600">{locationError}</p>}
-                        </div>
-                      )}
-                      <textarea
-                        id="direccion"
-                        value={direccion}
-                        onChange={(e) => setDireccion(e.target.value)}
-                        rows="2"
-                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-primary-500 focus:border-primary-500"
-                        placeholder="Escribe detalles o referencias (Ej. Casa amarilla frente al parque)"
-                      />
-                    </div>
-                  )}
-                </>
-              )}
-
+            <div className="mt-4">
               <label htmlFor="order-notes" className="block text-sm font-medium text-gray-700">
                 Notas para la cocina (opcional)
               </label>
@@ -1005,8 +734,8 @@ const PublicMenuPage = ({ slugOverride }) => {
                 id="order-notes"
                 value={orderNotes}
                 onChange={(e) => setOrderNotes(e.target.value)}
-                rows="2"
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-primary-500 focus:border-primary-500"
+                rows="3"
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500"
                 placeholder="Ej: sin cebolla, muy picante..."
               />
             </div>

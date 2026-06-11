@@ -485,7 +485,7 @@ const takeOrder = async (req, res) => {
 const getOrderStats = async (req, res) => {
   try {
     const { restauranteId } = req.user;
-    const { period = 'today' } = req.query;
+    const { period = 'today', tipoPedido } = req.query;
 
     let startDate, endDate;
     const now = new Date();
@@ -522,6 +522,12 @@ const getOrderStats = async (req, res) => {
       }
     };
 
+    if (tipoPedido === 'EXTERNAL') {
+      where.tipoPedido = { in: ['RECOGER', 'A_DOMICILIO'] };
+    } else if (tipoPedido) {
+      where.tipoPedido = tipoPedido;
+    }
+
     const [
       total,
       enviadas,
@@ -532,7 +538,9 @@ const getOrderStats = async (req, res) => {
       servidas,
       completadas,
       canceladas,
-      totalVentas
+      aDomicilio,
+      recoger,
+      ventasAggregate
     ] = await Promise.all([
       prisma.orden.count({ where }),
       prisma.orden.count({ where: { ...where, estado: 'ENVIADA' } }),
@@ -543,12 +551,18 @@ const getOrderStats = async (req, res) => {
       prisma.orden.count({ where: { ...where, estado: 'SERVIDA' } }),
       prisma.orden.count({ where: { ...where, estado: 'COMPLETADA' } }),
       prisma.orden.count({ where: { ...where, estado: 'CANCELADA' } }),
+      prisma.orden.count({ where: { ...where, tipoPedido: 'A_DOMICILIO' } }),
+      prisma.orden.count({ where: { ...where, tipoPedido: 'RECOGER' } }),
       prisma.orden.aggregate({
         where: {
           ...where,
           estado: { not: 'CANCELADA' }
         },
         _sum: {
+          total: true,
+          costoEnvio: true
+        },
+        _avg: {
           total: true
         }
       })
@@ -566,7 +580,11 @@ const getOrderStats = async (req, res) => {
         servidas,
         completadas,
         canceladas,
-        totalVentas: totalVentas._sum.total || 0,
+        aDomicilio,
+        recoger,
+        totalVentas: ventasAggregate._sum.total || 0,
+        totalEnvios: ventasAggregate._sum.costoEnvio || 0,
+        ticketPromedio: ventasAggregate._avg.total || 0,
         period
       }
     });

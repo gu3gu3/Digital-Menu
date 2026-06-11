@@ -35,8 +35,8 @@ const AdminChangelogPage = () => {
   const roadmapItems = [
     {
       id: 'pickup-delivery',
-      title: "Módulo de Pick-Up y Delivery Externo",
-      description: "¡Nuevo Addon! Ahora puedes recibir pedidos para llevar y a domicilio directamente en tu panel de administración. Proporciona a tus clientes un enlace exclusivo y un código QR descargable para agilizar tus ventas externas.",
+      title: "Módulo de Pick-Up y Delivery Externo + Cálculo Inteligente GPS",
+      description: "¡Nuevo Addon! Recibe pedidos para llevar y a domicilio. Incluye un revolucionario cálculo inteligente de delivery que utiliza el GPS del cliente y la Fórmula Haversine para cobrar tarifas justas por distancia exacta (Tarifa base + extra por km), sin depender de costosas integraciones de mapas.",
       date: "Junio 2026",
       status: "Lanzado",
       icon: ShoppingBagIcon,

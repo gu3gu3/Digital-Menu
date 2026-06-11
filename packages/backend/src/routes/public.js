@@ -561,8 +561,32 @@ const createExternalOrder = async (req, res) => {
     if (config.servicio && tipoPedido === 'PARA_COMER_AQUI') servicio = subtotal * (config.servicio / 100);
 
     let costoEnvio = 0;
-    if (tipoPedido === 'A_DOMICILIO') {
-      costoEnvio = config.costoEnvio || 0; // Implementación futura para costo de envío
+    if (tipoPedido === 'A_DOMICILIO' && config.delivery?.enabled && config.delivery?.latitud && config.delivery?.longitud && datosCliente?.coordenadas) {
+      // Cálculo Haversine en el servidor para evitar manipulación en el cliente
+      const R = 6371; // Radio de la tierra en km
+      const lat1 = config.delivery.latitud;
+      const lon1 = config.delivery.longitud;
+      const lat2 = datosCliente.coordenadas.lat;
+      const lon2 = datosCliente.coordenadas.lng;
+
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = 
+        Math.sin(dLat/2) * Math.sin(dLat/2) +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+        Math.sin(dLon/2) * Math.sin(dLon/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      const distanceKm = R * c;
+
+      costoEnvio = config.delivery.tarifaBase || 0;
+      if (distanceKm > (config.delivery.kmBase || 0)) {
+        const extraKm = distanceKm - (config.delivery.kmBase || 0);
+        costoEnvio += extraKm * (config.delivery.costoKmExtra || 0);
+      }
+      costoEnvio = Math.round(costoEnvio);
+    } else if (tipoPedido === 'A_DOMICILIO') {
+      // Fallback si la configuración de delivery no está completa o el cliente no envió coordenadas
+      costoEnvio = req.body.costoEnvio || config.costoEnvio || 0;
     }
 
     const total = subtotal + impuestos + servicio + costoEnvio;
