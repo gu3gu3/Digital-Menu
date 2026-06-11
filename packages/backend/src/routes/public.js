@@ -175,6 +175,7 @@ const getRestaurantBySlug = async (req, res) => {
           backgroundColor: restaurante.backgroundColor,
           moneda: restaurante.moneda,
           configuracion: restaurante.configuracion,
+          addonPedidosExternos: restaurante.addonPedidosExternos,
           sponsorActivo: restaurante.sponsors?.length > 0 ? {
             nombreEmpresa: restaurante.sponsors[0].nombreEmpresa,
             logoUrl: buildAbsoluteUrl(restaurante.sponsors[0].logoUrl, req),
@@ -232,6 +233,7 @@ const getMenuBySlug = async (req, res) => {
         backgroundImage: true,
         moneda: true,
         configuracion: true,
+        addonPedidosExternos: true,
         categorias: {
           where: { activa: true, archivado: false },
           include: {
@@ -303,6 +305,7 @@ const getMenuBySlug = async (req, res) => {
           backgroundImage: restaurante.backgroundImage,
           moneda: restaurante.moneda,
           configuracion: restaurante.configuracion,
+          addonPedidosExternos: restaurante.addonPedidosExternos,
           sponsorActivo: restaurante.sponsors?.length > 0 ? {
             nombreEmpresa: restaurante.sponsors[0].nombreEmpresa,
             logoUrl: buildAbsoluteUrl(restaurante.sponsors[0].logoUrl, req),
@@ -504,6 +507,105 @@ const getSponsorBySlug = async (req, res) => {
   }
 };
 
+// @desc    Crear orden externa (Pickup/Delivery)
+// @route   POST /api/public/orders/external
+// @access  Public
+const createExternalOrder = async (req, res) => {
+  try {
+    const { slug, tipoPedido, datosCliente, notas, items } = req.body;
+
+    const restaurante = await prisma.restaurante.findFirst({
+      where: { slug, activo: true }
+    });
+
+    if (!restaurante) {
+      return res.status(404).json({ success: false, error: 'Restaurante no encontrado' });
+    }
+
+    if (!restaurante.addonPedidosExternos) {
+      return res.status(403).json({ success: false, error: 'El restaurante no tiene habilitados los pedidos externos' });
+    }
+
+    if (tipoPedido === 'A_DOMICILIO' && (!datosCliente || !datosCliente.direccion)) {
+      return res.status(400).json({ success: false, error: 'La dirección es obligatoria para envíos a domicilio' });
+    }
+
+    let subtotal = 0;
+    const itemsParaCrear = [];
+
+    for (const item of items) {
+      const producto = await prisma.producto.findUnique({ where: { id: item.productoId } });
+      if (!producto) continue;
+      
+      const itemSubtotal = producto.precio * item.cantidad;
+      subtotal += itemSubtotal;
+      
+      itemsParaCrear.push({
+        productoId: producto.id,
+        cantidad: item.cantidad,
+        precioUnitario: producto.precio,
+        subtotal: itemSubtotal,
+        notas: item.notas ? `${item.notas} (Por: ${datosCliente?.nombre || 'Anónimo'})` : `(Por: ${datosCliente?.nombre || 'Anónimo'})`
+      });
+    }
+
+    if (itemsParaCrear.length === 0) {
+      return res.status(400).json({ success: false, error: 'El carrito está vacío o contiene productos inválidos' });
+    }
+
+    let impuestos = 0;
+    let servicio = 0;
+    const config = typeof restaurante.configuracion === 'string' ? JSON.parse(restaurante.configuracion) : (restaurante.configuracion || {});
+    if (config.iva) impuestos = subtotal * (config.iva / 100);
+    // Nota: A veces el servicio no se cobra en pickup/delivery, pero lo mantendremos igual o se puede configurar a 0 en el futuro.
+    if (config.servicio && tipoPedido === 'PARA_COMER_AQUI') servicio = subtotal * (config.servicio / 100);
+
+    let costoEnvio = 0;
+    if (tipoPedido === 'A_DOMICILIO') {
+      costoEnvio = config.costoEnvio || 0; // Implementación futura para costo de envío
+    }
+
+    const total = subtotal + impuestos + servicio + costoEnvio;
+
+    // Use transaction to ensure order number is correct
+    const orden = await prisma.$transaction(async (tx) => {
+      const lastOrder = await tx.orden.findFirst({
+        where: { restauranteId: restaurante.id },
+        orderBy: { numeroOrden: 'desc' }
+      });
+      const newOrderNumber = (lastOrder?.numeroOrden || 0) + 1;
+
+      return await tx.orden.create({
+        data: {
+          numeroOrden: newOrderNumber,
+          estado: 'ENVIADA',
+          tipoPedido: tipoPedido || 'RECOGER',
+          datosCliente: datosCliente,
+          notas: notas,
+          nombreClienteFactura: datosCliente?.nombre,
+          subtotal,
+          impuestos,
+          servicio,
+          costoEnvio,
+          total,
+          restaurante: { connect: { id: restaurante.id } },
+          items: {
+            create: itemsParaCrear
+          }
+        },
+        include: {
+          items: { include: { producto: true } }
+        }
+      });
+    });
+
+    res.json({ success: true, data: { orden } });
+  } catch (error) {
+    console.error('Error creando orden externa:', error);
+    res.status(500).json({ success: false, error: 'Error interno del servidor' });
+  }
+};
+
 // Routes
 router.get('/sponsor/:slug', getSponsorBySlug);
 router.get('/restaurant/:slug', getRestaurantBySlug);
@@ -511,6 +613,7 @@ router.get('/menu/:slug', getMenuBySlug);
 router.get('/check-slug/:slug', checkSlugAvailability);
 router.get('/domain/:domain', getSlugByDomain);
 router.get('/orden/:ordenId', getOrdenStatus);
+router.post('/orders/external', createExternalOrder);
 router.get('/planes', getActivePlanes);
 
 module.exports = router; 

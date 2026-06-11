@@ -127,6 +127,27 @@ const SubscriptionDetailsPage = () => {
     }
   };
 
+  const handleToggleAddon = async (addonName, newValue) => {
+    try {
+      setLoading(true);
+      setError('');
+      
+      const payload = {
+        [addonName]: newValue
+      };
+
+      const response = await superAdminService.updateSubscription(id, payload);
+      
+      if (response.success) {
+        alert('Addon actualizado correctamente');
+        fetchData(); // Reload data
+      }
+    } catch (err) {
+      setError(err.message || 'Error al actualizar addon');
+      setLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -360,6 +381,35 @@ const SubscriptionDetailsPage = () => {
               >
                 {savingDomain ? 'Guardando...' : 'Guardar Dominio'}
               </button>
+            </div>
+          </div>
+
+          {/* Addons Box */}
+          <div className="bg-white shadow rounded-lg p-6 flex flex-col justify-between">
+            <div>
+              <div className="flex items-center space-x-2 mb-4 border-b pb-2">
+                <svg className="h-5 w-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                </svg>
+                <h3 className="text-lg font-medium text-gray-900">Módulos Adicionales</h3>
+              </div>
+              
+              <div className="mt-4 flex items-center justify-between">
+                <div>
+                  <h4 className="text-sm font-medium text-gray-900">Pick-Up / Delivery</h4>
+                  <p className="text-xs text-gray-500">Habilita pedidos externos sin mesa</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleToggleAddon('addonPedidosExternos', !restaurante?.addonPedidosExternos)}
+                  className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${restaurante?.addonPedidosExternos ? 'bg-indigo-600' : 'bg-gray-200'}`}
+                >
+                  <span
+                    aria-hidden="true"
+                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${restaurante?.addonPedidosExternos ? 'translate-x-5' : 'translate-x-0'}`}
+                  />
+                </button>
+              </div>
             </div>
           </div>
         </div>

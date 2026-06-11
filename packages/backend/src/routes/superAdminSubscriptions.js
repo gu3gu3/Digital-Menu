@@ -11,7 +11,8 @@ const updateSubscriptionSchema = Joi.object({
   planId: Joi.string().optional(),
   estado: Joi.string().valid('ACTIVA', 'VENCIDA', 'SUSPENDIDA', 'CANCELADA', 'BLOQUEADA').optional(),
   fechaVencimiento: Joi.date().optional(),
-  notasAdmin: Joi.string().optional()
+  notasAdmin: Joi.string().optional(),
+  addonPedidosExternos: Joi.boolean().optional()
 });
 
 const processPaymentSchema = Joi.object({
@@ -418,7 +419,8 @@ router.get('/:id', authenticateSuperAdmin, async (req, res) => {
         partner: restaurante.partner,
         sponsorId: restaurante.sponsors && restaurante.sponsors.length > 0 ? restaurante.sponsors[0].id : null,
         sponsor: restaurante.sponsors && restaurante.sponsors.length > 0 ? restaurante.sponsors[0] : null,
-        sponsors: restaurante.sponsors
+        sponsors: restaurante.sponsors,
+        addonPedidosExternos: restaurante.addonPedidosExternos
       },
       stats: {
         totalUsuariosAdmin: restaurante.usuariosAdmin.length,
@@ -475,24 +477,27 @@ router.put('/:id', authenticateSuperAdmin, async (req, res) => {
       });
     }
 
+    // Extraer campos que pertenecen al restaurante
+    const { addonPedidosExternos, ...suscripcionData } = value;
+
     // Actualizar suscripción
     const resultado = await prisma.$transaction(async (tx) => {
       // Actualizar suscripción
       const suscripcionActualizada = await tx.suscripcion.update({
         where: { id },
-        data: value,
+        data: suscripcionData,
         include: {
           restaurante: {
             select: {
               id: true,
               nombre: true,
-              email: true
-            }
-          },
-          plan: {
-            select: {
-              id: true,
-              nombre: true
+              email: true,
+              plan: {
+                select: {
+                  id: true,
+                  nombre: true
+                }
+              }
             }
           }
         }
@@ -503,6 +508,14 @@ router.put('/:id', authenticateSuperAdmin, async (req, res) => {
         await tx.restaurante.update({
           where: { id: suscripcionExistente.restauranteId },
           data: { planId: value.planId }
+        });
+      }
+
+      // Si se cambia el addon de pedidos externos
+      if (typeof addonPedidosExternos === 'boolean') {
+        await tx.restaurante.update({
+          where: { id: suscripcionExistente.restauranteId },
+          data: { addonPedidosExternos }
         });
       }
 

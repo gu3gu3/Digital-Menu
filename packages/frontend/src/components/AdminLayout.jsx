@@ -14,7 +14,8 @@ import {
   LinkIcon,
   BellIcon as BellIconOutline,
   ChatBubbleBottomCenterTextIcon,
-  SparklesIcon
+  SparklesIcon,
+  ShoppingBagIcon
 } from '@heroicons/react/24/outline'
 import logo from '../assets/logo.png'
 import NotificationBell from './NotificationBell'
@@ -81,7 +82,7 @@ const AdminLayout = () => {
     navigate('/admin/login')
   }
 
-  const navigation = [
+  let navigation = [
     { name: 'Dashboard', href: '/admin/dashboard', icon: HomeIcon },
     { name: 'Restaurante', href: '/admin/restaurant', icon: BuildingStorefrontIcon },
     { name: 'Menú', href: '/admin/menu', icon: RectangleStackIcon },
@@ -89,10 +90,17 @@ const AdminLayout = () => {
     { name: 'Notificaciones', href: '/admin/notifications', icon: BellIconOutline },
     { name: 'Mesas & QR', href: '/admin/tables', icon: QrCodeIcon },
     { name: 'Meseros', href: '/admin/staff', icon: UsersIcon },
+  ]
+
+  if (restaurant?.addonPedidosExternos) {
+    navigation.splice(4, 0, { name: 'Delivery & Pickup', href: '/admin/pickup-delivery', icon: ShoppingBagIcon })
+  }
+
+  navigation = navigation.concat([
     { name: 'Danos tu opinión', href: '/admin/feedback', icon: ChatBubbleBottomCenterTextIcon },
     { name: 'Novedades y Mejoras', href: '/admin/changelog', icon: SparklesIcon },
     { name: 'Configuración', href: '/admin/settings', icon: Cog6ToothIcon },
-  ]
+  ])
 
   const isCurrentPath = (path) => {
     return location.pathname === path || location.pathname.startsWith(path + '/')

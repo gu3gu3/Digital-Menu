@@ -34,6 +34,7 @@ const AdminOrdersPage = () => {
   const [filters, setFilters] = useState({
     estado: '',
     mesa: '',
+    tipoPedido: '',
     fecha: (new Date(Date.now() - (new Date()).getTimezoneOffset() * 60000)).toISOString().split('T')[0] // Fecha de hoy local por defecto
   });
 
@@ -129,6 +130,7 @@ const AdminOrdersPage = () => {
     setFilters({ 
       estado: '', 
       mesa: '', 
+      tipoPedido: '',
       fecha: (new Date(Date.now() - (new Date()).getTimezoneOffset() * 60000)).toISOString().split('T')[0] // Mantener fecha de hoy local
     });
     setSearchTerm('');
@@ -229,7 +231,7 @@ const AdminOrdersPage = () => {
           </div>
           
           {/* Responsive Tabs Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 gap-2 mb-4">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -255,6 +257,31 @@ const AdminOrdersPage = () => {
                 </button>
               );
             })}
+          </div>
+
+          {/* Tabs para Tipo de Pedido */}
+          <div className="mt-4 pt-4 border-t border-gray-100">
+            <h3 className="text-sm font-medium text-gray-700 mb-3">Tipo de Pedido</h3>
+            <div className="flex flex-wrap gap-2">
+              {[
+                { id: '', name: 'Todos' },
+                { id: 'PARA_COMER_AQUI', name: 'En Mesa' },
+                { id: 'RECOGER', name: 'Pasar a recoger' },
+                { id: 'A_DOMICILIO', name: 'A domicilio' }
+              ].map(tipo => (
+                <button
+                  key={tipo.id}
+                  onClick={() => setFilters({ ...filters, tipoPedido: tipo.id })}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                    filters.tipoPedido === tipo.id
+                      ? 'bg-primary-600 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  {tipo.name}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -377,7 +404,7 @@ const AdminOrdersPage = () => {
                       Orden
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Mesa
+                      Tipo / Mesa
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Cliente
@@ -422,9 +449,19 @@ const AdminOrdersPage = () => {
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                            Mesa {order.mesa?.numero}
-                          </span>
+                          {order.tipoPedido === 'A_DOMICILIO' ? (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                              A Domicilio
+                            </span>
+                          ) : order.tipoPedido === 'RECOGER' ? (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                              Pasar a recoger
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                              Mesa {order.mesa?.numero}
+                            </span>
+                          )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-900">
@@ -512,9 +549,19 @@ const AdminOrdersPage = () => {
                         <h3 className="text-sm font-semibold text-gray-900">
                           #{order.numeroOrden}
                         </h3>
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                          Mesa {order.mesa?.numero}
-                        </span>
+                        {order.tipoPedido === 'A_DOMICILIO' ? (
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                            A Domicilio
+                          </span>
+                        ) : order.tipoPedido === 'RECOGER' ? (
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                            Pasar a recoger
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            Mesa {order.mesa?.numero}
+                          </span>
+                        )}
                       </div>
                       <OrderStatusBadge status={order.estado} size="sm" />
                     </div>

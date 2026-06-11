@@ -48,6 +48,7 @@ model Restaurante {
   configuracion        Json?
   pais                 String?  @default("US")
   dominioPersonalizado String?  @unique
+  addonPedidosExternos Boolean  @default(false)
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
 
@@ -209,14 +210,17 @@ model Orden {
   nombreClienteFactura  String?
   preparacionStartedAt  DateTime?
   preparacionFinishedAt DateTime?
+  tipoPedido            String    @default("PARA_COMER_AQUI") // PARA_COMER_AQUI, RECOGER, A_DOMICILIO
+  datosCliente          Json?
+  costoEnvio            Float     @default(0)
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
 
   restauranteId String
   restaurante   Restaurante @relation(fields: [restauranteId], references: [id], onDelete: Cascade)
 
-  mesaId String
-  mesa   Mesa   @relation(fields: [mesaId], references: [id])
+  mesaId String?
+  mesa   Mesa?  @relation(fields: [mesaId], references: [id])
 
   sesionId String?
   sesion   Sesion? @relation(fields: [sesionId], references: [id])
@@ -256,8 +260,8 @@ model Sesion {
   ultimaActividad DateTime?
   finSesion       DateTime?
 
-  mesaId        String
-  mesa          Mesa        @relation(fields: [mesaId], references: [id])
+  mesaId        String?
+  mesa          Mesa?       @relation(fields: [mesaId], references: [id])
   restauranteId String
   restaurante   Restaurante @relation(fields: [restauranteId], references: [id])
   ordenes       Orden[]

@@ -413,10 +413,10 @@ export default function CampaignBuilder({ sponsorId }) {
                 <h4 className={`text-sm font-semibold flex items-center gap-1 mb-1 ${tipoCampana === 'SPLASH' ? 'text-amber-800' : 'text-blue-800'}`}>
                   <CheckCircle2 size={16} /> Experiencia de Usuario (UX)
                 </h4>
-                <p className={`text-xs ${tipoCampana === 'SPLASH' ? 'text-amber-700' : 'text-blue-700'}`}>
+                <p className={`text-xs mt-1 leading-relaxed ${tipoCampana === 'SPLASH' ? 'text-amber-700' : 'text-blue-700'}`}>
                   {tipoCampana === 'SPLASH' 
-                    ? 'La imagen o video que subas se mostrará durante 3 segundos a pantalla completa sobre el menú. Recomendamos proporciones verticales (9:16).' 
-                    : `El banner permanecerá visible en la posición seleccionada (${posicionBanner}). Recomendamos proporciones horizontales como 16:9 o ultra anchas (21:9).`
+                    ? 'La imagen o video se mostrará a pantalla completa durante 3 segundos. Para un renderizado perfecto sin distorsiones en móviles, recomendamos usar una resolución exacta de 1080x1920 píxeles (proporción vertical 9:16).' 
+                    : `El banner permanecerá visible en la posición seleccionada. Para evitar distorsiones o recortes inadecuados, sugerimos utilizar una imagen panorámica con una resolución exacta de 1080x250 píxeles.`
                   }
                 </p>
               </div>

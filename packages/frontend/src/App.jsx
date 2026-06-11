@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import LandingPage from './pages/LandingPage'
 import DemoPage from './pages/DemoPage'
 import AdminLoginPage from './pages/AdminLoginPage'
@@ -13,6 +13,7 @@ import AdminRestaurantPage from './pages/AdminRestaurantPage'
 import AdminMenuPage from './pages/AdminMenuPage'
 import AdminTablesPage from './pages/AdminTablesPage'
 import AdminOrdersPage from './pages/AdminOrdersPage'
+import AdminPickupDeliveryPage from './pages/AdminPickupDeliveryPage'
 import AdminStaffPage from './pages/AdminStaffPage'
 import AdminSettingsPage from './pages/AdminSettingsPage'
 import NotificationsPage from './pages/NotificationsPage'
@@ -58,11 +59,13 @@ function App() {
               <Route path="/admin/reset-password" element={<AdminResetPasswordPage />} />
               
               {/* Staff authentication routes */}
+              <Route path="/staff" element={<Navigate to="/staff/login" replace />} />
               <Route path="/staff/login" element={<StaffLoginPage />} />
               <Route path="/staff/dashboard" element={<StaffDashboard />} />
               <Route path="/staff/kitchen" element={<KitchenDashboard />} />
               
               {/* Super Admin routes */}
+              <Route path="/super-admin" element={<Navigate to="/super-admin/login" replace />} />
               <Route path="/super-admin/login" element={<SuperAdminLoginPage />} />
               <Route path="/super-admin/dashboard" element={<SuperAdminDashboard />} />
               <Route path="/super-admin/settings" element={<SuperAdminSettingsPage />} />
@@ -77,10 +80,12 @@ function App() {
               <Route path="/super-admin/sponsors" element={<SuperAdminSponsorsPage />} />
               
               {/* Sponsor routes */}
+              <Route path="/sponsor" element={<Navigate to="/sponsor/login" replace />} />
               <Route path="/sponsor/login" element={<SponsorLoginPage />} />
               <Route path="/sponsor/dashboard" element={<SponsorDashboard />} />
               
               {/* Partner routes */}
+              <Route path="/partner" element={<Navigate to="/partner/login" replace />} />
               <Route path="/partner/login" element={<PartnerLoginPage />} />
               <Route path="/partner/dashboard" element={<PartnerDashboard />} />
               <Route path="/partner/ai-tools" element={<PartnerAiToolsPage />} />
@@ -94,6 +99,7 @@ function App() {
                 <Route path="orders" element={<AdminOrdersPage />} />
                 <Route path="staff" element={<AdminStaffPage />} />
                 <Route path="feedback" element={<AdminFeedbackPage />} />
+                <Route path="pickup-delivery" element={<AdminPickupDeliveryPage />} />
                 <Route path="changelog" element={<AdminChangelogPage />} />
                 <Route path="settings" element={<AdminSettingsPage />} />
                 <Route path="notifications" element={<NotificationsPage />} />
@@ -101,6 +107,7 @@ function App() {
               
               {/* Dynamic menu routes (placed at the end so exact routes take precedence) */}
               <Route path="/:slug" element={<PublicMenuPage />} />
+              <Route path="/order/:slug" element={<PublicMenuPage />} />
               <Route path="/:countryCode/:slug" element={<PublicMenuPage />} />
             </Routes>
           </div>

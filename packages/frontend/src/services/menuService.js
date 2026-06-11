@@ -65,6 +65,12 @@ class MenuService {
     return response.data.data;
   }
 
+  // Crear pedido externo (Pickup / Delivery)
+  async createExternalOrder(orderData) {
+    const response = await apiClient.post('/public/orders/external', orderData);
+    return response.data.data;
+  }
+
   // Actualizar carrito de sesión (para sincronización con estado local)
   async updateSessionCart(sessionToken, cartItems) {
     // Esta función maneja la sincronización del carrito con el backend

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { UserIcon } from '@heroicons/react/24/outline';
 
-const NamePromptModal = ({ isOpen, onSubmit, restaurantName }) => {
+const NamePromptModal = ({ isOpen, onSubmit, restaurantName, isExternalOrder = false }) => {
   const [name, setName] = useState('');
 
   const handleSubmit = (e) => {
@@ -26,7 +26,10 @@ const NamePromptModal = ({ isOpen, onSubmit, restaurantName }) => {
             ¡Bienvenido a {restaurantName}!
           </h3>
           <p className="mt-2 text-sm text-gray-500">
-            Para identificar tu pedido en la mesa, por favor danos un nombre.
+            {isExternalOrder 
+              ? 'Para procesar tu orden de Delivery o Pick-Up, por favor danos un nombre.'
+              : 'Para identificar tu pedido en la mesa, por favor danos un nombre.'
+            }
           </p>
           <form onSubmit={handleSubmit} className="mt-6">
             <input

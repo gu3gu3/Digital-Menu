@@ -192,7 +192,11 @@ const OrderDetailsModal = ({ isOpen, onClose, order, onOrderUpdate }) => {
                       Orden #{order.numeroOrden}
                     </Dialog.Title>
                     <p className="text-sm text-gray-600 mt-1">
-                      Mesa {order.mesa?.numero} • {formatDate(order.createdAt)}
+                      {order.tipoPedido === 'A_DOMICILIO' 
+                        ? 'A Domicilio' 
+                        : order.tipoPedido === 'RECOGER' 
+                        ? 'Pasar a recoger' 
+                        : `Mesa ${order.mesa?.numero}`} • {formatDate(order.createdAt)}
                     </p>
                   </div>
                   <div className="flex items-center space-x-3">
@@ -251,6 +255,27 @@ const OrderDetailsModal = ({ isOpen, onClose, order, onOrderUpdate }) => {
                     </div>
                   </div>
                 </div>
+
+                {/* Información adicional del cliente para pedidos externos */}
+                {(order.datosCliente?.telefono || order.datosCliente?.direccion) && (
+                  <div className="mb-6 p-4 bg-blue-50 border border-blue-100 rounded-lg">
+                    <h4 className="text-sm font-semibold text-gray-900 mb-3">Detalles de Entrega / Contacto</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {order.datosCliente?.telefono && (
+                        <div>
+                          <p className="text-xs text-gray-500">Teléfono</p>
+                          <p className="text-sm font-medium text-gray-900">{order.datosCliente.telefono}</p>
+                        </div>
+                      )}
+                      {order.datosCliente?.direccion && (
+                        <div>
+                          <p className="text-xs text-gray-500">Dirección</p>
+                          <p className="text-sm font-medium text-gray-900">{order.datosCliente.direccion}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 {/* Order Items */}
                 <div className="mb-6">

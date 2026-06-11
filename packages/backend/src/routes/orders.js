@@ -16,7 +16,8 @@ const getOrders = async (req, res) => {
       estado, 
       mesaId, 
       fecha, 
-      search 
+      search,
+      tipoPedido
     } = req.query;
 
     // Build where clause
@@ -35,6 +36,10 @@ const getOrders = async (req, res) => {
 
     if (mesaId) {
       where.mesaId = mesaId;
+    }
+
+    if (tipoPedido) {
+      where.tipoPedido = tipoPedido;
     }
 
     if (fecha) {

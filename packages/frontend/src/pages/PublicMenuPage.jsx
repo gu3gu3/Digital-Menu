@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { useParams, useSearchParams } from 'react-router-dom'
+import { useParams, useSearchParams, useLocation } from 'react-router-dom'
 import { 
   MapPinIcon, 
   PhoneIcon, 
@@ -28,6 +28,8 @@ const PublicMenuPage = ({ slugOverride }) => {
   const params = useParams()
   const activeSlug = slugOverride || params.slug
   const countryCode = params.countryCode
+  const location = useLocation()
+  const isExternalOrder = location.pathname.startsWith('/order/')
   
   const [searchParams] = useSearchParams()
   const mesaNumero = searchParams.get('mesa')
@@ -58,6 +60,11 @@ const PublicMenuPage = ({ slugOverride }) => {
   const [isNameModalOpen, setIsNameModalOpen] = useState(false)
   const [orderNotes, setOrderNotes] = useState('')
   const [showSplash, setShowSplash] = useState(false)
+  
+  // Estados para Pedidos Externos
+  const [tipoPedido, setTipoPedido] = useState('RECOGER')
+  const [telefono, setTelefono] = useState('')
+  const [direccion, setDireccion] = useState('')
 
   // Estados Swipe
   const [touchStart, setTouchStart] = useState(null)
@@ -345,9 +352,21 @@ const PublicMenuPage = ({ slugOverride }) => {
   }
 
   const confirmOrder = async () => {
-    if (!sesionId) {
+    // Si hay mesaNumero, la orden requiere sesión activa
+    if (mesaNumero && !sesionId) {
       showNotification('La sesión no es válida. Recarga la página.', 'error')
       return
+    }
+
+    if (!mesaNumero) {
+      if (tipoPedido === 'A_DOMICILIO' && (!direccion || direccion.trim() === '')) {
+        showNotification('Por favor, ingresa tu dirección para el envío a domicilio', 'error')
+        return
+      }
+      if (!telefono || telefono.trim() === '') {
+        showNotification('Por favor, ingresa tu teléfono para contactarte', 'error')
+        return
+      }
     }
     
     try {
@@ -359,14 +378,30 @@ const PublicMenuPage = ({ slugOverride }) => {
         notas: ''
       }));
 
-      const data = await menuService.confirmOrder(sesionId, {
-        nombreClienteFactura: customerName,
-        notas: orderNotes.trim() || undefined,
-        items: itemsParaBackend
-      });
+      let data;
+
+      if (mesaNumero) {
+        data = await menuService.confirmOrder(sesionId, {
+          nombreClienteFactura: customerName,
+          notas: orderNotes.trim() || undefined,
+          items: itemsParaBackend
+        });
+      } else {
+        data = await menuService.createExternalOrder({
+          slug: realSlug,
+          tipoPedido,
+          datosCliente: {
+            nombre: customerName,
+            telefono: telefono.trim(),
+            direccion: tipoPedido === 'A_DOMICILIO' ? direccion.trim() : undefined
+          },
+          notas: orderNotes.trim() || undefined,
+          items: itemsParaBackend
+        });
+      }
       
       setCurrentOrdenId(data.orden.id)
-      localStorage.setItem(`orden_${realSlug}_${mesaNumero}`, data.orden.id)
+      localStorage.setItem(`orden_${realSlug}_${mesaNumero || 'externo'}`, data.orden.id)
       
       setCart({ items: [], total: 0 })
       setShowOrderModal(false)
@@ -379,7 +414,7 @@ const PublicMenuPage = ({ slugOverride }) => {
 
     } catch (error) {
       console.error('Error confirming order:', error)
-      showNotification(error.message || 'Error al enviar el pedido. Intenta de nuevo.', 'error')
+      showNotification(error.response?.data?.error || error.message || 'Error al enviar el pedido. Intenta de nuevo.', 'error')
     } finally {
       setSubmittingOrder(false)
     }
@@ -507,6 +542,7 @@ const PublicMenuPage = ({ slugOverride }) => {
         isOpen={isNameModalOpen}
         onSubmit={handleNameSubmit}
         restaurantName={restaurante?.nombre || 'este restaurante'}
+        isExternalOrder={isExternalOrder}
       />
 
       {/* Banner Section */}
@@ -813,7 +849,64 @@ const PublicMenuPage = ({ slugOverride }) => {
             <p className="text-gray-600 mt-2">
               Tu pedido para <span className="font-semibold">{customerName}</span> está casi listo.
             </p>
-            <div className="mt-4">
+            <div className="mt-4 max-h-[60vh] overflow-y-auto px-1 scrollbar-hide">
+              
+              {!mesaNumero && (
+                <>
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Tipo de Pedido</label>
+                    <div className="flex gap-4">
+                      <label className="flex items-center">
+                        <input
+                          type="radio"
+                          value="RECOGER"
+                          checked={tipoPedido === 'RECOGER'}
+                          onChange={(e) => setTipoPedido(e.target.value)}
+                          className="mr-2"
+                        />
+                        <span className="text-sm">Pasar a recoger</span>
+                      </label>
+                      <label className="flex items-center">
+                        <input
+                          type="radio"
+                          value="A_DOMICILIO"
+                          checked={tipoPedido === 'A_DOMICILIO'}
+                          onChange={(e) => setTipoPedido(e.target.value)}
+                          className="mr-2"
+                        />
+                        <span className="text-sm">A domicilio</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="mb-4">
+                    <label htmlFor="telefono" className="block text-sm font-medium text-gray-700">Teléfono *</label>
+                    <input
+                      type="tel"
+                      id="telefono"
+                      value={telefono}
+                      onChange={(e) => setTelefono(e.target.value)}
+                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-primary-500 focus:border-primary-500"
+                      placeholder="Ej: 8888-8888"
+                    />
+                  </div>
+
+                  {tipoPedido === 'A_DOMICILIO' && (
+                    <div className="mb-4">
+                      <label htmlFor="direccion" className="block text-sm font-medium text-gray-700">Dirección de entrega *</label>
+                      <textarea
+                        id="direccion"
+                        value={direccion}
+                        onChange={(e) => setDireccion(e.target.value)}
+                        rows="2"
+                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-primary-500 focus:border-primary-500"
+                        placeholder="Ingresa tu dirección completa"
+                      />
+                    </div>
+                  )}
+                </>
+              )}
+
               <label htmlFor="order-notes" className="block text-sm font-medium text-gray-700">
                 Notas para la cocina (opcional)
               </label>
@@ -821,8 +914,8 @@ const PublicMenuPage = ({ slugOverride }) => {
                 id="order-notes"
                 value={orderNotes}
                 onChange={(e) => setOrderNotes(e.target.value)}
-                rows="3"
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500"
+                rows="2"
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-primary-500 focus:border-primary-500"
                 placeholder="Ej: sin cebolla, muy picante..."
               />
             </div>

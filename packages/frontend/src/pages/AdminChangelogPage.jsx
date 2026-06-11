@@ -6,7 +6,8 @@ import {
   ServerStackIcon,
   DevicePhoneMobileIcon,
   CurrencyEuroIcon,
-  ChatBubbleBottomCenterTextIcon
+  ChatBubbleBottomCenterTextIcon,
+  ShoppingBagIcon
 } from '@heroicons/react/24/outline'
 import apiClient from '../lib/apiClient'
 
@@ -32,6 +33,15 @@ const AdminChangelogPage = () => {
 
   // Roadmap & Changelog Dummy Data
   const roadmapItems = [
+    {
+      id: 'pickup-delivery',
+      title: "Módulo de Pick-Up y Delivery Externo",
+      description: "¡Nuevo Addon! Ahora puedes recibir pedidos para llevar y a domicilio directamente en tu panel de administración. Proporciona a tus clientes un enlace exclusivo y un código QR descargable para agilizar tus ventas externas.",
+      date: "Junio 2026",
+      status: "Lanzado",
+      icon: ShoppingBagIcon,
+      color: "bg-rose-500"
+    },
     {
       id: 0,
       title: "Configuración y Desglose Automático de IVA y Servicio",
