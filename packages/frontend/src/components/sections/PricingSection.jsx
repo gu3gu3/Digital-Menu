@@ -15,15 +15,18 @@ const PricingSection = () => {
       buttonColor: 'btn-secondary',
       popular: false,
       features: [
-        { text: 'Hasta 30 productos', included: true },
-        { text: 'Hasta 5 categorías', included: true },
+        { text: 'Hasta 100 productos', included: true },
+        { text: 'Hasta 10 categorías', included: true },
         { text: 'Hasta 10 mesas con QR únicos', included: true },
         { text: 'Hasta 2 meseros con panel dedicado', included: true },
-        { text: 'Hasta 400 órdenes/mes', included: true },
+        { text: 'Hasta 1,500 órdenes/mes', included: true },
         { text: '🤖 Digitalización de menú con IA*', included: true, highlight: true },
         { text: '💱 Soporte Multimoneda', included: true },
         { text: '📱 Menú digital responsivo', included: true },
-        { text: '🧑‍🍳 Módulo KDS (Cocina)', included: false }
+        { text: '📊 Dashboard con estadísticas', included: true, highlight: true },
+        { text: '🔔 Notificaciones en tiempo real', included: true, highlight: true },
+        { text: '🛎️ Botón Solicitar mesero', included: true, highlight: true },
+        { text: '💳 Botón Pedir la cuenta', included: true, highlight: true }
       ]
     },
     {
@@ -40,11 +43,13 @@ const PricingSection = () => {
         { text: 'Hasta 15 categorías', included: true },
         { text: 'Hasta 20 mesas con QR únicos', included: true },
         { text: 'Hasta 6 meseros con gestión completa', included: true },
-        { text: 'Hasta 1,500 órdenes/mes', included: true },
+        { text: 'Hasta 3,000 órdenes/mes', included: true },
         { text: '🤖 Digitalización de menú con IA*', included: true, highlight: true },
         { text: '💱 Soporte Multimoneda', included: true },
         { text: '📊 Dashboard con estadísticas', included: true, highlight: true },
-        { text: '🧑‍🍳 Módulo KDS (Cocina)', included: false }
+        { text: '🔔 Notificaciones en tiempo real', included: true, highlight: true },
+        { text: '🛎️ Botón Solicitar mesero', included: true, highlight: true },
+        { text: '💳 Botón Pedir la cuenta', included: true, highlight: true }
       ]
     },
     {
@@ -56,14 +61,15 @@ const PricingSection = () => {
       buttonColor: 'bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow-lg hover:bg-blue-700 transition-all duration-300',
       popular: false,
       features: [
-        { text: 'Hasta 200 productos', included: true },
-        { text: 'Hasta 30 categorías', included: true },
-        { text: 'Hasta 50 mesas con QR únicos', included: true },
-        { text: 'Meseros ilimitados', included: true, highlight: true },
-        { text: 'Hasta 4,000 órdenes/mes', included: true },
+        { text: 'Hasta 300 productos', included: true },
+        { text: 'Hasta 45 categorías', included: true },
+        { text: 'Hasta 75 mesas con QR únicos', included: true },
+        { text: 'Hasta 10 meseros', included: true, highlight: true },
+        { text: 'Hasta 7,500 órdenes/mes', included: true },
         { text: '🤖 Digitalización de menú con IA*', included: true, highlight: true },
-        { text: '🎨 Personalización avanzada', included: true, highlight: true },
         { text: '🔔 Notificaciones en tiempo real', included: true, highlight: true },
+        { text: '🛎️ Botón Solicitar mesero', included: true, highlight: true },
+        { text: '💳 Botón Pedir la cuenta', included: true, highlight: true },
         { text: '🧾 Cálculo automático de IVA y Servicio', included: true, highlight: true },
         { text: '🧑‍🍳 Módulo KDS (Cocina)', included: true, highlight: true }
       ]
@@ -86,6 +92,9 @@ const PricingSection = () => {
         { text: '🤖 Digitalización de menú con IA*', included: true, highlight: true },
         { text: '📊 Analytics empresariales', included: true, highlight: true },
         { text: '🆘 Soporte 24/7 dedicado', included: true, highlight: true },
+        { text: '🔔 Notificaciones en tiempo real', included: true, highlight: true },
+        { text: '🛎️ Botón Solicitar mesero', included: true, highlight: true },
+        { text: '💳 Botón Pedir la cuenta', included: true, highlight: true },
         { text: '🧾 Cálculo automático de IVA y Servicio', included: true, highlight: true },
         { text: '🧑‍🍳 Módulo KDS (Cocina)', included: true, highlight: true }
       ]
