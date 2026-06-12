@@ -727,7 +727,8 @@ const register = async (req, res) => {
         result.nombre,
         result.restaurante.nombre,
         planElegido,
-        demoDays
+        demoDays,
+        password
       );
       
       console.log(`📧 Emails enviados a ${result.email}`);

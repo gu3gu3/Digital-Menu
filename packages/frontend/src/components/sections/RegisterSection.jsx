@@ -331,7 +331,7 @@ const RegisterSection = () => {
                       <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-600"></div>
                     </div>
                   ) : (
-                    plans.map((plan) => (
+                    plans.filter(plan => plan.nombre !== 'Plan Platinum').map((plan) => (
                       <div 
                         key={plan.id}
                         onClick={() => setSelectedPlanId(plan.id)}
@@ -356,6 +356,10 @@ const RegisterSection = () => {
                           {plan.limiteMesas > 0 && <div>• Hasta {plan.limiteMesas} mesas (QR)</div>}
                           {plan.limiteMeseros > 0 && <div>• Hasta {plan.limiteMeseros} meseros</div>}
                           {plan.limiteOrdenes > 0 && <div>• {plan.limiteOrdenes} órdenes mensuales</div>}
+                          <div>• 🤖 Digitalización de menú con IA*</div>
+                          {plan.nombre !== 'Plan Emprendedor' && <div>• 📊 Dashboard de analíticas</div>}
+                          <div>• 🛍️ Pick-up / Delivery (Addon)</div>
+                          <div>• 🚀 Próximamente: Módulo de marketing</div>
                         </div>
                         
                         <div className="mt-4 pt-4 border-t border-gray-200 border-opacity-50">

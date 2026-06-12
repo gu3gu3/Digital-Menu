@@ -477,7 +477,7 @@ const AdminRegisterPage = () => {
                     <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-600"></div>
                   </div>
                 ) : (
-                  plans.map((plan) => (
+                  plans.filter(plan => plan.nombre !== 'Plan Platinum').map((plan) => (
                     <div 
                       key={plan.id}
                       onClick={() => setSelectedPlanId(plan.id)}
@@ -502,6 +502,10 @@ const AdminRegisterPage = () => {
                         {plan.limiteMesas > 0 && <li>• Hasta {plan.limiteMesas} mesas (QR)</li>}
                         {plan.limiteMeseros > 0 && <li>• Hasta {plan.limiteMeseros} meseros</li>}
                         {plan.limiteOrdenes > 0 && <li>• {plan.limiteOrdenes} órdenes mensuales</li>}
+                        <li>• 🤖 Digitalización de menú con IA*</li>
+                        {plan.nombre !== 'Plan Emprendedor' && <li>• 📊 Dashboard de analíticas</li>}
+                        <li>• 🛍️ Pick-up / Delivery (Addon)</li>
+                        <li>• 🚀 Próximamente: Módulo de marketing</li>
                       </ul>
                       
                       <div className="mt-4 pt-4 border-t border-gray-200 border-opacity-50">

@@ -22,11 +22,12 @@ const PricingSection = () => {
         { text: 'Hasta 1,500 órdenes/mes', included: true },
         { text: '🤖 Digitalización de menú con IA*', included: true, highlight: true },
         { text: '💱 Soporte Multimoneda', included: true },
-        { text: '📱 Menú digital responsivo', included: true },
         { text: '📊 Dashboard con estadísticas', included: true, highlight: true },
         { text: '🔔 Notificaciones en tiempo real', included: true, highlight: true },
         { text: '🛎️ Botón Solicitar mesero', included: true, highlight: true },
-        { text: '💳 Botón Pedir la cuenta', included: true, highlight: true }
+        { text: '💳 Botón Pedir la cuenta', included: true, highlight: true },
+        { text: '🛍️ Pick-up / Delivery (Addon)', included: true },
+        { text: '🚀 Próximamente: Módulo de marketing', included: true }
       ]
     },
     {
@@ -49,7 +50,9 @@ const PricingSection = () => {
         { text: '📊 Dashboard con estadísticas', included: true, highlight: true },
         { text: '🔔 Notificaciones en tiempo real', included: true, highlight: true },
         { text: '🛎️ Botón Solicitar mesero', included: true, highlight: true },
-        { text: '💳 Botón Pedir la cuenta', included: true, highlight: true }
+        { text: '💳 Botón Pedir la cuenta', included: true, highlight: true },
+        { text: '🛍️ Pick-up / Delivery (Addon)', included: true },
+        { text: '🚀 Próximamente: Módulo de marketing', included: true }
       ]
     },
     {
@@ -67,11 +70,14 @@ const PricingSection = () => {
         { text: 'Hasta 10 meseros', included: true, highlight: true },
         { text: 'Hasta 7,500 órdenes/mes', included: true },
         { text: '🤖 Digitalización de menú con IA*', included: true, highlight: true },
+        { text: '📊 Dashboard de analíticas', included: true, highlight: true },
         { text: '🔔 Notificaciones en tiempo real', included: true, highlight: true },
         { text: '🛎️ Botón Solicitar mesero', included: true, highlight: true },
         { text: '💳 Botón Pedir la cuenta', included: true, highlight: true },
         { text: '🧾 Cálculo automático de IVA y Servicio', included: true, highlight: true },
-        { text: '🧑‍🍳 Módulo KDS (Cocina)', included: true, highlight: true }
+        { text: '🧑‍🍳 Módulo KDS (Cocina)', included: true, highlight: true },
+        { text: '🛍️ Pick-up / Delivery (Addon)', included: true },
+        { text: '🚀 Próximamente: Módulo de marketing', included: true }
       ]
     },
     {
@@ -96,7 +102,9 @@ const PricingSection = () => {
         { text: '🛎️ Botón Solicitar mesero', included: true, highlight: true },
         { text: '💳 Botón Pedir la cuenta', included: true, highlight: true },
         { text: '🧾 Cálculo automático de IVA y Servicio', included: true, highlight: true },
-        { text: '🧑‍🍳 Módulo KDS (Cocina)', included: true, highlight: true }
+        { text: '🧑‍🍳 Módulo KDS (Cocina)', included: true, highlight: true },
+        { text: '🛍️ Pick-up / Delivery (Addon)', included: true },
+        { text: '🚀 Próximamente: Módulo de marketing', included: true }
       ]
     }
   ]

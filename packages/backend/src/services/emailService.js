@@ -147,7 +147,7 @@ class EmailService {
     return this.sendEmail(emailContent);
   }
 
-  async sendWelcomeEmail(email, userName, restaurantName, planElegido, demoDays) {
+  async sendWelcomeEmail(email, userName, restaurantName, planElegido, demoDays, tempPassword) {
     const baseUrl = process.env.FRONTEND_URL || 'https://menuview.app';
     const dashboardUrl = `${baseUrl}/admin/dashboard`;
     const adminLoginUrl = `${baseUrl}/admin/login`;
@@ -238,6 +238,17 @@ class EmailService {
                 <div style="background-color: #bee3f8; padding: 10px; border-radius: 4px; margin: 10px 0;">
                   <code style="color: #2a69ac; font-size: 13px; word-break: break-all;">${adminLoginUrl}</code>
                 </div>
+                ${tempPassword ? `
+                <p style="color: #2c5282; margin: 15px 0 10px 0; font-size: 14px;">
+                  <strong>Tu contraseña temporal es:</strong>
+                </p>
+                <div style="background-color: #bee3f8; padding: 10px; border-radius: 4px; margin: 10px 0;">
+                  <code style="color: #2a69ac; font-size: 14px; font-weight: bold;">${tempPassword}</code>
+                </div>
+                <p style="color: #2c5282; font-size: 12px; margin: 5px 0 15px 0;">
+                  (Te recomendamos cambiarla una vez que inicies sesión)
+                </p>
+                ` : ''}
                 <div style="text-align: center; margin: 15px 0;">
                   <a href="${adminLoginUrl}" style="background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%); color: white; text-decoration: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; font-size: 14px; display: inline-block;">
                     🔗 Ir al Login
