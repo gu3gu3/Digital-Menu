@@ -8,11 +8,13 @@ import {
   ChatBubbleLeftRightIcon,
   CheckIcon,
   ChevronUpDownIcon,
-  UsersIcon 
+  UsersIcon,
+  PrinterIcon 
 } from '@heroicons/react/24/outline';
 import OrderStatusBadge from './OrderStatusBadge';
 import ordersService from '../services/ordersService';
 import staffService from '../services/staffService';
+import restaurantService from '../services/restaurantService';
 import useRestaurantCurrency from '../hooks/useRestaurantCurrency';
 
 const OrderDetailsModal = ({ isOpen, onClose, order, onOrderUpdate }) => {
@@ -23,6 +25,22 @@ const OrderDetailsModal = ({ isOpen, onClose, order, onOrderUpdate }) => {
   const [availableMeseros, setAvailableMeseros] = useState([]);
   const [selectedMesero, setSelectedMesero] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
+  const [restaurantData, setRestaurantData] = useState(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      loadRestaurantData();
+    }
+  }, [isOpen]);
+
+  const loadRestaurantData = async () => {
+    try {
+      const data = await restaurantService.getMyRestaurant();
+      setRestaurantData(data);
+    } catch (e) {
+      console.error('Error loading restaurant info for print:', e);
+    }
+  };
 
   const statusOptions = [
     { value: 'ENVIADA', label: 'Enviada' },
@@ -202,8 +220,15 @@ const OrderDetailsModal = ({ isOpen, onClose, order, onOrderUpdate }) => {
                   <div className="flex items-center space-x-3">
                     <OrderStatusBadge status={order.estado} />
                     <button
+                      onClick={() => window.print()}
+                      className="text-gray-500 hover:text-primary-600 p-1 transition-colors no-print"
+                      title="Imprimir Prefactura"
+                    >
+                      <PrinterIcon className="h-6 w-6" />
+                    </button>
+                    <button
                       onClick={onClose}
-                      className="text-gray-400 hover:text-gray-600 p-1"
+                      className="text-gray-400 hover:text-gray-600 p-1 no-print"
                     >
                       <XMarkIcon className="h-6 w-6" />
                     </button>
@@ -505,6 +530,79 @@ const OrderDetailsModal = ({ isOpen, onClose, order, onOrderUpdate }) => {
           </div>
         </div>
       </Dialog>
+
+      {/* Printable Invoice Ticket (Hidden on screen, visible on print) */}
+      {order && isOpen && (
+        <div className="hidden print-only bg-white text-black p-4" style={{ width: '80mm', fontFamily: 'monospace' }}>
+          <div className="text-center mb-4">
+            <h2 className="font-bold text-xl uppercase mb-1">{restaurantData?.nombre || 'Restaurante'}</h2>
+            <p className="text-xs">Orden #{order.numeroOrden}</p>
+            <p className="text-xs">{formatDate(order.createdAt)}</p>
+            <p className="text-xs font-bold mt-1">*** PREFACTURA ***</p>
+          </div>
+
+          <div className="border-t border-b border-dashed border-gray-400 py-2 mb-2 text-xs">
+            <p>Cliente: {order.nombreClienteFactura || order.sesion?.clienteNombre || 'Cliente anónimo'}</p>
+            {order.tipoPedido === 'A_DOMICILIO' && <p>Tipo: Delivery</p>}
+            {order.tipoPedido === 'RECOGER' && <p>Tipo: Pickup</p>}
+            {order.tipoPedido === 'PARA_COMER_AQUI' && <p>Mesa: {order.mesa?.numero || 'N/A'}</p>}
+            <p>Mesero: {order.mesero ? `${order.mesero.nombre} ${order.mesero.apellido || ''}`.trim() : 'No asignado'}</p>
+          </div>
+
+          <table className="w-full text-xs mb-2">
+            <thead>
+              <tr className="border-b border-dashed border-gray-400">
+                <th className="text-left font-normal pb-1 w-8">Cant</th>
+                <th className="text-left font-normal pb-1">Desc</th>
+                <th className="text-right font-normal pb-1">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {order.items?.map((item, index) => (
+                <tr key={index}>
+                  <td className="align-top py-1 text-center">{item.cantidad}</td>
+                  <td className="align-top py-1 px-1">
+                    {item.producto?.nombre}
+                    {item.notas && <div className="text-[10px] italic text-gray-600">- {item.notas}</div>}
+                  </td>
+                  <td className="align-top text-right py-1">
+                    <span translate="no">{formatAmount(item.subtotal)}</span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          <div className="border-t border-dashed border-gray-400 pt-2 text-xs space-y-1">
+            {order.subtotal > 0 && order.subtotal !== order.total && (
+              <div className="flex justify-between">
+                <span>Subtotal:</span>
+                <span translate="no">{formatAmount(order.subtotal)}</span>
+              </div>
+            )}
+            {order.impuestos > 0 && (
+              <div className="flex justify-between">
+                <span>IVA:</span>
+                <span translate="no">{formatAmount(order.impuestos)}</span>
+              </div>
+            )}
+            {order.propina > 0 && (
+              <div className="flex justify-between">
+                <span>Servicio:</span>
+                <span translate="no">{formatAmount(order.propina)}</span>
+              </div>
+            )}
+            <div className="flex justify-between font-bold text-sm mt-2 border-t border-dashed border-gray-400 pt-2">
+              <span>TOTAL:</span>
+              <span translate="no">{formatAmount(order.total)}</span>
+            </div>
+          </div>
+
+          <div className="text-center mt-6 text-xs italic">
+            ¡Gracias por su preferencia!
+          </div>
+        </div>
+      )}
     </Transition>
   );
 };
