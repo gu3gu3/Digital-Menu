@@ -9,29 +9,23 @@ const apiClient = axios.create({
 // Interceptor de request: Añade automáticamente el token de autorización
 apiClient.interceptors.request.use(
   (config) => {
-    // Buscar token en orden de prioridad: SuperAdmin > Admin > Staff
-    let token = localStorage.getItem('superAdminToken');
-    
-    if (!token) {
+    let token = null;
+    const path = window.location.pathname;
+
+    // Asignación estricta del token según el área de la aplicación
+    // Esto previene el cruce de sesiones (ej. que un Mesero use el token del Admin)
+    if (path.startsWith('/super-admin')) {
+      token = localStorage.getItem('superAdminToken');
+    } else if (path.startsWith('/admin')) {
       token = localStorage.getItem('adminToken');
-    }
-
-    if (!token) {
+    } else if (path.startsWith('/staff')) {
       token = localStorage.getItem('staffToken');
-    }
-    
-    // Check partner path
-    if (!token && window.location.pathname.includes('/partner')) {
+    } else if (path.startsWith('/partner')) {
       token = localStorage.getItem('partnerToken');
-    }
-
-    // Check sponsor path
-    if (!token && window.location.pathname.includes('/sponsor')) {
+    } else if (path.startsWith('/sponsor')) {
       token = localStorage.getItem('sponsor_token');
-    }
-    
-    // Si no hay token específico por ruta, buscar el primero disponible
-    if (!token) {
+    } else {
+      // Fallback para rutas que no están explícitamente en subpaneles (como el public menu)
       token = localStorage.getItem('adminToken') || 
               localStorage.getItem('staffToken') || 
               localStorage.getItem('superAdminToken') ||
