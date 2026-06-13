@@ -154,7 +154,7 @@ const PublicMenuPage = ({ slugOverride }) => {
 
   // Cargar ID de orden guardado en localStorage al inicializar
   useEffect(() => {
-    const savedOrdenId = localStorage.getItem(`orden_${realSlug}_${mesaNumero}`)
+    const savedOrdenId = localStorage.getItem(`orden_${realSlug}_${mesaNumero || 'externo'}`)
     if (savedOrdenId) {
       setCurrentOrdenId(savedOrdenId)
     }
@@ -399,7 +399,7 @@ const PublicMenuPage = ({ slugOverride }) => {
             direccion: tipoPedido === 'A_DOMICILIO' ? direccion.trim() : undefined,
             coordenadas: userLocation ? { lat: userLocation.lat, lng: userLocation.lng } : undefined
           },
-          costoEnvio: tipoPedido === 'A_DOMICILIO' ? calculatedCostoEnvio : 0,
+          costoEnvio: tipoPedido === 'A_DOMICILIO' ? getDeliveryAmount() : 0,
           notas: orderNotes.trim() || undefined,
           items: itemsParaBackend
         });
@@ -450,7 +450,12 @@ const PublicMenuPage = ({ slugOverride }) => {
 
   const getDeliveryAmount = () => {
     if (tipoPedido === 'A_DOMICILIO') {
-      return calculatedCostoEnvio || 0;
+      // Si el GPS determinó un costo, se usa ese.
+      if (calculatedCostoEnvio > 0) return calculatedCostoEnvio;
+      // De lo contrario, si el restaurante tiene una tarifa base fija configurada, úsala como fallback
+      if (restaurante?.configuracion?.delivery?.tarifaBase) {
+        return Number(restaurante.configuracion.delivery.tarifaBase);
+      }
     }
     return 0;
   }
@@ -1009,6 +1014,36 @@ const PublicMenuPage = ({ slugOverride }) => {
                 className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-primary-500 focus:border-primary-500"
                 placeholder="Ej: sin cebolla, muy picante..."
               />
+            </div>
+            
+            {/* Resumen del Costo Total */}
+            <div className="mt-4 border-t border-gray-200 pt-4 px-1">
+               <div className="flex justify-between items-center text-sm text-gray-600 mb-1">
+                 <span>Subtotal:</span>
+                 <span translate="no">{formatCurrency(getSubtotalPrice())}</span>
+               </div>
+               {getTaxAmount() > 0 && (
+                 <div className="flex justify-between items-center text-sm text-gray-600 mb-1">
+                   <span>IVA:</span>
+                   <span translate="no">{formatCurrency(getTaxAmount())}</span>
+                 </div>
+               )}
+               {getServiceAmount() > 0 && (
+                 <div className="flex justify-between items-center text-sm text-gray-600 mb-1">
+                   <span>Servicio:</span>
+                   <span translate="no">{formatCurrency(getServiceAmount())}</span>
+                 </div>
+               )}
+               {getDeliveryAmount() > 0 && (
+                 <div className="flex justify-between items-center text-sm text-gray-600 mb-1">
+                   <span>Envío a Domicilio:</span>
+                   <span translate="no">{formatCurrency(getDeliveryAmount())}</span>
+                 </div>
+               )}
+               <div className="flex justify-between items-center text-lg font-bold text-gray-900 mt-2">
+                 <span>Total a Pagar:</span>
+                 <span translate="no" className="text-primary-600">{formatCurrency(getTotalPrice())}</span>
+               </div>
             </div>
             <div className="mt-6 flex justify-end space-x-3">
               <button
