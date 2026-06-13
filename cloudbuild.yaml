@@ -76,6 +76,10 @@ steps:
   - '--port=8080' # El puerto que Nginx está escuchando
   - '--timeout=300' # 5 minutos para operaciones de IA
   - '--memory=2Gi' # Más memoria para procesamiento de imágenes
+  - '--cpu=1' # 1 vCPU es suficiente y económico para ~100 restaurantes
+  - '--concurrency=150' # Permite 150 conexiones KDS/Staff por servidor
+  - '--min-instances=1' # Pre-calienta 1 servidor para evitar "Cold Starts" y mejorar velocidad
+  - '--max-instances=5' # Límite seguro para proteger costos y no saturar Cloud SQL
 
 # Guardar la imagen en Artifact Registry
 images:
