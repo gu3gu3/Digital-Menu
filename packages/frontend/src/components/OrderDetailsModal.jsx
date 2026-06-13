@@ -606,6 +606,7 @@ const OrderDetailsModal = ({ isOpen, onClose, order, onOrderUpdate }) => {
         <div id="print-ticket-container" className="hidden">
           <div className="text-center mb-4">
             <h2 className="font-bold text-xl uppercase mb-1">{restaurantData?.nombre || 'Restaurante'}</h2>
+            {restaurantData?.direccion && <p className="text-xs mb-1">{restaurantData.direccion}</p>}
             <p className="text-xs">Orden #{order.numeroOrden}</p>
             <p className="text-xs">{formatDate(order.createdAt)}</p>
             <p className="text-xs font-bold mt-1">*** PREFACTURA ***</p>
@@ -616,7 +617,6 @@ const OrderDetailsModal = ({ isOpen, onClose, order, onOrderUpdate }) => {
             {order.tipoPedido === 'A_DOMICILIO' && <p>Tipo: Delivery</p>}
             {order.tipoPedido === 'RECOGER' && <p>Tipo: Pickup</p>}
             {order.tipoPedido === 'PARA_COMER_AQUI' && <p>Mesa: {order.mesa?.numero || 'N/A'}</p>}
-            <p>Mesero: {order.mesero ? `${order.mesero.nombre} ${order.mesero.apellido || ''}`.trim() : 'No asignado'}</p>
           </div>
 
           <table className="w-full text-xs mb-2">
