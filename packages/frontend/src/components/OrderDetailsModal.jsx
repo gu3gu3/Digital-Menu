@@ -160,17 +160,27 @@ const OrderDetailsModal = ({ isOpen, onClose, order, onOrderUpdate }) => {
 
   const handlePrint = () => {
     const printContent = document.getElementById('print-ticket-container').innerHTML;
-    const printWindow = window.open('', '_blank', 'height=600,width=800');
-    if (!printWindow) {
-      alert("Por favor permite las ventanas emergentes (pop-ups) para imprimir la prefactura.");
-      return;
-    }
     
-    printWindow.document.write('<html><head><title>Prefactura - ' + (restaurantData?.nombre || 'Orden') + '</title>');
-    printWindow.document.write('<style>');
-    printWindow.document.write(`
+    // Crear iframe oculto
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+    
+    const doc = iframe.contentWindow.document;
+    doc.open();
+    doc.write('<html><head><title>Prefactura - ' + (restaurantData?.nombre || 'Orden') + '</title>');
+    doc.write('<style>');
+    doc.write(`
       @page { margin: 0; }
-      body { margin: 0; padding: 15px; font-family: monospace; font-size: 13px; color: #000; width: 80mm; }
+      body { 
+        margin: 0; 
+        padding: 15px; 
+        font-family: monospace; 
+        font-size: 13px; 
+        color: #000; 
+        max-width: 80mm; 
+        margin: 0 auto; 
+      }
       .text-center { text-align: center; }
       .text-right { text-align: right; }
       .font-bold { font-weight: bold; }
@@ -196,21 +206,25 @@ const OrderDetailsModal = ({ isOpen, onClose, order, onOrderUpdate }) => {
       .border-b { border-bottom: 1px dashed #000; }
       .space-y-1 > * + * { margin-top: 4px; }
       .flex { display: flex; justify-content: space-between; }
-      table { border-collapse: collapse; width: 100%; }
-      th, td { text-align: left; vertical-align: top; }
+      table { border-collapse: collapse; width: 100%; table-layout: fixed; }
+      th, td { text-align: left; vertical-align: top; word-wrap: break-word; }
       th.text-right, td.text-right { text-align: right; }
       th.text-center, td.text-center { text-align: center; }
     `);
-    printWindow.document.write('</style></head><body>');
-    printWindow.document.write(printContent);
-    printWindow.document.write('</body></html>');
-    printWindow.document.close();
+    doc.write('</style></head><body>');
+    doc.write(printContent);
+    doc.write('</body></html>');
+    doc.close();
     
-    // Wait for content to load before printing
+    // Esperar a que el contenido se renderice
     setTimeout(() => {
-      printWindow.focus();
-      printWindow.print();
-      printWindow.close();
+      iframe.contentWindow.focus();
+      iframe.contentWindow.print();
+      
+      // Eliminar iframe después de la impresión
+      setTimeout(() => {
+        document.body.removeChild(iframe);
+      }, 1000);
     }, 250);
   };
 
@@ -608,9 +622,9 @@ const OrderDetailsModal = ({ isOpen, onClose, order, onOrderUpdate }) => {
           <table className="w-full text-xs mb-2">
             <thead>
               <tr className="border-b border-dashed border-gray-400">
-                <th className="text-left font-normal pb-1 w-8">Cant</th>
-                <th className="text-left font-normal pb-1">Desc</th>
-                <th className="text-right font-normal pb-1">Total</th>
+                <th className="text-center font-bold pb-1" style={{ width: '15%' }}>Cant</th>
+                <th className="text-left font-bold pb-1" style={{ width: '55%' }}>Desc</th>
+                <th className="text-right font-bold pb-1" style={{ width: '30%' }}>Total</th>
               </tr>
             </thead>
             <tbody>
