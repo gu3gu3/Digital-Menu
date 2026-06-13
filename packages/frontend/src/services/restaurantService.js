@@ -31,6 +31,10 @@ class RestaurantService {
     const response = await apiClient.delete(`/restaurants/image/${imageType}`);
     return response.data;
   }
+  async getPickupQR() {
+    const response = await apiClient.get('/restaurants/me/pickup-qr');
+    return response.data.data;
+  }
 }
 
 export default new RestaurantService(); 

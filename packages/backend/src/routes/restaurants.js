@@ -4,6 +4,8 @@ const Joi = require('joi');
 const { authenticate, requireAdmin } = require('../middleware/authMiddleware');
 const { getAllCurrencies, isValidCurrency } = require('../utils/currencyUtils');
 const { upload, handleFileUpload } = require('../config/storage');
+const QRCode = require('qrcode');
+const sharp = require('sharp');
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -101,6 +103,75 @@ const updateRestaurantSchema = Joi.object({
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
+
+// Helpers for QR Code with logo
+async function fetchLogoBuffer(logoUrl) {
+  if (!logoUrl) return null;
+  try {
+    const res = await fetch(logoUrl);
+    if (!res.ok) return null;
+    let logoBuffer = Buffer.from(await res.arrayBuffer());
+    logoBuffer = await sharp(logoBuffer)
+      .resize(80, 80, { fit: 'contain', background: { r: 255, g: 255, b: 255, alpha: 1 } })
+      .toBuffer();
+    return logoBuffer;
+  } catch (e) {
+    console.error('Error fetching/resizing logo for QR:', e);
+    return null;
+  }
+}
+
+async function generateQRBufferWithLogoBuffer(url, logoBuffer) {
+  try {
+    const qrBuffer = await QRCode.toBuffer(url, {
+      width: 300,
+      margin: 2,
+      color: { dark: '#000000', light: '#FFFFFF' },
+      errorCorrectionLevel: 'H'
+    });
+
+    if (!logoBuffer) {
+      return `data:image/png;base64,${qrBuffer.toString('base64')}`;
+    }
+
+    const finalBuffer = await sharp(qrBuffer)
+      .composite([{ input: logoBuffer, gravity: 'center' }])
+      .png()
+      .toBuffer();
+
+    return `data:image/png;base64,${finalBuffer.toString('base64')}`;
+  } catch (e) {
+    console.error('QR Gen error', e);
+    return await QRCode.toDataURL(url, { width: 300, margin: 2, errorCorrectionLevel: 'H' });
+  }
+}
+
+router.get('/me/pickup-qr', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const { restauranteId } = req.user;
+    const restaurante = await prisma.restaurante.findUnique({
+      where: { id: restauranteId }
+    });
+    
+    if (!restaurante) {
+      return res.status(404).json({ success: false, error: 'Restaurante no encontrado' });
+    }
+
+    const origin = process.env.VITE_FRONTEND_URL || req.headers.origin || 'http://localhost:5173';
+    const orderUrl = `${origin}/order/${restaurante.slug}`;
+
+    const logoBuffer = await fetchLogoBuffer(restaurante.logoUrl);
+    const qrCodeImage = await generateQRBufferWithLogoBuffer(orderUrl, logoBuffer);
+
+    res.json({
+      success: true,
+      data: { qrCodeImage, orderUrl }
+    });
+  } catch (error) {
+    console.error('Error generating pickup QR:', error);
+    res.status(500).json({ success: false, error: 'Error interno' });
+  }
+});
 router.get('/currencies', async (req, res) => {
   try {
     const currencies = getAllCurrencies();

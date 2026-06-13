@@ -1,5 +1,4 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { QRCodeCanvas } from 'qrcode.react';
 import { 
   ClipboardDocumentIcon, 
   ArrowDownTrayIcon, 
@@ -19,6 +18,8 @@ const AdminPickupDeliveryPage = () => {
   
   const [restaurant, setRestaurant] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [qrData, setQrData] = useState(null);
+  const [loadingQR, setLoadingQR] = useState(false);
   
   // Dashboard states
   const [period, setPeriod] = useState('today');
@@ -57,8 +58,21 @@ const AdminPickupDeliveryPage = () => {
   useEffect(() => {
     if (restaurant?.addonPedidosExternos) {
       loadStats();
+      if (!qrData) loadQR();
     }
   }, [restaurant, period]);
+
+  const loadQR = async () => {
+    setLoadingQR(true);
+    try {
+      const data = await restaurantService.getPickupQR();
+      setQrData(data);
+    } catch (e) {
+      console.error('Error loading QR:', e);
+    } finally {
+      setLoadingQR(false);
+    }
+  };
 
   const loadStats = async () => {
     setLoadingStats(true);
@@ -101,25 +115,10 @@ const AdminPickupDeliveryPage = () => {
   };
 
   const downloadQR = () => {
-    const canvas = qrRef.current.querySelector('canvas');
-    if (!canvas) return;
-
-    const padding = 20;
-    const paddedCanvas = document.createElement('canvas');
-    const ctx = paddedCanvas.getContext('2d');
-    
-    paddedCanvas.width = canvas.width + padding * 2;
-    paddedCanvas.height = canvas.height + padding * 2;
-    
-    ctx.fillStyle = 'white';
-    ctx.fillRect(0, 0, paddedCanvas.width, paddedCanvas.height);
-    
-    ctx.drawImage(canvas, padding, padding);
-    
-    const pngFile = paddedCanvas.toDataURL('image/png');
+    if (!qrData?.qrCodeImage) return;
     const downloadLink = document.createElement('a');
     downloadLink.download = `QR-Pedidos-${restaurant.slug}.png`;
-    downloadLink.href = pngFile;
+    downloadLink.href = qrData.qrCodeImage;
     downloadLink.click();
   };
 
@@ -279,22 +278,13 @@ const AdminPickupDeliveryPage = () => {
           
           <div className="flex-1 flex flex-col items-center justify-center border-2 border-dashed border-gray-200 rounded-xl p-6 bg-gray-50 mb-6">
             <div className="bg-white p-4 rounded-xl shadow-sm mb-4" ref={qrRef}>
-              <QRCodeCanvas 
-                value={orderUrl} 
-                size={160}
-                level="H"
-                includeMargin={false}
-                fgColor="#1e1b4b"
-                imageSettings={restaurant.logoUrl ? {
-                  src: restaurant.logoUrl,
-                  x: undefined,
-                  y: undefined,
-                  height: 40,
-                  width: 40,
-                  excavate: true,
-                  crossOrigin: "anonymous"
-                } : undefined}
-              />
+              {loadingQR ? (
+                <div className="flex items-center justify-center h-40 w-40">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+                </div>
+              ) : qrData ? (
+                <img src={qrData.qrCodeImage} alt="QR Pickup" className="w-40 h-40 object-contain" />
+              ) : null}
             </div>
             <button
               onClick={downloadQR}
