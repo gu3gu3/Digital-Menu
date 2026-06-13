@@ -1,5 +1,6 @@
 const express = require('express');
 const QRCode = require('qrcode');
+const sharp = require('sharp');
 const { authenticate, requireAdmin } = require('../middleware/authMiddleware');
 const { prisma } = require('../config/database');
 const Joi = require('joi');
@@ -15,6 +16,47 @@ const getBeautifulMenuUrlBackend = (slug, pais, origin) => {
   const prefix = country ? `/${country}` : '';
   return `${origin}${prefix}/${displaySlug}`;
 };
+
+async function fetchLogoBuffer(logoUrl) {
+  if (!logoUrl) return null;
+  try {
+    const res = await fetch(logoUrl);
+    if (!res.ok) return null;
+    let logoBuffer = Buffer.from(await res.arrayBuffer());
+    logoBuffer = await sharp(logoBuffer)
+      .resize(80, 80, { fit: 'contain', background: { r: 255, g: 255, b: 255, alpha: 1 } })
+      .toBuffer();
+    return logoBuffer;
+  } catch (e) {
+    console.error('Error fetching/resizing logo for QR:', e);
+    return null;
+  }
+}
+
+async function generateQRBufferWithLogoBuffer(url, logoBuffer) {
+  try {
+    const qrBuffer = await QRCode.toBuffer(url, {
+      width: 300,
+      margin: 2,
+      color: { dark: '#000000', light: '#FFFFFF' },
+      errorCorrectionLevel: 'H'
+    });
+
+    if (!logoBuffer) {
+      return `data:image/png;base64,${qrBuffer.toString('base64')}`;
+    }
+
+    const finalBuffer = await sharp(qrBuffer)
+      .composite([{ input: logoBuffer, gravity: 'center' }])
+      .png()
+      .toBuffer();
+
+    return `data:image/png;base64,${finalBuffer.toString('base64')}`;
+  } catch (e) {
+    console.error('QR Gen error', e);
+    return await QRCode.toDataURL(url, { width: 300, margin: 2, errorCorrectionLevel: 'H' });
+  }
+}
 
 // Validation schemas
 const tableSchema = Joi.object({
@@ -309,14 +351,8 @@ const createTable = async (req, res) => {
 
     // Generate QR code image
     try {
-      const qrCodeDataURL = await QRCode.toDataURL(qrUrl, {
-        width: 300,
-        margin: 2,
-        color: {
-          dark: '#000000',
-          light: '#FFFFFF'
-        }
-      });
+      const logoBuffer = await fetchLogoBuffer(restaurante.logoUrl);
+      const qrCodeDataURL = await generateQRBufferWithLogoBuffer(qrUrl, logoBuffer);
 
       res.json({
         success: true,
@@ -524,7 +560,7 @@ const getTableQR = async (req, res) => {
       },
       include: {
         restaurante: {
-          select: { slug: true, pais: true }
+          select: { slug: true, pais: true, logoUrl: true }
         }
       }
     });
@@ -536,14 +572,8 @@ const getTableQR = async (req, res) => {
     const baseUrl = process.env.VITE_FRONTEND_URL || 'http://localhost:5173';
     const qrUrl = `${getBeautifulMenuUrlBackend(mesa.restaurante.slug, mesa.restaurante.pais, baseUrl)}?mesa=${mesa.numero}`;
 
-    const qrCodeImage = await QRCode.toDataURL(qrUrl, {
-      width: 300,
-      margin: 2,
-      color: {
-        dark: '#000000',
-        light: '#FFFFFF'
-      }
-    });
+    const logoBuffer = await fetchLogoBuffer(mesa.restaurante.logoUrl);
+    const qrCodeImage = await generateQRBufferWithLogoBuffer(qrUrl, logoBuffer);
 
     res.json({
       success: true,
@@ -570,9 +600,11 @@ const getAllQRCodes = async (req, res) => {
 
     const restaurante = await prisma.restaurante.findUnique({
       where: { id: restauranteId },
-      select: { nombre: true, slug: true, pais: true }
+      select: { nombre: true, slug: true, pais: true, logoUrl: true }
     });
     
+    const logoBuffer = await fetchLogoBuffer(restaurante.logoUrl);
+
     const mesas = await prisma.mesa.findMany({
       where: { restauranteId },
       orderBy: { numero: 'asc' },
@@ -589,14 +621,7 @@ const getAllQRCodes = async (req, res) => {
         const qrUrl = `${getBeautifulMenuUrlBackend(restaurante.slug, restaurante.pais, baseUrl)}?mesa=${mesa.numero}`;
         
         try {
-          const qrCodeImage = await QRCode.toDataURL(qrUrl, {
-            width: 300,
-            margin: 2,
-            color: {
-              dark: '#000000',
-              light: '#FFFFFF'
-            }
-          });
+          const qrCodeImage = await generateQRBufferWithLogoBuffer(qrUrl, logoBuffer);
 
           return {
             mesa: {

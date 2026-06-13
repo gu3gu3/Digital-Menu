@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { QRCodeSVG } from 'qrcode.react';
+import { QRCodeCanvas } from 'qrcode.react';
 import { 
   ClipboardDocumentIcon, 
   ArrowDownTrayIcon, 
@@ -101,30 +101,26 @@ const AdminPickupDeliveryPage = () => {
   };
 
   const downloadQR = () => {
-    const svg = qrRef.current.querySelector('svg');
-    const svgData = new XMLSerializer().serializeToString(svg);
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    const img = new Image();
+    const canvas = qrRef.current.querySelector('canvas');
+    if (!canvas) return;
+
+    const padding = 20;
+    const paddedCanvas = document.createElement('canvas');
+    const ctx = paddedCanvas.getContext('2d');
     
-    img.onload = () => {
-      const padding = 20;
-      canvas.width = img.width + padding * 2;
-      canvas.height = img.height + padding * 2;
-      
-      ctx.fillStyle = 'white';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      
-      ctx.drawImage(img, padding, padding);
-      
-      const pngFile = canvas.toDataURL('image/png');
-      const downloadLink = document.createElement('a');
-      downloadLink.download = `QR-Pedidos-${restaurant.slug}.png`;
-      downloadLink.href = `${pngFile}`;
-      downloadLink.click();
-    };
+    paddedCanvas.width = canvas.width + padding * 2;
+    paddedCanvas.height = canvas.height + padding * 2;
     
-    img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, paddedCanvas.width, paddedCanvas.height);
+    
+    ctx.drawImage(canvas, padding, padding);
+    
+    const pngFile = paddedCanvas.toDataURL('image/png');
+    const downloadLink = document.createElement('a');
+    downloadLink.download = `QR-Pedidos-${restaurant.slug}.png`;
+    downloadLink.href = pngFile;
+    downloadLink.click();
   };
 
   return (
@@ -283,12 +279,21 @@ const AdminPickupDeliveryPage = () => {
           
           <div className="flex-1 flex flex-col items-center justify-center border-2 border-dashed border-gray-200 rounded-xl p-6 bg-gray-50 mb-6">
             <div className="bg-white p-4 rounded-xl shadow-sm mb-4" ref={qrRef}>
-              <QRCodeSVG 
+              <QRCodeCanvas 
                 value={orderUrl} 
                 size={160}
                 level="H"
                 includeMargin={false}
                 fgColor="#1e1b4b"
+                imageSettings={restaurant.logoUrl ? {
+                  src: restaurant.logoUrl,
+                  x: undefined,
+                  y: undefined,
+                  height: 40,
+                  width: 40,
+                  excavate: true,
+                  crossOrigin: "anonymous"
+                } : undefined}
               />
             </div>
             <button
