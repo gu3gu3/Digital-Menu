@@ -158,6 +158,62 @@ const OrderDetailsModal = ({ isOpen, onClose, order, onOrderUpdate }) => {
     }
   };
 
+  const handlePrint = () => {
+    const printContent = document.getElementById('print-ticket-container').innerHTML;
+    const printWindow = window.open('', '_blank', 'height=600,width=800');
+    if (!printWindow) {
+      alert("Por favor permite las ventanas emergentes (pop-ups) para imprimir la prefactura.");
+      return;
+    }
+    
+    printWindow.document.write('<html><head><title>Prefactura - ' + (restaurantData?.nombre || 'Orden') + '</title>');
+    printWindow.document.write('<style>');
+    printWindow.document.write(`
+      @page { margin: 0; }
+      body { margin: 0; padding: 15px; font-family: monospace; font-size: 13px; color: #000; width: 80mm; }
+      .text-center { text-align: center; }
+      .text-right { text-align: right; }
+      .font-bold { font-weight: bold; }
+      .text-xl { font-size: 20px; }
+      .text-xs { font-size: 11px; }
+      .text-sm { font-size: 14px; }
+      .mb-1 { margin-bottom: 4px; }
+      .mb-2 { margin-bottom: 8px; }
+      .mb-4 { margin-bottom: 16px; }
+      .mt-1 { margin-top: 4px; }
+      .mt-2 { margin-top: 8px; }
+      .mt-6 { margin-top: 24px; }
+      .uppercase { text-transform: uppercase; }
+      .py-1 { padding-top: 4px; padding-bottom: 4px; }
+      .py-2 { padding-top: 8px; padding-bottom: 8px; }
+      .pt-2 { padding-top: 8px; }
+      .pb-1 { padding-bottom: 4px; }
+      .px-1 { padding-left: 4px; padding-right: 4px; }
+      .w-8 { width: 32px; }
+      .w-full { width: 100%; }
+      .italic { font-style: italic; }
+      .border-t { border-top: 1px dashed #000; }
+      .border-b { border-bottom: 1px dashed #000; }
+      .space-y-1 > * + * { margin-top: 4px; }
+      .flex { display: flex; justify-content: space-between; }
+      table { border-collapse: collapse; width: 100%; }
+      th, td { text-align: left; vertical-align: top; }
+      th.text-right, td.text-right { text-align: right; }
+      th.text-center, td.text-center { text-align: center; }
+    `);
+    printWindow.document.write('</style></head><body>');
+    printWindow.document.write(printContent);
+    printWindow.document.write('</body></html>');
+    printWindow.document.close();
+    
+    // Wait for content to load before printing
+    setTimeout(() => {
+      printWindow.focus();
+      printWindow.print();
+      printWindow.close();
+    }, 250);
+  };
+
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
     try {
@@ -220,7 +276,7 @@ const OrderDetailsModal = ({ isOpen, onClose, order, onOrderUpdate }) => {
                   <div className="flex items-center space-x-3">
                     <OrderStatusBadge status={order.estado} />
                     <button
-                      onClick={() => window.print()}
+                      onClick={handlePrint}
                       className="text-gray-500 hover:text-primary-600 p-1 transition-colors no-print"
                       title="Imprimir Prefactura"
                     >
@@ -531,9 +587,9 @@ const OrderDetailsModal = ({ isOpen, onClose, order, onOrderUpdate }) => {
         </div>
       </Dialog>
 
-      {/* Printable Invoice Ticket (Hidden on screen, visible on print) */}
+      {/* Printable Invoice Ticket (Hidden on screen, rendered in iframe) */}
       {order && isOpen && (
-        <div className="hidden print-only bg-white text-black p-4" style={{ width: '80mm', fontFamily: 'monospace' }}>
+        <div id="print-ticket-container" className="hidden">
           <div className="text-center mb-4">
             <h2 className="font-bold text-xl uppercase mb-1">{restaurantData?.nombre || 'Restaurante'}</h2>
             <p className="text-xs">Orden #{order.numeroOrden}</p>
