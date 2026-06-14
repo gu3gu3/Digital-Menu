@@ -22,7 +22,7 @@ const createMeseroSchema = Joi.object({
   }),
   apellido: Joi.string().min(2).optional(),
   telefono: Joi.string().optional(),
-  rol: Joi.string().valid('MESERO', 'COCINA').optional()
+  rol: Joi.string().valid('MESERO', 'COCINA', 'REPARTIDOR').optional()
 });
 
 const updateMeseroSchema = Joi.object({
@@ -32,7 +32,7 @@ const updateMeseroSchema = Joi.object({
   apellido: Joi.string().min(2).optional(),
   telefono: Joi.string().optional(),
   activo: Joi.boolean().optional(),
-  rol: Joi.string().valid('MESERO', 'COCINA').optional()
+  rol: Joi.string().valid('MESERO', 'COCINA', 'REPARTIDOR').optional()
 });
 
 // @desc    Get all meseros for restaurant

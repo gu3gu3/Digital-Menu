@@ -11,7 +11,8 @@ import {
   DollarSign as CurrencyDollarIcon,
   Paintbrush as PaintBrushIcon,
   MapPin,
-  Truck
+  Truck,
+  Building
 } from 'lucide-react';
 import restaurantService from '../services/restaurantService';
 import { getCurrenciesByRegion, getCurrencyDisplayInfo } from '../utils/currencyUtils';
@@ -42,6 +43,9 @@ const AdminRestaurantPage = () => {
         setValue('buttonColor', restaurante.configuracion.buttonColor);
       } else {
         setValue('buttonColor', '#ea580c'); // Default orange
+      }
+      if (restaurante.configuracion?.isHotelMode !== undefined) {
+        setValue('isHotelMode', restaurante.configuracion.isHotelMode);
       }
       if (restaurante.configuracion?.iva) {
         setValue('iva', restaurante.configuracion.iva);
@@ -83,6 +87,7 @@ const AdminRestaurantPage = () => {
         backgroundColor: formData.backgroundColor,
         configuracion: {
           ...restaurantData.configuracion,
+          isHotelMode: formData.isHotelMode || false,
           buttonColor: formData.buttonColor || '#ea580c',
           iva: formData.iva ? parseFloat(formData.iva) : 0,
           servicio: formData.servicio ? parseFloat(formData.servicio) : 0,
@@ -356,6 +361,18 @@ const AdminRestaurantPage = () => {
           <div className="p-6"><h4 className="text-lg font-semibold text-gray-800 mb-1">Imagen de Fondo</h4><p className="text-sm text-gray-500 mb-4">Alternativa al color de fondo. Si subes una imagen, esta tendrá prioridad.</p><ImageUploadField label="" description="Recomendado: 1920x1080. Intenta que no sea muy pesada." imageType="background" currentImageUrl={restaurantData?.backgroundImage} /></div>
               </div>
 
+        <div className="bg-white shadow-lg rounded-xl overflow-hidden mb-8 border border-indigo-100">
+          <div className="p-6">
+            <h3 className="text-xl font-bold text-gray-900 flex items-center mb-2"><Building className="h-6 w-6 mr-2 text-indigo-600" />Modo Hotel / Room Service</h3>
+            <p className="mt-1 text-sm text-gray-500 mb-6">Habilita esta opción si tu negocio es un Hotel o funciona exclusivamente con Room Service. Ocultará las funciones de Delivery y cambiará dinámicamente la terminología de "Mesa" a "Habitación".</p>
+            <div className="flex items-center">
+              <input type="checkbox" id="isHotelMode" {...register("isHotelMode")} className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" />
+              <label htmlFor="isHotelMode" className="ml-2 block text-sm font-medium text-gray-900">Activar Modo Hotel</label>
+            </div>
+          </div>
+        </div>
+
+        {!watch('isHotelMode') && (
         <div className="bg-white shadow-lg rounded-xl overflow-hidden">
           <div className="p-6">
             <h3 className="text-xl font-bold text-gray-900 flex items-center mb-2"><Truck className="h-6 w-6 mr-2 text-indigo-600" />Configuración de Delivery y Costos de Envío</h3>
@@ -409,6 +426,7 @@ const AdminRestaurantPage = () => {
             </div>
           </div>
         </div>
+        )}
 
         <div className="flex justify-end pt-4">
           <button type="submit" disabled={isSubmitting} className="inline-flex justify-center py-2 px-6 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50">

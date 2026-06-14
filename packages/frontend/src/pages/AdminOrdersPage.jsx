@@ -10,15 +10,20 @@ import {
   ClockIcon,
   FireIcon,
   CheckCircleIcon,
-  HandRaisedIcon
+  HandRaisedIcon,
+  TruckIcon,
+  MapPinIcon
 } from '@heroicons/react/24/outline';
 import OrderStatusBadge from '../components/OrderStatusBadge';
 import OrderDetailsModal from '../components/OrderDetailsModal';
+import { formatTableName } from '../utils/tableUtils';
 import ordersService from '../services/ordersService';
 import sessionsService from '../services/sessionsService';
 import useRestaurantCurrency from '../hooks/useRestaurantCurrency';
 
 const AdminOrdersPage = () => {
+  const adminUserStr = localStorage.getItem('adminUser');
+  const user = adminUserStr ? JSON.parse(adminUserStr) : null;
   const { formatAmount } = useRestaurantCurrency();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -38,6 +43,8 @@ const AdminOrdersPage = () => {
     fecha: (new Date(Date.now() - (new Date()).getTimezoneOffset() * 60000)).toISOString().split('T')[0] // Fecha de hoy local por defecto
   });
 
+  const isHotelMode = user?.restaurante?.configuracion?.isHotelMode === true;
+
   const tabs = [
     { id: 'all', name: 'Todas', icon: ClipboardDocumentListIcon, count: stats.total },
     { id: 'ENVIADA', name: 'Enviadas', icon: ClockIcon, count: stats.enviadas },
@@ -45,7 +52,9 @@ const AdminOrdersPage = () => {
     { id: 'CONFIRMADA', name: 'Confirmadas', icon: HandRaisedIcon, count: stats.confirmadas },
     { id: 'EN_PREPARACION', name: 'En Cocina', icon: FireIcon, count: stats.enPreparacion },
     { id: 'LISTA', name: 'Listas', icon: EyeIcon, count: stats.listas },
+    ...(isHotelMode ? [] : [{ id: 'EN_CAMINO', name: 'En Camino', icon: TruckIcon, count: stats.enCamino }]),
     { id: 'SERVIDA', name: 'Servidas', icon: BanknotesIcon, count: stats.servidas },
+    ...(isHotelMode ? [] : [{ id: 'ENTREGADA', name: 'Entregadas', icon: MapPinIcon, count: stats.entregadas }]),
     { id: 'COMPLETADA', name: 'Completadas', icon: CheckCircleIcon, count: stats.completadas }
   ];
 
@@ -209,7 +218,7 @@ const AdminOrdersPage = () => {
               <ClockIcon className="h-5 w-5 lg:h-6 lg:w-6 text-purple-600" />
             </div>
             <div className="ml-3 lg:ml-4 min-w-0 flex-1">
-              <p className="text-xs lg:text-sm font-medium text-gray-600 truncate">Mesas Activas</p>
+              <p className="text-xs lg:text-sm font-medium text-gray-600 truncate">{isHotelMode ? 'Habitaciones Activas' : 'Mesas Activas'}</p>
               <p className="text-xl lg:text-2xl font-bold text-gray-900">{activeSessions.length}</p>
             </div>
           </div>
@@ -265,9 +274,11 @@ const AdminOrdersPage = () => {
             <div className="flex flex-wrap gap-2">
               {[
                 { id: '', name: 'Todos' },
-                { id: 'PARA_COMER_AQUI', name: 'En Mesa' },
-                { id: 'RECOGER', name: 'Pasar a recoger' },
-                { id: 'A_DOMICILIO', name: 'A domicilio' }
+                { id: 'PARA_COMER_AQUI', name: isHotelMode ? 'En Habitación' : 'En Mesa' },
+                ...(isHotelMode ? [] : [
+                  { id: 'RECOGER', name: 'Pasar a recoger' },
+                  { id: 'A_DOMICILIO', name: 'A domicilio' }
+                ])
               ].map(tipo => (
                 <button
                   key={tipo.id}
@@ -304,11 +315,11 @@ const AdminOrdersPage = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {/* Mesa Filter */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Mesa</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{isHotelMode ? 'Habitación' : 'Mesa'}</label>
                 <input
                   type="number"
                   min="1"
-                  placeholder="Número de mesa..."
+                  placeholder={isHotelMode ? "Número de habitación..." : "Número de mesa..."}
                   value={filters.mesa || ''}
                   onChange={(e) => setFilters({ ...filters, mesa: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
@@ -402,13 +413,13 @@ const AdminOrdersPage = () => {
                       Orden
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Tipo / Mesa
+                      Tipo / Lugar
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Cliente
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Mesero
+                      Personal
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Estado
@@ -457,7 +468,7 @@ const AdminOrdersPage = () => {
                             </span>
                           ) : (
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                              Mesa {order.mesa?.numero}
+                              {formatTableName(order.mesa, isHotelMode)}
                             </span>
                           )}
                         </td>
@@ -481,7 +492,7 @@ const AdminOrdersPage = () => {
                                   {order.mesero.nombre} {order.mesero.apellido || ''}
                                 </div>
                                 <div className="text-sm text-gray-500">
-                                  Mesero
+                                  Personal
                                 </div>
                               </div>
                             </div>
@@ -557,7 +568,7 @@ const AdminOrdersPage = () => {
                           </span>
                         ) : (
                           <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                            Mesa {order.mesa?.numero}
+                            {isHotelMode ? 'Habitación' : 'Mesa'} {order.mesa?.numero}
                           </span>
                         )}
                       </div>
@@ -595,9 +606,9 @@ const AdminOrdersPage = () => {
                       </div>
                     </div>
 
-                    {/* Información del Mesero en móvil */}
+                    {/* Información del Personal en móvil */}
                     <div className="mb-3 p-2 bg-gray-50 rounded-lg">
-                      <span className="text-gray-500 text-xs">Mesero:</span>
+                      <span className="text-gray-500 text-xs">Personal:</span>
                       {order.mesero ? (
                         <div className="flex items-center mt-1">
                           <div className="w-6 h-6 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center mr-2">
@@ -641,12 +652,17 @@ const AdminOrdersPage = () => {
       {/* Order Details Modal */}
       <OrderDetailsModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedOrder(null);
+        }}
         order={selectedOrder}
-        onOrderUpdate={handleOrderUpdate}
+        onOrderUpdate={loadOrders}
+        currentUser={{ ...user, role: 'ADMINISTRADOR' }}
+        isHotelMode={isHotelMode}
       />
     </div>
   );
 };
 
-export default AdminOrdersPage; 
+export default AdminOrdersPage;

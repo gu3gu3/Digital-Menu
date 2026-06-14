@@ -12,19 +12,19 @@ import {
   PrinterIcon 
 } from '@heroicons/react/24/outline';
 import OrderStatusBadge from './OrderStatusBadge';
+import { formatTableName } from '../utils/tableUtils';
 import ordersService from '../services/ordersService';
 import staffService from '../services/staffService';
 import restaurantService from '../services/restaurantService';
 import useRestaurantCurrency from '../hooks/useRestaurantCurrency';
 
-const OrderDetailsModal = ({ isOpen, onClose, order, onOrderUpdate }) => {
+const OrderDetailsModal = ({ isOpen, onClose, order, onOrderUpdate, currentUser, isHotelMode = false }) => {
   const { formatAmount } = useRestaurantCurrency();
   const [selectedStatus, setSelectedStatus] = useState(null);
   const [notes, setNotes] = useState('');
   const [updating, setUpdating] = useState(false);
   const [availableMeseros, setAvailableMeseros] = useState([]);
   const [selectedMesero, setSelectedMesero] = useState(null);
-  const [currentUser, setCurrentUser] = useState(null);
   const [restaurantData, setRestaurantData] = useState(null);
 
   useEffect(() => {
@@ -42,13 +42,20 @@ const OrderDetailsModal = ({ isOpen, onClose, order, onOrderUpdate }) => {
     }
   };
 
-  const statusOptions = [
+  const isRepartidor = currentUser?.role === 'REPARTIDOR' || currentUser?.rol === 'REPARTIDOR';
+
+  const statusOptions = isRepartidor ? [
+    { value: 'EN_CAMINO', label: 'En Camino' },
+    { value: 'ENTREGADA', label: 'Entregada' }
+  ] : [
     { value: 'ENVIADA', label: 'Enviada' },
     { value: 'RECIBIDA', label: 'Recibida' },
     { value: 'CONFIRMADA', label: 'Confirmada' },
     { value: 'EN_PREPARACION', label: 'En Preparación' },
     { value: 'LISTA', label: 'Lista' },
+    { value: 'EN_CAMINO', label: 'En Camino' },
     { value: 'SERVIDA', label: 'Servida' },
+    { value: 'ENTREGADA', label: 'Entregada' },
     { value: 'COMPLETADA', label: 'Completada' },
     { value: 'CANCELADA', label: 'Cancelada' }
   ];
@@ -64,18 +71,6 @@ const OrderDetailsModal = ({ isOpen, onClose, order, onOrderUpdate }) => {
       } : null);
     }
   }, [order]);
-
-  useEffect(() => {
-    // Load current user info
-    const adminUser = localStorage.getItem('adminUser');
-    const staffUser = localStorage.getItem('staffUser');
-    
-    if (adminUser) {
-      setCurrentUser({ ...JSON.parse(adminUser), role: 'ADMINISTRADOR' });
-    } else if (staffUser) {
-      setCurrentUser({ ...JSON.parse(staffUser), role: 'MESERO' });
-    }
-  }, []);
 
   useEffect(() => {
     if (isOpen && currentUser?.role === 'ADMINISTRADOR') {
@@ -112,7 +107,7 @@ const OrderDetailsModal = ({ isOpen, onClose, order, onOrderUpdate }) => {
       
     } catch (error) {
       console.error('Error assigning mesero:', error);
-      alert('Error al asignar mesero');
+      alert('Error al asignar personal');
     } finally {
       setUpdating(false);
     }
@@ -161,14 +156,18 @@ const OrderDetailsModal = ({ isOpen, onClose, order, onOrderUpdate }) => {
   const handlePrint = () => {
     const printContent = document.getElementById('print-ticket-container').innerHTML;
     
-    // Crear iframe oculto
+    // Crear iframe oculto sin usar display:none para evitar problemas de impresión en móviles
     const iframe = document.createElement('iframe');
-    iframe.style.display = 'none';
+    iframe.style.position = 'absolute';
+    iframe.style.width = '0px';
+    iframe.style.height = '0px';
+    iframe.style.border = 'none';
+    iframe.style.visibility = 'hidden';
     document.body.appendChild(iframe);
     
     const doc = iframe.contentWindow.document;
     doc.open();
-    doc.write('<html><head><title>Prefactura - ' + (restaurantData?.nombre || 'Orden') + '</title>');
+    doc.write('<!DOCTYPE html><html><head><title>Prefactura - ' + (restaurantData?.nombre || 'Orden') + '</title>');
     doc.write('<style>');
     doc.write(`
       @page { margin: 0; }
@@ -284,7 +283,7 @@ const OrderDetailsModal = ({ isOpen, onClose, order, onOrderUpdate }) => {
                         ? 'A Domicilio' 
                         : order.tipoPedido === 'RECOGER' 
                         ? 'Pasar a recoger' 
-                        : `Mesa ${order.mesa?.numero}`} • {formatDate(order.createdAt)}
+                        : formatTableName(order.mesa, isHotelMode)} • {formatDate(order.createdAt)}
                     </p>
                   </div>
                   <div className="flex items-center space-x-3">
@@ -320,7 +319,7 @@ const OrderDetailsModal = ({ isOpen, onClose, order, onOrderUpdate }) => {
                   <div className="flex items-center space-x-2">
                     <UsersIcon className="h-5 w-5 text-gray-400" />
                     <div>
-                      <p className="text-xs text-gray-500">Mesero</p>
+                      <p className="text-xs text-gray-500">Personal</p>
                       <p className="text-sm font-medium">
                         {order.mesero 
                           ? `${order.mesero.nombre} ${order.mesero.apellido || ''}`.trim()
@@ -506,21 +505,21 @@ const OrderDetailsModal = ({ isOpen, onClose, order, onOrderUpdate }) => {
                 </div>
 
                 {/* Mesero Assignment Section */}
-                {currentUser?.role === 'ADMINISTRADOR' && (
+                {!isHotelMode && currentUser?.role === 'ADMINISTRADOR' && (
                   <div className="border-t border-gray-200 pt-6">
-                    <h4 className="text-sm font-semibold text-gray-900 mb-4">Asignar Mesero</h4>
+                    <h4 className="text-sm font-semibold text-gray-900 mb-4">Asignar Personal</h4>
                     
                     <div className="space-y-4">
                       {/* Mesero Selector */}
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Mesero
+                          Personal
                         </label>
                         <Listbox value={selectedMesero} onChange={setSelectedMesero}>
                           <div className="relative">
                             <Listbox.Button className="relative w-full cursor-default rounded-lg bg-white py-2 pl-3 pr-10 text-left border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-500">
                               <span className="block truncate">
-                                {selectedMesero?.label || 'Seleccionar mesero'}
+                                {selectedMesero?.label || 'Seleccionar personal'}
                               </span>
                               <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
                                 <ChevronUpDownIcon className="h-5 w-5 text-gray-400" />
@@ -570,7 +569,7 @@ const OrderDetailsModal = ({ isOpen, onClose, order, onOrderUpdate }) => {
                           disabled={updating || !selectedMesero}
                           className="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          {updating ? 'Asignando...' : 'Asignar Mesero'}
+                          {updating ? 'Asignando...' : 'Asignar Personal'}
                         </button>
                       </div>
                     </div>
@@ -616,7 +615,7 @@ const OrderDetailsModal = ({ isOpen, onClose, order, onOrderUpdate }) => {
             <p>Cliente: {order.nombreClienteFactura || order.sesion?.clienteNombre || 'Cliente anónimo'}</p>
             {order.tipoPedido === 'A_DOMICILIO' && <p>Tipo: Delivery</p>}
             {order.tipoPedido === 'RECOGER' && <p>Tipo: Pickup</p>}
-            {order.tipoPedido === 'PARA_COMER_AQUI' && <p>Mesa: {order.mesa?.numero || 'N/A'}</p>}
+            {order.tipoPedido === 'PARA_COMER_AQUI' && <p>{formatTableName(order.mesa, isHotelMode)}</p>}
           </div>
 
           <table className="w-full text-xs mb-2">

@@ -14,6 +14,7 @@ import {
   XMarkIcon
 } from '@heroicons/react/24/outline';
 import OrderDetailsModal from '../components/OrderDetailsModal';
+import { formatTableName } from '../utils/tableUtils';
 import OrderStatusBadge from '../components/OrderStatusBadge';
 import NotificationBell from '../components/NotificationBell';
 import ordersService from '../services/ordersService';
@@ -258,12 +259,15 @@ const StaffDashboard = () => {
     return 'normal';
   };
 
+  const isHotelMode = user?.restaurante?.configuracion?.isHotelMode === true;
+
   const filters = [
     { id: 'all', name: 'Todas', count: stats.total || 0 },
     { id: 'ENVIADA', name: 'Nuevas', count: stats.enviadas || 0, urgent: true },
     { id: 'EN_PREPARACION', name: 'En Cocina', count: stats.enPreparacion || 0 },
     { id: 'LISTA', name: 'Listas', count: stats.listas || 0, urgent: true },
-    { id: 'SERVIDA', name: 'Servidas', count: stats.servidas || 0 }
+    ...(isHotelMode ? [] : [{ id: 'EN_CAMINO', name: 'En Camino', count: stats.enCamino || 0, urgent: true }]),
+    { id: 'SERVIDA', name: 'Entregadas', count: (stats.servidas || 0) + (stats.entregadas || 0) }
   ];
 
   if (!user) {
@@ -314,7 +318,7 @@ const StaffDashboard = () => {
                 <img src={logo} alt="Menu View" className="h-8 w-auto" />
                 <div className="ml-3">
                 <h1 className="text-lg font-semibold text-gray-900">
-                  Portal de Meseros
+                  Portal de Personal
                 </h1>
                 </div>
               </div>
@@ -339,7 +343,7 @@ const StaffDashboard = () => {
               <div className="flex items-center space-x-3">
                 <div className="hidden md:block text-right">
                   <p className="text-sm font-medium text-gray-900">{user.nombre}</p>
-                  <p className="text-xs text-gray-500">Mesero</p>
+                  <p className="text-xs text-gray-500">Personal</p>
                 </div>
                 <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
                   <span className="text-white text-sm font-medium">
@@ -415,7 +419,7 @@ const StaffDashboard = () => {
                 <CheckCircleIcon className="h-6 w-6 text-purple-600" />
               </div>
               <div className="ml-3">
-                <p className="text-sm font-medium text-gray-600">Servidas</p>
+                <p className="text-sm font-medium text-gray-600">Entregadas</p>
                 <p className="text-xl font-bold text-gray-900">{stats.servidas || 0}</p>
               </div>
             </div>
@@ -537,7 +541,7 @@ const StaffDashboard = () => {
                       <div className="flex-1">
                         <div className="flex items-center space-x-3">
                           <h3 className="text-lg font-semibold text-gray-900">
-                            Orden #{order.numeroOrden || 'N/A'} • Mesa {order.mesa?.numero || 'N/A'}
+                            Orden #{order.numeroOrden || 'N/A'} • {order.tipoPedido === 'A_DOMICILIO' ? 'A Domicilio' : order.tipoPedido === 'RECOGER' ? 'Para Recoger' : formatTableName(order.mesa, isHotelMode)}
                           </h3>
                           <OrderStatusBadge status={order.estado} size="sm" />
                         </div>
@@ -560,7 +564,7 @@ const StaffDashboard = () => {
                             <>
                               <span className="mx-2">•</span>
                               <span className="text-blue-600">
-                                Mesero: {order.mesero.nombre} {order.mesero.apellido || ''}
+                                Personal: {order.mesero.nombre} {order.mesero.apellido || ''}
                               </span>
                             </>
                           )}
@@ -574,7 +578,7 @@ const StaffDashboard = () => {
                       </div>
                       <div className="text-right space-y-2">
                         {/* Take Order Button */}
-                        {!order.mesero && order.estado === 'ENVIADA' && (
+                        {(user?.role === 'MESERO' || user?.rol === 'MESERO') && !order.mesero && order.estado === 'ENVIADA' && (
                           <button
                             onClick={(e) => handleTakeOrder(order.id, e)}
                             className="block w-full mb-2 px-3 py-1 text-xs font-medium text-white bg-green-600 rounded hover:bg-green-700 transition-colors"
@@ -607,9 +611,11 @@ const StaffDashboard = () => {
         onClose={() => setIsModalOpen(false)}
         order={selectedOrder}
         onOrderUpdate={handleOrderUpdate}
+        currentUser={{ ...user, role: 'MESERO' }}
+        isHotelMode={isHotelMode}
       />
     </div>
   );
 };
 
-export default StaffDashboard; 
+export default StaffDashboard;

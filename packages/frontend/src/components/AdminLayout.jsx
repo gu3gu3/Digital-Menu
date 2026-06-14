@@ -89,7 +89,7 @@ const AdminLayout = () => {
     { name: 'Órdenes', href: '/admin/orders', icon: ClipboardDocumentListIcon },
     { name: 'Notificaciones', href: '/admin/notifications', icon: BellIconOutline },
     { name: 'Mesas & QR', href: '/admin/tables', icon: QrCodeIcon },
-    { name: 'Meseros', href: '/admin/staff', icon: UsersIcon },
+    { name: 'Personal', href: '/admin/staff', icon: UsersIcon },
   ]
 
   if (restaurant?.addonPedidosExternos) {

@@ -468,7 +468,8 @@ const login = async (req, res) => {
           limiteOrdenes: user.restaurante.plan.limiteOrdenes,
           limiteMesas: user.restaurante.plan.limiteMesas,
           limiteMeseros: user.restaurante.plan.limiteMeseros
-        }
+        },
+        configuracion: user.restaurante.configuracion
       }
     };
 

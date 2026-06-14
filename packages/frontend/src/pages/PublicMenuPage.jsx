@@ -45,6 +45,7 @@ const PublicMenuPage = ({ slugOverride }) => {
   const [currentOrdenId, setCurrentOrdenId] = useState(null)
   const [submittingOrder, setSubmittingOrder] = useState(false)
   const [orderSubmitted, setOrderSubmitted] = useState(false)
+  const [ultimoTotal, setUltimoTotal] = useState(0)
   const [tableInactiveMessage, setTableInactiveMessage] = useState('')
 
   // Estados UI
@@ -64,6 +65,8 @@ const PublicMenuPage = ({ slugOverride }) => {
   const [calculatedCostoEnvio, setCalculatedCostoEnvio] = useState(0)
   const [isGettingLocation, setIsGettingLocation] = useState(false)
   const [locationError, setLocationError] = useState('')
+
+  const isHotelMode = restaurante?.configuracion?.isHotelMode === true;
 
   // Estados Swipe
   const [touchStart, setTouchStart] = useState(null)
@@ -114,6 +117,7 @@ const PublicMenuPage = ({ slugOverride }) => {
 
   useEffect(() => {
     if (activeSlug) {
+      setCart({ items: [], total: 0 }); // Limpiar carrito al cambiar de restaurante
       loadMenu()
     }
   }, [activeSlug, countryCode, mesaNumero])
@@ -408,6 +412,7 @@ const PublicMenuPage = ({ slugOverride }) => {
       setCurrentOrdenId(data.orden.id)
       localStorage.setItem(`orden_${realSlug}_${mesaNumero || 'externo'}`, data.orden.id)
       
+      setUltimoTotal(getTotalPrice())
       setCart({ items: [], total: 0 })
       setShowOrderModal(false)
       setOrderNotes('')
@@ -618,6 +623,7 @@ const PublicMenuPage = ({ slugOverride }) => {
         onSubmit={handleNameSubmit}
         restaurantName={restaurante?.nombre || 'este restaurante'}
         isExternalOrder={isExternalOrder}
+        isHotelMode={isHotelMode}
       />
 
       {/* Banner Section */}
@@ -797,7 +803,7 @@ const PublicMenuPage = ({ slugOverride }) => {
                     <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
                       <XMarkIcon className="h-8 w-8 text-red-600" />
                     </div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">Mesa Inactiva</h3>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">{isHotelMode ? 'Habitación Inactiva' : 'Mesa Inactiva'}</h3>
                     <p className="text-gray-500 text-sm">
                       {tableInactiveMessage}
                     </p>
@@ -933,7 +939,7 @@ const PublicMenuPage = ({ slugOverride }) => {
             </p>
             <div className="mt-4 max-h-[60vh] overflow-y-auto px-1 scrollbar-hide">
               
-              {!mesaNumero && (
+              {!mesaNumero && !isHotelMode && (
                 <>
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-gray-700 mb-2">Tipo de Pedido</label>
@@ -1001,6 +1007,24 @@ const PublicMenuPage = ({ slugOverride }) => {
                     </div>
                   )}
                 </>
+              )}
+
+              {isHotelMode && !mesaNumero && (
+                <div className="mb-4">
+                  <label htmlFor="direccion" className="block text-sm font-medium text-gray-700">Número de Habitación *</label>
+                  <input
+                    type="text"
+                    id="direccion"
+                    value={direccion}
+                    onChange={(e) => {
+                      setDireccion(e.target.value);
+                      if (tipoPedido !== 'PARA_COMER_AQUI') setTipoPedido('PARA_COMER_AQUI');
+                    }}
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-primary-500 focus:border-primary-500"
+                    placeholder="Ej: 204"
+                    required
+                  />
+                </div>
               )}
 
               <label htmlFor="order-notes" className="block text-sm font-medium text-gray-700">
@@ -1074,7 +1098,7 @@ const PublicMenuPage = ({ slugOverride }) => {
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">¡Pedido enviado exitosamente!</h3>
             <p className="text-gray-600 mb-6">
-              Tu pedido ha sido enviado al restaurante. Puedes seguir el estado de tu orden desde el banner que aparecerá abajo.
+              Tu pedido ha sido enviado al restaurante por un total de <b className="text-gray-900">{formatCurrency(ultimoTotal)}</b>. Puedes seguir el estado de tu orden desde el banner que aparecerá abajo.
             </p>
           </div>
         </div>

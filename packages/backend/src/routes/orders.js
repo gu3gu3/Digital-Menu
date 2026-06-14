@@ -31,7 +31,11 @@ const getOrders = async (req, res) => {
 
     // Si se especifica un estado específico, sobrescribir el filtro anterior
     if (estado) {
-      where.estado = estado;
+      if (estado === 'SERVIDA') {
+        where.estado = { in: ['SERVIDA', 'ENTREGADA'] };
+      } else {
+        where.estado = estado;
+      }
     }
 
     if (mesaId) {
@@ -194,7 +198,7 @@ const updateOrderStatus = async (req, res) => {
     const { id } = req.params;
     const { status, notas } = req.body;
 
-    const validStatuses = ['ENVIADA', 'RECIBIDA', 'CONFIRMADA', 'EN_PREPARACION', 'LISTA', 'SERVIDA', 'COMPLETADA', 'CANCELADA'];
+    const validStatuses = ['ENVIADA', 'RECIBIDA', 'CONFIRMADA', 'EN_PREPARACION', 'LISTA', 'EN_CAMINO', 'SERVIDA', 'COMPLETADA', 'CANCELADA'];
     
     if (!validStatuses.includes(status)) {
       return res.status(400).json({
@@ -535,7 +539,9 @@ const getOrderStats = async (req, res) => {
       confirmadas,
       enPreparacion,
       listas,
+      enCamino,
       servidas,
+      entregadas,
       completadas,
       canceladas,
       aDomicilio,
@@ -548,7 +554,9 @@ const getOrderStats = async (req, res) => {
       prisma.orden.count({ where: { ...where, estado: 'CONFIRMADA' } }),
       prisma.orden.count({ where: { ...where, estado: 'EN_PREPARACION' } }),
       prisma.orden.count({ where: { ...where, estado: 'LISTA' } }),
+      prisma.orden.count({ where: { ...where, estado: 'EN_CAMINO' } }),
       prisma.orden.count({ where: { ...where, estado: 'SERVIDA' } }),
+      prisma.orden.count({ where: { ...where, estado: 'ENTREGADA' } }),
       prisma.orden.count({ where: { ...where, estado: 'COMPLETADA' } }),
       prisma.orden.count({ where: { ...where, estado: 'CANCELADA' } }),
       prisma.orden.count({ where: { ...where, tipoPedido: 'A_DOMICILIO' } }),
@@ -577,7 +585,9 @@ const getOrderStats = async (req, res) => {
         confirmadas,
         enPreparacion,
         listas,
+        enCamino,
         servidas,
+        entregadas,
         completadas,
         canceladas,
         aDomicilio,

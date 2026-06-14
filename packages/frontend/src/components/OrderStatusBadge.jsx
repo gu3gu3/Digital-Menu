@@ -3,7 +3,8 @@ import {
   FireIcon, 
   CheckCircleIcon, 
   XCircleIcon,
-  HandRaisedIcon 
+  HandRaisedIcon,
+  TruckIcon
 } from '@heroicons/react/24/solid';
 
 const OrderStatusBadge = ({ status, size = 'md' }) => {
@@ -44,12 +45,26 @@ const OrderStatusBadge = ({ status, size = 'md' }) => {
           icon: CheckCircleIcon,
           description: 'Lista para servir'
         };
+      case 'EN_CAMINO':
+        return {
+          label: 'En Camino',
+          color: 'bg-teal-100 text-teal-800 border-teal-200',
+          icon: TruckIcon,
+          description: 'Pedido en ruta'
+        };
       case 'SERVIDA':
         return {
           label: 'Servida',
           color: 'bg-emerald-100 text-emerald-800 border-emerald-200',
           icon: CheckCircleIcon,
-          description: 'Pedido entregado'
+          description: 'Pedido servido'
+        };
+      case 'ENTREGADA':
+        return {
+          label: 'Entregada',
+          color: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+          icon: CheckCircleIcon,
+          description: 'Pedido entregado a domicilio'
         };
       case 'COMPLETADA':
         return {

@@ -534,7 +534,12 @@ const createExternalOrder = async (req, res) => {
     const itemsParaCrear = [];
 
     for (const item of items) {
-      const producto = await prisma.producto.findUnique({ where: { id: item.productoId } });
+      const producto = await prisma.producto.findFirst({ 
+        where: { 
+          id: item.productoId,
+          restauranteId: restaurante.id 
+        } 
+      });
       if (!producto) continue;
       
       const itemSubtotal = producto.precio * item.cantidad;

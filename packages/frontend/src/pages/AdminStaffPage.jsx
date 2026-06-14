@@ -188,7 +188,7 @@ const AdminStaffPage = () => {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Gestión de Personal</h1>
           <p className="mt-1 text-sm text-gray-600">
-            Administra a tu equipo de meseros
+            Administra a tu equipo de trabajo
           </p>
         </div>
         <div className="mt-4 sm:mt-0">
@@ -198,14 +198,14 @@ const AdminStaffPage = () => {
             className="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <PlusIcon className="h-4 w-4 mr-2" />
-            Agregar Mesero
+            Agregar Personal
           </button>
         </div>
       </div>
 
       {/* Staff Panel Access */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Panel Meseros */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* Panel Meseros -> Panel de Servicio */}
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center">
@@ -213,8 +213,8 @@ const AdminStaffPage = () => {
                 <UsersIcon className="h-5 w-5 text-blue-600" />
               </div>
               <div className="ml-3">
-                <h3 className="text-sm font-medium text-blue-900">Panel de Meseros</h3>
-                <p className="text-xs sm:text-sm text-blue-700">Enlace de acceso para el equipo de sala</p>
+                <h3 className="text-sm font-medium text-blue-900">Panel de Servicio</h3>
+                <p className="text-xs sm:text-sm text-blue-700">Acceso para atención (Sala/Habitaciones)</p>
               </div>
             </div>
             <div className="flex items-center space-x-2">
@@ -249,7 +249,7 @@ const AdminStaffPage = () => {
               </div>
               <div className="ml-3">
                 <h3 className="text-sm font-medium text-orange-900">Módulo de Cocina (KDS)</h3>
-                <p className="text-xs sm:text-sm text-orange-700">Enlace de acceso para el personal de cocina</p>
+                <p className="text-xs sm:text-sm text-orange-700">Acceso para el personal de preparación</p>
               </div>
             </div>
             <div className="flex items-center space-x-2">
@@ -274,6 +274,41 @@ const AdminStaffPage = () => {
             </div>
           </div>
         </div>
+
+        {/* Panel Delivery */}
+        <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center">
+              <div className="p-2 bg-emerald-100 rounded-lg shrink-0">
+                <ClipboardDocumentIcon className="h-5 w-5 text-emerald-600" />
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-emerald-900">Panel de Repartidores</h3>
+                <p className="text-xs sm:text-sm text-emerald-700">Acceso para gestión de Delivery</p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(`${window.location.origin}/staff/login`);
+                }}
+                className="inline-flex items-center px-3 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 text-sm"
+                title="Copiar enlace"
+              >
+                📋 Copiar
+              </button>
+              <a
+                href="/staff/login"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center px-3 py-2 bg-white border border-emerald-300 text-emerald-700 rounded-lg hover:bg-emerald-50 text-sm"
+                title="Abrir panel de delivery"
+              >
+                🔗 Abrir
+              </a>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -284,7 +319,7 @@ const AdminStaffPage = () => {
               <UsersIcon className="h-6 w-6 text-blue-600" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Total Meseros</p>
+              <p className="text-sm font-medium text-gray-600">Total Personal</p>
               <p className="text-2xl font-bold text-gray-900">{stats.totalMeseros || 0}</p>
             </div>
           </div>
@@ -339,7 +374,7 @@ const AdminStaffPage = () => {
               <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
               <input
                 type="text"
-                placeholder="Buscar meseros..."
+                placeholder="Buscar personal..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -378,19 +413,19 @@ const AdminStaffPage = () => {
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
-            <span className="ml-3 text-gray-600">Cargando meseros...</span>
+            <span className="ml-3 text-gray-600">Cargando personal...</span>
           </div>
         ) : meseros.length === 0 ? (
           <div className="text-center py-12">
             <UsersIcon className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No hay meseros</h3>
-            <p className="text-gray-500 mb-4">Agrega tu primer mesero para comenzar.</p>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No hay personal</h3>
+            <p className="text-gray-500 mb-4">Agrega a tu primer miembro del equipo para comenzar.</p>
             <button
               onClick={() => setShowCreateModal(true)}
               disabled={stats.limitePlan > 0 && stats.disponibles <= 0}
               className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 disabled:opacity-50"
             >
-              Agregar Mesero
+              Agregar Personal
             </button>
           </div>
         ) : (
@@ -399,7 +434,7 @@ const AdminStaffPage = () => {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Mesero
+                    Personal
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Contacto
@@ -452,8 +487,8 @@ const AdminStaffPage = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${mesero.rol === 'COCINA' ? 'bg-orange-100 text-orange-800' : 'bg-blue-100 text-blue-800'}`}>
-                        {mesero.rol === 'COCINA' ? 'Cocina' : 'Mesero'}
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${mesero.rol === 'COCINA' ? 'bg-orange-100 text-orange-800' : mesero.rol === 'REPARTIDOR' ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-100 text-blue-800'}`}>
+                        {mesero.rol === 'COCINA' ? 'Cocina' : mesero.rol === 'REPARTIDOR' ? 'Repartidor' : 'Sala/Servicio'}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -521,7 +556,7 @@ const AdminStaffPage = () => {
               >
                 <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
                   <Dialog.Title as="h3" className="text-lg font-medium leading-6 text-gray-900 mb-4">
-                    Agregar Nuevo Mesero
+                    Agregar Nuevo Personal
                   </Dialog.Title>
 
                   <form onSubmit={handleCreateMesero} className="space-y-4">
@@ -597,10 +632,11 @@ const AdminStaffPage = () => {
                         onChange={(e) => setFormData({ ...formData, rol: e.target.value })}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                       >
-                        <option value="MESERO">Mesero</option>
+                        <option value="MESERO">Servicio (Sala/Habitación)</option>
                         {['Plan Pro', 'Plan Platinum', 'Pro', 'Platinum'].includes(stats.planNombre) && (
                           <option value="COCINA">Cocina (KDS)</option>
                         )}
+                        <option value="REPARTIDOR">Repartidor (Delivery)</option>
                       </select>
                     </div>
 
@@ -616,7 +652,7 @@ const AdminStaffPage = () => {
                         type="submit"
                         className="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700"
                       >
-                        Crear Mesero
+                        Guardar
                       </button>
                     </div>
                   </form>
@@ -655,7 +691,7 @@ const AdminStaffPage = () => {
               >
                 <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
                   <Dialog.Title as="h3" className="text-lg font-medium leading-6 text-gray-900 mb-4">
-                    Editar Mesero
+                    Editar Personal
                   </Dialog.Title>
 
                   <form onSubmit={handleUpdateMesero} className="space-y-4">
@@ -731,10 +767,11 @@ const AdminStaffPage = () => {
                         onChange={(e) => setFormData({ ...formData, rol: e.target.value })}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                       >
-                        <option value="MESERO">Mesero</option>
+                        <option value="MESERO">Servicio (Sala/Habitación)</option>
                         {['Plan Pro', 'Plan Platinum', 'Pro', 'Platinum'].includes(stats.planNombre) && (
                           <option value="COCINA">Cocina (KDS)</option>
                         )}
+                        <option value="REPARTIDOR">Repartidor (Delivery)</option>
                       </select>
                     </div>
 
@@ -750,7 +787,7 @@ const AdminStaffPage = () => {
                         type="submit"
                         className="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700"
                       >
-                        Actualizar Mesero
+                        Actualizar
                       </button>
                     </div>
                   </form>
